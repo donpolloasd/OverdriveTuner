@@ -1,0 +1,273 @@
+OverdriveTuner - optimizador de PC para gaming (Windows 10/11, 64 bits)
+
+INSTALAR
+  1. Ejecuta OverdriveTuner-Setup.exe (acepta el aviso de administrador).
+  2. Elige carpeta y accesos directos. Termina y abre OverdriveTuner.
+  Instalación silenciosa: OverdriveTuner-Setup.exe /S
+
+USAR
+  - Inicio: escanea tu hardware y aplica el perfil Recomendado o Competitivo.
+  - Cada ajuste tiene un interruptor: activarlo lo aplica; desactivarlo lo revierte
+    a como estaba antes (se guarda una copia de cada valor en C:\ProgramData\FPSForge).
+  - Los ajustes "Avanzado" bajan la seguridad: no están en ningún perfil.
+  - Antes de aplicar un perfil se crea un punto de restauración.
+
+DESINSTALAR
+  Configuración > Aplicaciones > OverdriveTuner > Desinstalar.
+  Los ajustes aplicados se mantienen: revierte antes los que no quieras.
+
+COMPILAR (Go 1.22+, desde cualquier sistema):  ./build.sh
+
+== Versión 1.1 ==
+- OverdriveTuner-Patch.exe: actualiza una instalación existente (conserva ajustes, copias y benchmarks).
+- Nueva sección «Fluidez 240 Hz»: revisa a qué gráfica está conectado el monitor, Hz reales,
+  DOCP/XMP de la RAM, canales, plan de energía, y muestra qué proceso usa más CPU.
+- Nueva sección «Benchmark»: guarda corridas y dice si una diferencia es real o ruido.
+- «Restaurar todo» en Inicio.
+- Anti-cheat (anti-cheat de kernel): lo que desactiva HVCI/virtualización pide doble confirmación y
+  nunca entra en los perfiles.
+
+== Versión 1.2 ==
+- Overlay en juego (sección «Overlay en juego»): panel minimalista con FPS, 1% low, gráfico de
+  tiempos de cuadro, CPU, GPU, RAM y temperaturas. Es una ventana aparte que deja pasar los clics;
+  NO se inyecta en el juego. Atajo para ocultarlo: Ctrl+Alt+O.
+  Los FPS los mide PresentMon (Intel, MIT) incluido en el programa; escucha eventos de Windows (ETW).
+  Temperatura de GPU: la que expone Windows (la misma del Administrador de tareas). Temperatura de
+  CPU: solo si tenés LibreHardwareMonitor abierto; sin driver Windows no la da (no se instala
+  ningún driver de kernel porque los anti-cheat los bloquean).
+- Grabar corridas con el overlay, ver microcortes cuadro por cuadro, importarlas al Benchmark.
+- Buscar el ajuste culpable (bisección) cuando algo empeora de verdad.
+- Detector de cuello de botella, perfiles por juego (plan de energía, prioridad, cerrar apps).
+- Pruebas de red y ping, estado de discos, revisión de cs2_video.txt, informe descargable.
+- Revisor de anti-cheat de kernel ampliado (Secure Boot, TPM, HVCI, IOMMU, reinicio pendiente) y punto de
+  restauración automático antes de ajustes avanzados.
+
+== Versión 1.3: ahora se llama OverdriveTuner ==
+- Nuevo nombre, logo (velocímetro) y diseño en blanco y negro.
+- OverdriveTuner-Patch.exe actualiza desde FPS Forge: instala el programa con el nombre nuevo,
+  quita el acceso y la entrada de «Aplicaciones» del anterior y conserva tus ajustes, copias de
+  seguridad, benchmarks y sesiones (siguen en C:\ProgramData\FPSForge, nombre interno).
+- Arreglos: la ventana ya aparece al instante con una pantalla de carga y se completa sola cuando
+  termina el escaneo del equipo; el ícono de la ventana y de la barra de tareas ya es el logo
+  (antes mostraba el globo del navegador).
+
+== Versión 1.3.1 / 1.3.2 ==
+- La guía de BIOS se arma según el procesador y la placa de video detectados (ya no muestra siempre
+  la placa de quien la desarrolló). La sección «Fluidez 240 Hz» ahora es «Diagnóstico».
+- (Reemplazado en 1.4.1: ahora la X deja el programa en la bandeja, ver abajo.)
+- Memoria de video leída correctamente (antes mostraba 4 GB como tope de Windows).
+
+== Versión 1.4 ==
+- Cómo funciona: botón fijo en cada pestaña con un recorrido guiado que resalta cada zona y explica
+  qué hace (categorías, perfiles, restaurar todo, benchmark, limpieza...). Se ofrece la primera vez.
+- Overlay: «Entender los números» explica FPS, 1% low, gráfico, CPU, GPU, VRAM, RAM y temperaturas.
+- Detector de microcortes: al ver una corrida grabada con el overlay se calcula un puntaje de fluidez,
+  el patrón de los picos (al empezar, periódicos, en ráfagas, sueltos) y la causa más probable. Es una
+  estimación por patrón, no una certeza.
+- Test de DNS (Cloudflare, Google, Quad9, OpenDNS) con botón para usar el más rápido y volver al
+  anterior. Solo uno activo a la vez.
+- «Quién usa la red»: programas con conexiones abiertas y su actividad estimada.
+- Discos: temperatura, desgaste, horas encendido, errores, TRIM y espacio libre por unidad.
+- Limpieza profunda: cachés de Edge, Chrome, Brave, Discord, Steam (web), Spotify y Delivery
+  Optimization. No toca contraseñas, cookies ni historial.
+- Historial: línea de tiempo de cambios aplicados y revertidos, con «Deshacer» y «Restaurar todo».
+- Debloat y apps preinstaladas siguen siendo reversibles y ahora lo indican en pantalla.
+
+== Versión 2.0 (incluye lo de 1.4.1) ==
+- Pestaña Configuración: idioma, atajos globales, copia de la configuración, animación de apertura,
+  ventana/bandeja y repetir el recorrido guiado.
+- Idioma español / inglés para toda la interfaz (se elige solo según el idioma de Windows la primera
+  vez). Los textos del panel que dibuja el overlay encima del juego y las ventanas de Setup/Patch
+  siguen en español. La traducción al inglés es mía: puede haber frases sin traducir o mejorables.
+- Atajos globales editables (mostrar/ocultar overlay, grabar, cambiar esquina): hacé clic en el
+  recuadro y apretá la combinación. Se avisa si está repetida o si otro programa ya la usa.
+- Exportar / importar configuración: archivo .json con tus ajustes, el overlay y las optimizaciones
+  aplicadas. Al importar se muestra una vista previa; los ajustes de anti-cheat y los avanzados nunca
+  se aplican solos desde un archivo.
+- Animación de apertura con sonido (generado, sin archivos), saltable con cualquier tecla o clic, con
+  interruptor y volumen.
+- La X ya no cierra el programa: queda en la bandeja del sistema (junto al reloj) con el overlay y las
+  grabaciones activos. Clic en el ícono (o abrir el programa de nuevo) vuelve a mostrar la ventana;
+  clic derecho > «Salir por completo» (o el botón en Configuración) lo cierra del todo.
+  Setup y Patch cierran el programa antes de reemplazarlo.
+- Arreglo: el editor de atajos no funcionaba (la captura de teclas falla con AltGr en teclados
+  latinoamericanos). Ahora se eligen con casillas Ctrl/Alt/Shift/Win y una lista de teclas.
+- Arreglo: el overlay podía mostrar el doble de FPS (por ejemplo 400 en vez de 200). Ahora ignora
+  los cuadros generados, las cadenas de presentación secundarias y las filas duplicadas. Además guarda
+  las primeras líneas crudas de PresentMon en C:\ProgramData\FPSForge\presentmon_diagnostico.txt: si los
+  FPS siguieran sin coincidir con los del juego, ese archivo permite ver exactamente qué entrega.
+- El ícono de la bandeja reaparece si el Explorador de Windows se reinicia.
+
+== Versión 2.0.1 ==
+- Arreglo (FPS del overlay): con tu archivo de PresentMon se vio la causa. PresentMon 2.3 entrega, antes
+  de cada cuadro real, una fila «de espera» de ~0,2 ms (CPU ocupada = 0). El overlay la contaba como un
+  cuadro más y mostraba casi el doble (500 con 300 reales). Ahora esas filas se descartan.
+- El 1% low del overlay ahora es el percentil 99 de los tiempos de cuadro (método de CapFrameX), más
+  estable que promediar el peor 1%. Las corridas grabadas siguen usando el promedio del peor 1%.
+- Arreglo: el cartel de «¿Primera vez?» aparecía siempre. La ventana se abre en un puerto distinto cada
+  vez y el navegador olvidaba que ya lo habías visto; ahora lo recuerda el programa (lo mismo vale para
+  idioma y animación de apertura).
+
+== Versión 2.0.2 ==
+- Arreglo: en la 2.0.1 el overlay podía quedarse sin FPS. El descarte de filas de espera se rehízo: de
+  cada grupo de filas con el mismo instante de inicio se conserva la más larga (el cuadro real). Además,
+  si los filtros no dejaran pasar ningún cuadro, el overlay usa los tiempos tal cual en vez de quedar vacío.
+
+
+== Versión 2.0.3 ==
+- FPS del overlay: el tiempo de cada cuadro ahora se calcula como la distancia entre los instantes de
+  inicio que reporta PresentMon, así las filas de espera y duplicadas no pueden inflar el número, sin
+  importar en qué orden lleguen. Verificado con tu muestra y con una simulación a 300 FPS.
+- Si PresentMon se cierra solo mientras el juego sigue abierto, el overlay lo vuelve a lanzar.
+- Si el juego lleva más de 10 segundos abierto y no llegan cuadros, el estado lo avisa.
+- Diagnóstico: C:\ProgramData\FPSForge\presentmon_diagnostico.txt (se rehace cada vez que abrís el
+  overlay) guarda los errores de PresentMon, líneas crudas al empezar y en pleno juego, y cada 5
+  segundos cuántas filas y cuadros salen y los FPS calculados. Si los FPS siguen sin coincidir con
+  MSI Afterburner, mandame ese archivo después de jugar unos minutos.
+
+== Versión 2.0.4 ==
+- Arreglo (overlay sin FPS en FC26): el diagnóstico mostró que PresentMon fallaba con «access denied» al
+  abrir su sesión de seguimiento. Ahora, antes de medir, se cierran las sesiones «OverdriveTuner» que
+  hayan quedado abiertas, y si falla se reintenta con otro nombre de sesión. El overlay anota si corre
+  como administrador y, si no llegan cuadros, muestra el error que dio Windows.
+- Si el error persiste solo con FC26, lo más probable es que su anti-cheat bloquee la medición; el
+  archivo presentmon_diagnostico.txt lo va a mostrar.
+
+== Versión 2.0.5 ==
+- Respaldo con RTSS: si PresentMon no entrega cuadros durante 3 segundos y RivaTuner/MSI Afterburner ya
+  está abierto, el overlay toma los FPS que RTSS publica (los mismos que muestra Afterburner). Solo
+  lee esos datos: este programa no inyecta nada en el juego. Si PresentMon vuelve a andar, se usa de
+  nuevo PresentMon. Con RTSS el 1% low es aproximado. El cambio queda anotado en
+  presentmon_diagnostico.txt.
+
+== Versión 2.1 ==
+- Nueva pestaña «Instalar programas» (usa winget, el administrador de paquetes de Windows 11):
+  navegadores (Brave, Firefox, Chrome), launchers (Steam, Epic, EA app, Ubisoft Connect, Battle.net,
+  GOG Galaxy), Discord y Telegram, WinRAR y 7-Zip, VLC, OBS, Notepad++, PowerToys, Everything,
+  qBittorrent, runtimes para juegos (Visual C++ de todas las versiones, .NET Desktop, DirectX) y
+  herramientas de hardware (HWiNFO, CPU-Z, GPU-Z, MSI Afterburner + RTSS, DDU). Los programas ya
+  instalados se marcan. «Actualizar programas instalados» corre winget upgrade --all. Si el equipo
+  no tiene winget, hay un botón para instalarlo.
+- Aviso de peligro con confirmación antes de instalar programas que cargan drivers o se enganchan al
+  juego (MSI Afterburner/RTSS, HWiNFO, CPU-Z, GPU-Z, OBS y Discord): pueden interferir con el
+  anti-cheat de kernel dentro del juego. El servidor también exige esa confirmación.
+- Botones para abrir la página oficial de drivers de NVIDIA, AMD o Intel según tu placa (no se
+  instalan drivers desde el programa).
+- Nuevo ajuste «Aplazar las actualizaciones de Windows hasta el año 3000» (categoría Actualizaciones):
+  políticas de Windows Update, pausa hasta el año 3000, orquestador de actualizaciones y sus tareas
+  detenidos. Pausa TOTAL: incluye los parches de seguridad. Pide doble confirmación y crea punto de
+  restauración. No toca las definiciones del Antivirus de Windows. Si Windows lo deshace (por una
+  actualización grande), la interfaz lo avisa. Se revierte en un clic.
+- Ajustes nuevos: preferir IPv4, desactivar IPv6 y desactivar Teredo (marcados «probar»), WPBT,
+  apps acompañantes de dispositivos, bloqueo de instalación automática de Razer y de Logitech,
+  terminar tarea con clic derecho, pantalla de bloqueo y notificaciones.
+- Nueva categoría «Estética y comodidad» (todo apagado por defecto): extensiones de archivo, archivos
+  ocultos, tema oscuro, Bloq Num, barras de desplazamiento, rutas largas, % de batería, pantalla azul
+  detallada, mensajes detallados al iniciar y quitar Inicio y Galería del Explorador.
+- Se retiraron del catálogo visible los ajustes de menor valor (cola de impresión, Asistencia remota,
+  efectos del toque, agitar para minimizar, estimación de energía, SleepStudy, nombres 8.3, volcado
+  mínimo, mitigaciones Spectre/Meltdown y desactivar hipervisor). Si ya los tenías aplicados siguen
+  apareciendo para poder revertirlos.
+- Los ajustes específicos de un fabricante de GPU (NVIDIA, AMD, Intel) solo se muestran si tu equipo
+  tiene esa placa.
+- La limpieza de temporales y cachés ya existía en la pestaña Limpieza.
+- Sin probar en Windows real: la pestaña de instalación (winget), la pausa de actualizaciones y los
+  ajustes de red nuevos. Las traducciones al inglés de esta versión son mías, sin revisión nativa.
+- WhatsApp no se incluyó: no está en el repositorio oficial de winget.
+
+
+== Versión 2.2: rediseño de la interfaz ==
+Solo cambia el aspecto y la forma de usar la ventana; los ajustes y sus operaciones son los mismos.
+- Sin emojis ni símbolos decorativos: el estado se muestra con marcadores simples y texto.
+- Negro y blanco, con una sola tipografía (Archivo, incluida en el programa) y listas separadas por líneas finas en lugar de tarjetas.
+- Menú lateral agrupado en Optimizar, Herramientas y Programa; el apartado activo se marca invertido.
+- Inicio: el porcentaje de optimizaciones aplicadas se muestra como número grande y una escala de 50 marcas.
+- Cada ajuste muestra su riesgo con un indicador de tres barras y las advertencias empiezan con «Ojo:».
+- Interruptores, casillas, listas desplegables y deslizadores propios, con foco visible al navegar con el teclado.
+- Las confirmaciones (incluida la doble confirmación de anti-cheat) ahora son diálogos dentro de la aplicación, no ventanas del navegador. Esc cancela y Enter acepta.
+- Se respeta la opción de Windows «reducir animaciones».
+Créditos: la tipografía Archivo (Omnibus-Type) se distribuye bajo licencia SIL Open Font License 1.1 (archivo archivo-OFL.txt en los recursos de la aplicación).
+Limitación: el panel que se dibuja encima del juego (overlay) y las ventanas del instalador y del parche mantienen su aspecto anterior.
+
+== Versión 2.2.1 ==
+Instalar programas: se suman FACEIT (cliente), FACEIT Anti-Cheat, Spotify, WizTree, Malwarebytes, Visual Studio Code e Intel Driver & Support Assistant. Los identificadores se verificaron contra el repositorio oficial de winget. Los drivers de NVIDIA y AMD siguen abriendo la página oficial, porque no existen como paquetes de winget.
+
+== Versión 2.2.2 ==
+Overlay: se endurece la lectura de RTSS/MSI Afterburner (lee solo lo necesario y un error de lectura ya no cierra el overlay) y el diagnóstico (presentmon_diagnostico.txt) ahora dice si RTSS estaba abierto, si medía el juego y cualquier error interno del overlay.
+
+== Versión 2.3.0: overlay automático ==
+- El overlay detecta solo qué juego abriste: los conocidos (CS2, EA FC, ETS2, Valorant, Fortnite, Apex y otros), los que agregues en «Perfiles por juego» y cualquier programa que ocupe toda la pantalla (excepto navegadores, escritorio y launchers). Ya no hace falta escribir el nombre del programa. La opción «Juego a medir» solo se usa si apagás la detección.
+- «Mostrar solo mientras juego»: el panel aparece al abrir un juego y se esconde al cerrarlo (también mientras grabás una corrida).
+- «Abrir el overlay al iniciar OverdriveTuner»: queda en segundo plano mientras el programa esté abierto, también en la bandeja.
+- La detección solo consulta la lista de programas y la ventana activa; no toca el juego.
+Limitación: todavía no arranca con Windows; hay que abrir OverdriveTuner una vez por sesión.
+
+== Versión 2.3.1 ==
+- La detección automática del juego también usa lo que mide RTSS (MSI Afterburner): si Afterburner está abierto y mide un programa, ese es el juego, aunque no figure en la lista de conocidos.
+- Temperaturas: si Windows no informa la del procesador o la de la gráfica, el overlay toma las que publica MSI Afterburner (solo lectura de su memoria compartida). En Afterburner hay que tener activado el monitoreo de «CPU temperature».
+- El diagnóstico (presentmon_diagnostico.txt) anota cuándo se detecta o se pierde un juego y si falla la lectura de la lista de programas.
+
+== Versión 2.3.2 ==
+Overlay: el número de FPS se actualiza más veces por segundo. Antes se redibujaba 2 veces por segundo y promediaba el último segundo; ahora, por defecto, 10 veces por segundo y promedia unos 400 ms. En la pestaña Overlay, «Frecuencia de actualización» permite elegir 20, 10, 4 o 2 por segundo. Si los FPS vienen de RTSS (Afterburner), la velocidad real de cambio también depende del intervalo de promedio que tenga configurado RTSS.
+
+== Versión 2.3.3 ==
+Detección automática de juegos por carpeta de instalación: cualquier programa con ventana visible que esté dentro de la carpeta de juegos de Steam (steamapps\common, en cualquier disco), Epic Games, EA, GOG, Ubisoft, Xbox o Riot se reconoce como juego, sin necesidad de conocer su nombre. Se ignoran los launchers, instaladores, informes de fallos y anti-cheat auxiliares, y programas como Wallpaper Engine o SteamVR. Se suma a la lista de juegos conocidos, a lo que mide RTSS y a los programas a pantalla completa.
+
+== Versión 2.3.4 ==
+Detección de juegos con varios discos: además de steamapps\common en cualquier disco, ahora se leen las carpetas donde el launcher de Epic instaló cada juego (aunque sea en otro disco o con otro nombre de carpeta) y se pueden agregar carpetas propias en la pestaña Overlay, «Carpetas de juegos adicionales».
+
+== Versión 2.4.0: guía «Cómo se miden los FPS» ==
+Pestaña Overlay, botón «Cómo se miden los FPS»: mini tutorial animado de cuatro pasos que explica que OverdriveTuner es completamente externo (no entra al juego, solo lee), por qué el overlay necesita MSI Afterburner (RTSS) abierto para medir FPS y la temperatura del procesador, cómo dejarlo andando y cuándo puede no funcionar. También se corrigió el texto de «Entender los números» sobre la temperatura del CPU.
+
+== Versión 2.4.1: fuente de FPS ==
+Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si PresentMon no entrega cuadros), Solo PresentMon (100 % externo, no lee ni necesita MSI Afterburner) o Solo RTSS (Afterburner desde el primer segundo). La guía «Cómo se miden los FPS» ahora aclara que lo que entra al juego es RTSS, no OverdriveTuner, y que Afterburner no es obligatorio. Limitación conocida: en algunos juegos (por ejemplo EA FC 26 en la PC de pruebas) Windows rechaza a PresentMon y ahí solo RTSS mide.
+
+== Versión 2.5.0 ==
+- Limpieza > Memoria RAM: botón «Liberar memoria RAM» (como «Acelerar» de Microsoft PC Manager). Pide a Windows que recupere memoria de procesos inactivos y vacía la lista en espera; muestra RAM libre antes y después. Es temporal; no toca el primer plano ni el juego abierto.
+- Detector de hardware: si Windows no informa la VRAM, se la pide a DirectX (dxdiag) para mostrar cuánta tiene la gráfica.
+- Instalar programas: se quitaron los avisos de anti-cheat y se agregaron más de veinte programas, incluido RTSS solo (para medir FPS en juegos con anti-cheat de kernel).
+- Instalador y parche: aviso de que el overlay puede no medir FPS en juegos con anti-cheat de kernel si no está RTSS, con el motivo.
+- Parche: ahora abre una ventana que lista y explica cada cambio desde la versión instalada, y luego aplica la actualización conservando ajustes y copias.
+- Sin probar aún en Windows real: dxdiag de VRAM, liberar RAM y las instalaciones con winget.
+- Instalador y parche: casilla «Instalar RTSS (solo medición de FPS)», marcada por defecto; lo instala con winget y no hace falta MSI Afterburner. El overlay abre RTSS en segundo plano (ventana oculta) si está instalado y cerrado, para que enganche el juego desde el inicio. Si winget falla, se avisa y se puede instalar luego desde «Instalar programas».
+
+== Versión 2.6.0 ==
+- Inicio con Windows: el overlay arranca solo al iniciar sesión (tarea programada con permisos de administrador, sin aviso de UAC), en segundo plano. Casilla en el Setup y el Parche (activada por defecto) e interruptor en Configuración > «Inicio con Windows».
+- Modo juego (menú Herramientas): lista de programas que se cierran siempre al abrir un juego. No cierra el juego ni procesos de Windows/OverdriveTuner; los launchers y anti-cheat piden confirmación al agregarlos. Lo aplica el overlay (tiene que estar abierto).
+- Alerta de sobrecalentamiento en el overlay: límites configurables (CPU 90 °C, GPU 85 °C por defecto), valor en rojo y aviso de texto sin sonido, con histéresis de 3 °C. La del CPU necesita una fuente de temperatura (Afterburner o HWiNFO).
+- Detección de juegos por el registro de EA/Origin, GOG y Ubisoft (se relee cada minuto).
+- Botón «DRIVERS» abajo del menú: abre la página oficial de NVIDIA, AMD o Intel y marca la de tu PC.
+- Diagnóstico: la frecuencia del monitor ya no está fija en 240 Hz; se usa la máxima que Windows ofrece a la resolución actual (EnumDisplaySettings). Si la guardás a mano manda tu valor, y hay un botón para volver al detectado.
+- Instalar programas: Medal, Lossless Scaling, FurMark, Ryzen Master, WhatsApp, TeamSpeak, Google Drive, OneDrive, AnyDesk y, según tu hardware, Software AMD, NVIDIA App o Intel Graphics Software. Medal, Lossless Scaling, Ryzen Master, WhatsApp y los paneles de AMD/NVIDIA/Intel no están en winget (o su manifiesto está desactualizado), por eso abren la página oficial.
+- Sin probar aún en Windows real: tarea programada de inicio, lectura del registro EA/GOG/Ubisoft, Hz máximos, cierre del Modo juego e instalaciones con winget.
+
+== Versión 2.6.2 (reemplaza la lectura de HWiNFO de la 2.6.1) ==
+- Temperatura del CPU: el overlay ahora también la lee de Core Temp (además de MSI Afterburner), sin entrar al juego. Core Temp es gratis, no tiene límite de horas y está en «Instalar programas». Se toma el núcleo más caliente. Alimenta la alerta de sobrecalentamiento. (Se probó con HWiNFO y se descartó: su versión gratis apaga la memoria compartida cada 12 horas.)
+- Sin probar aún en Windows real: la lectura de la memoria compartida de Core Temp (el formato sigue su SDK y se probó con datos simulados).
+
+== Versión 2.6.3: inicio con Windows, diagnóstico ==
+- Cuando el overlay arranca solo con Windows (tarea programada con el argumento --boot) muestra un ícono en la bandeja y un aviso: sin juego abierto no tiene ventana y no se notaba que estaba activo. Clic en el ícono abre OverdriveTuner; clic derecho, «Salir por completo» cierra el overlay.
+- Configuración > Inicio con Windows: muestra si la tarea está registrada, la última vez que corrió y su código de resultado (0 = bien), y si el overlay está activo. Botón «Probar ahora» para ejecutarla sin reiniciar.
+- La tarea arranca desde la carpeta del programa y el overlay anota su inicio en C:\ProgramData\FPSForge\overdrivetuner.log.
+- Si no anda: abrí el Programador de tareas de Windows (taskschd.msc), Biblioteca, «OverdriveTuner Overlay», y mirá «Último resultado de ejecución».
+
+== Versión 2.6.4: desinstalador nuevo ==
+- «Desinstalar» (Aplicaciones instaladas de Windows o OverdriveTuner.exe --uninstall) ahora abre una ventana limpia, con el mismo estilo que el instalador, en vez de cuadros de Windows. Muestra qué se quita y qué se conserva, cuántos ajustes tenés aplicados (siguen activos en Windows) y cómo deshacerlos antes.
+- Casilla «Borrar también mis datos»: apagada por defecto. Solo borra C:\ProgramData\FPSForge (ajustes, copias de seguridad, pruebas, historial); nunca otra carpeta.
+- Antes de borrar cierra OverdriveTuner, el overlay y PresentMon, y quita la tarea de inicio con Windows. La carpeta del programa se borra unos segundos después de que el desinstalador se cierra.
+- Se probó en el navegador con datos simulados (--uninstall --demo). Sin probar aún en Windows real.
+
+== Versión 2.6.5 ==
+- El menú del ícono del overlay (el que aparece cuando arranca con Windows) ahora dice «Cerrar solo el overlay»: cierra únicamente el overlay, no la aplicación principal. El ícono de OverdriveTuner sigue diciendo «Salir por completo».
+
+== Versión 2.6.6 ==
+- Core Temp viene con la app: el Setup y el Parche tienen una casilla para instalarlo (marcada por defecto) y el overlay lo abre solo en segundo plano, igual que RTSS, para mostrar la temperatura del procesador. Si ves su ventana, minimizala a la bandeja desde sus opciones.
+- Los FPS del overlay salen solo de RTSS (se quitó PresentMon y el selector «Fuente de FPS»); la temperatura del CPU sale de Core Temp.
+- En «Instalar programas», si winget falla o no está, cada programa muestra «Abrir web oficial» para descargarlo vos.
+- Tutorial «Cómo funciona» nuevo en Modo juego e Instalar programas; corregidos los de Overlay, Configuración y categorías.
+
+== Versión 2.6.7 ==
+- El Parche ya no ofrece instalar RTSS ni Core Temp: solo actualiza y pregunta si OverdriveTuner se inicia automáticamente al prender la PC e iniciar sesión. El Setup sigue ofreciendo RTSS y Core Temp.
+
+== Versión 2.6.8 ==
+- OverdriveTuner, el Setup y el Parche se abren maximizados (toda la pantalla, con barra de título). El desinstalador sigue con ventana chica.

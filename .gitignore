@@ -1,0 +1,10 @@
+# Resultados de compilación
+dist/
+ot
+ot.log
+/setup
+*.syso
+cmd/setup/payload/OverdriveTuner.exe
+# Archivos de prueba y temporales
+*.tmp
+*.log

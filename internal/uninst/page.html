@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Desinstalar OverdriveTuner</title>
+<link rel="icon" type="image/png" href="/logo.png">
+<style>
+:root{--bg:#000000;--panel:#0f0f0f;--line:#262626;--text:#f5f5f5;--muted:#8f8f8f;--accent:#ffffff;--ok:#36d6a1;--bad:#ff5f78;
+ --head:"Bahnschrift","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;--body:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 var(--body);display:grid;grid-template-columns:300px 1fr}
+.left{background:linear-gradient(170deg,#141414,#050505);border-right:1px solid var(--line);padding:34px 28px;display:flex;flex-direction:column;gap:18px}
+.logo{width:64px;height:64px;border-radius:16px;box-shadow:0 8px 30px #ffffff14;display:block}
+h1{font:700 30px var(--head);margin:0}.left p{color:var(--muted);margin:0}
+.left ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px;color:#cfcfcf}.left li::before{content:"✓ ";color:var(--ok)}
+.right{padding:40px 48px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+h2{font:600 24px var(--head);margin:0 0 6px}p.s{color:var(--muted);margin:0 0 20px}
+label.f{display:block;color:var(--muted);margin:14px 0 4px}
+input[type=text]{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 12px;font:inherit}
+input[type=text]:focus{border-color:var(--accent);outline:0}
+.ck{display:flex;gap:10px;align-items:center;margin:12px 0}input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.btns{display:flex;gap:10px;margin-top:26px}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:9px;padding:10px 20px;font:600 14px var(--body);cursor:pointer}
+.btn.primary{background:#fff;border-color:#fff;color:#000}.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid #d4d4d4;outline-offset:2px}
+.bar{height:10px;border-radius:99px;background:#050505;overflow:hidden;margin:16px 0 10px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffffff,#8a8a8a);transition:width .25s}
+.err{background:#ff5f781a;border:1px solid #ff5f7855;color:#ffc2cb;border-radius:10px;padding:10px 14px;margin-top:14px}
+.hide{display:none}
+.note{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:12px 14px;margin-top:18px;color:#cfcfcf;font-size:13px}
+.note b{color:var(--text)}
+.rel{border:1px solid var(--line);border-radius:10px;margin:0 0 12px;background:var(--panel)}
+.rel h3{margin:0;padding:10px 14px;font:600 15px var(--head);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.rel h3 span{color:var(--muted);font:400 13px var(--body)}
+.rel ul{list-style:none;margin:0;padding:6px 14px 10px}.rel li{padding:7px 0;border-bottom:1px solid #1a1a1a}.rel li:last-child{border:0}
+.rel li b{display:block}.rel li span{color:var(--muted);font-size:13px}
+#chg{max-height:46vh;overflow:auto;padding-right:4px}
+@media (max-width:760px){body{grid-template-columns:1fr}.left{display:none}.right{padding:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:6px 0 4px}
+.box{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:14px 16px}
+.box h3{margin:0 0 8px;font:600 14px var(--head)}
+.box ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;color:#cfcfcf;font-size:13px}
+.box.out li::before{content:"– ";color:var(--bad)}.box.keep li::before{content:"✓ ";color:var(--ok)}
+.btn.danger{background:#ff5f78;border-color:#ff5f78;color:#150006}
+.note2{color:var(--muted);font-size:13px;margin:14px 0 0}
+.warn{border:1px solid #ffc85755;background:#ffc8571a;color:#ffe2a6;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:13px}
+@media (max-width:900px){.cols{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<aside class="left">
+  <img class="logo" src="/logo.png" alt="" width="64" height="64">
+  <div><h1>OverdriveTuner</h1><p>Desinstalador</p></div>
+  <ul><li>Quita solo lo que instaló</li><li>Tus datos se conservan si querés</li><li>No toca tus juegos ni otros programas</li></ul>
+</aside>
+<section class="right">
+  <div id="s1">
+    <h2>Desinstalar OverdriveTuner</h2>
+    <p class="s" id="sub">Se va a quitar el programa de este equipo.</p>
+    <div class="cols">
+      <div class="box out"><h3>Se quita</h3><ul><li>El programa y su carpeta</li><li>Los accesos directos</li><li>La entrada en «Aplicaciones instaladas»</li><li>El inicio del overlay con Windows</li></ul></div>
+      <div class="box keep"><h3>Se conserva</h3><ul><li>Tus juegos y programas</li><li id="kApplied">Los ajustes que aplicaste en Windows</li><li id="kData">Tus datos (ajustes, copias de seguridad, pruebas e historial)</li></ul></div>
+    </div>
+    <div class="warn hide" id="warnApplied"></div>
+    <div class="ck" id="rowData"><input type="checkbox" id="ckData"><label for="ckData">Borrar también mis datos (ajustes, copias de seguridad, pruebas e historial)</label></div>
+    <p class="note2" id="where"></p>
+    <div class="err hide" id="e1" role="alert"></div>
+    <div class="btns"><button class="btn danger" id="go">Desinstalar</button><button class="btn" id="cancel">Cancelar</button></div>
+  </div>
+  <div id="s2" class="hide">
+    <h2>Desinstalando…</h2>
+    <p class="s" id="msg">Preparando…</p>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="bar"></i></div>
+    <div class="err hide" id="e2" role="alert"></div>
+    <div class="btns"><button class="btn" id="back" hidden>Volver</button></div>
+  </div>
+  <div id="s3" class="hide">
+    <h2>Listo</h2>
+    <p class="s" id="doneTxt">OverdriveTuner se desinstaló correctamente.</p>
+    <div class="btns"><button class="btn primary" id="fin">Cerrar</button></div>
+  </div>
+</section>
+<script>
+const T = "__TOKEN__", $ = s => document.querySelector(s);
+async function api(p, b) {
+  const o = { headers: { "X-Token": T } };
+  if (b !== undefined) { o.method = "POST"; o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(b); }
+  const r = await fetch("/api/" + p, o); let d = null; try { d = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error((d && d.error) || "Error " + r.status); return d;
+}
+const show = id => ["s1", "s2", "s3"].forEach(x => $("#" + x).classList.toggle("hide", x !== id));
+let poll = null;
+async function init() {
+  const i = await api("info");
+  $("#sub").textContent = "Se va a quitar OverdriveTuner" + (i.version ? " " + i.version : "") + " de este equipo.";
+  $("#where").textContent = "Carpeta del programa: " + i.dir + (i.hasData ? "  ·  Datos: " + i.dataDir : "");
+  if (i.applied > 0) {
+    $("#warnApplied").textContent = "Tenés " + i.applied + " ajuste" + (i.applied === 1 ? "" : "s") + " aplicado" + (i.applied === 1 ? "" : "s") + " por OverdriveTuner. Siguen activos en Windows después de desinstalar. Si querés deshacerlos, cancelá, abrí OverdriveTuner y usá «Revertir todo».";
+    $("#warnApplied").classList.remove("hide");
+  }
+  if (!i.hasData || !i.canDeleteData) { $("#rowData").classList.add("hide"); if (!i.hasData) $("#kData").classList.add("hide"); }
+}
+$("#ckData").onchange = () => { $("#kData").classList.toggle("hide", $("#ckData").checked); };
+$("#go").onclick = async () => {
+  $("#e1").classList.add("hide");
+  try { await api("uninstall", { deleteData: $("#ckData").checked }); }
+  catch (e) { $("#e1").textContent = e.message; $("#e1").classList.remove("hide"); return; }
+  show("s2");
+  poll = setInterval(async () => {
+    try {
+      const p = await api("progress");
+      $("#bar").style.width = p.pct + "%"; $("#msg").textContent = p.msg;
+      if (p.err) { clearInterval(poll); $("#e2").textContent = p.err; $("#e2").classList.remove("hide"); $("#back").hidden = false; }
+      else if (p.done) { clearInterval(poll); show("s3"); $("#fin").focus(); }
+    } catch (e) { /* se reintenta */ }
+  }, 300);
+};
+$("#back").onclick = () => { $("#e2").classList.add("hide"); $("#back").hidden = true; show("s1"); };
+$("#cancel").onclick = () => api("finish", {}).catch(() => {}).then(() => window.close());
+$("#fin").onclick = () => api("finish", {}).catch(() => {}).then(() => window.close());
+setInterval(() => api("heartbeat", {}).catch(() => {}), 3000);
+init().catch(e => { $("#e1").textContent = e.message; $("#e1").classList.remove("hide"); });
+</script>
+</body>
+</html>

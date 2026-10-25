@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OverdriveTuner</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon.png">
+<style>html,body{background:#000}</style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="boot"><img src="/logo.png" alt="" width="76" height="76"><b>OverdriveTuner</b></div>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><img src="/logo.png" alt="" width="34" height="34"><div><b>OverdriveTuner</b><small id="ver"></small></div></div>
+    <nav id="nav" aria-label="Secciones"></nav>
+    <div class="foot" id="foot"></div>
+  </aside>
+  <main id="main" tabindex="-1"></main>
+</div>
+<div class="veil" id="veil" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+  <div class="modal">
+    <h3 id="mtitle"></h3>
+    <div class="prog"><i id="mbar"></i></div>
+    <div class="log" id="mlog" aria-live="polite"></div>
+    <div class="end"><button class="btn primary" id="mclose" disabled>Cerrar</button></div>
+  </div>
+</div>
+<script>window.TOKEN="__TOKEN__";window.BOOT=__BOOT__;</script>
+<script src="i18n.js"></script>
+<script src="intro.js"></script>
+<script src="app.js"></script>
+<script src="v14.js"></script>
+<script src="settings.js"></script>
+<script src="apps.js"></script>
+<script src="fpshelp.js"></script>
+<script src="gamemode.js"></script>
+</body>
+</html>

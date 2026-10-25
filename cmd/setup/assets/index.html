@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Instalar OverdriveTuner</title>
+<link rel="icon" type="image/png" href="/logo.png">
+<style>
+:root{--bg:#000000;--panel:#0f0f0f;--line:#262626;--text:#f5f5f5;--muted:#8f8f8f;--accent:#ffffff;--ok:#36d6a1;--bad:#ff5f78;
+ --head:"Bahnschrift","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;--body:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 var(--body);display:grid;grid-template-columns:300px 1fr}
+.left{background:linear-gradient(170deg,#141414,#050505);border-right:1px solid var(--line);padding:34px 28px;display:flex;flex-direction:column;gap:18px}
+.logo{width:64px;height:64px;border-radius:16px;box-shadow:0 8px 30px #ffffff14;display:block}
+h1{font:700 30px var(--head);margin:0}.left p{color:var(--muted);margin:0}
+.left ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px;color:#cfcfcf}.left li::before{content:"✓ ";color:var(--ok)}
+.right{padding:40px 48px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+h2{font:600 24px var(--head);margin:0 0 6px}p.s{color:var(--muted);margin:0 0 20px}
+label.f{display:block;color:var(--muted);margin:14px 0 4px}
+input[type=text]{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 12px;font:inherit}
+input[type=text]:focus{border-color:var(--accent);outline:0}
+.ck{display:flex;gap:10px;align-items:center;margin:12px 0}input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.btns{display:flex;gap:10px;margin-top:26px}
+.btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:9px;padding:10px 20px;font:600 14px var(--body);cursor:pointer}
+.btn.primary{background:#fff;border-color:#fff;color:#000}.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid #d4d4d4;outline-offset:2px}
+.bar{height:10px;border-radius:99px;background:#050505;overflow:hidden;margin:16px 0 10px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffffff,#8a8a8a);transition:width .25s}
+.err{background:#ff5f781a;border:1px solid #ff5f7855;color:#ffc2cb;border-radius:10px;padding:10px 14px;margin-top:14px}
+.hide{display:none}
+.note{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:12px 14px;margin-top:18px;color:#cfcfcf;font-size:13px}
+.note b{color:var(--text)}
+.rel{border:1px solid var(--line);border-radius:10px;margin:0 0 12px;background:var(--panel)}
+.rel h3{margin:0;padding:10px 14px;font:600 15px var(--head);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.rel h3 span{color:var(--muted);font:400 13px var(--body)}
+.rel ul{list-style:none;margin:0;padding:6px 14px 10px}.rel li{padding:7px 0;border-bottom:1px solid #1a1a1a}.rel li:last-child{border:0}
+.rel li b{display:block}.rel li span{color:var(--muted);font-size:13px}
+#chg{max-height:46vh;overflow:auto;padding-right:4px}
+@media (max-width:760px){body{grid-template-columns:1fr}.left{display:none}.right{padding:24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<aside class="left">
+  <img class="logo" src="/logo.png" alt="" width="64" height="64">
+  <div><h1>OverdriveTuner</h1><p>Optimizador de PC para gaming</p></div>
+  <ul><li>Escanea tu hardware</li><li>Más de 80 ajustes</li><li>Todo es reversible</li><li>Sin publicidad ni cuentas</li></ul>
+</aside>
+<section class="right">
+  <div id="s1">
+    <h2 id="t1">Instalar OverdriveTuner</h2>
+    <p class="s" id="sub1">Elige dónde instalarlo y qué accesos directos crear.</p>
+    <label class="f" for="dir">Carpeta de instalación</label>
+    <input type="text" id="dir" spellcheck="false" autocomplete="off">
+    <div class="ck"><input type="checkbox" id="ckStart" checked><label for="ckStart">Acceso en el menú Inicio</label></div>
+    <div class="ck"><input type="checkbox" id="ckDesk" checked><label for="ckDesk">Acceso en el escritorio</label></div>
+<div class="note"><b>Sobre el overlay de FPS y los juegos con anti-cheat de kernel.</b> El overlay lee los FPS de RTSS y la temperatura del procesador de Core Temp; los dos quedan en segundo plano y el overlay los abre solo. Sin RTSS no hay FPS (en juegos con anti-cheat de kernel como FACEIT o EA Javelin, Windows bloquea la otra forma de medir), y sin Core Temp no hay temperatura del procesador. No hace falta MSI Afterburner. Si winget falla, los bajás de «Instalar programas».</div>
+<div class="ck"><input type="checkbox" id="ckRtss" checked><label for="ckRtss">Instalar RTSS (necesario para los FPS del overlay)</label></div>
+<div class="ck"><input type="checkbox" id="ckCT" checked><label for="ckCT">Instalar Core Temp (temperatura del procesador; el overlay lo abre solo)</label></div>
+<div class="ck"><input type="checkbox" id="ckAuto" checked><label for="ckAuto">Iniciar el overlay con Windows (se puede desactivar en Configuración)</label></div>
+    <div class="err hide" id="e1" role="alert"></div>
+    <div class="btns"><button class="btn primary" id="go">Instalar</button><button class="btn" id="cancel">Cancelar</button></div>
+  </div>
+  <div id="sp" class="hide">
+    <h2 id="tp">Actualizar OverdriveTuner</h2>
+    <p class="s" id="subp"></p>
+    <div id="chg"></div>
+<div class="ck"><input type="checkbox" id="ckAutoP" checked><label for="ckAutoP">Iniciar OverdriveTuner automáticamente al prender la PC e iniciar sesión (se puede desactivar en Configuración)</label></div>
+    <div class="err hide" id="ep" role="alert"></div>
+    <div class="btns"><button class="btn primary" id="goP">Aplicar parche</button><button class="btn" id="cancelP">Cancelar</button></div>
+    <p class="s" style="margin:14px 0 0">Tus ajustes, copias de seguridad y resultados de pruebas se conservan.</p>
+  </div>
+  <div id="s2" class="hide">
+    <h2>Instalando…</h2>
+    <p class="s" id="msg">Preparando…</p>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="bar"></i></div>
+    <div class="err hide" id="e2" role="alert"></div>
+    <div class="btns"><button class="btn" id="back" hidden>Volver</button></div>
+  </div>
+  <div id="s3" class="hide">
+    <h2>Listo</h2>
+    <p class="s">OverdriveTuner se instaló correctamente. Al abrirlo te pedirá permisos de administrador para poder aplicar los ajustes.</p>
+    <div class="ck"><input type="checkbox" id="ckRun" checked><label for="ckRun">Abrir OverdriveTuner ahora</label></div>
+    <div class="btns"><button class="btn primary" id="fin">Terminar</button></div>
+  </div>
+</section>
+<script>
+const T = "__TOKEN__", $ = s => document.querySelector(s);
+async function api(p, b) {
+  const o = { headers: { "X-Token": T } };
+  if (b !== undefined) { o.method = "POST"; o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(b); }
+  const r = await fetch("/api/" + p, o); let d = null; try { d = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error((d && d.error) || "Error " + r.status); return d;
+}
+const show = id => ["s1", "sp", "s2", "s3"].forEach(x => $("#" + x).classList.toggle("hide", x !== id));
+let poll = null, patch = false;
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+async function init() {
+  const i = await api("info");
+  if (i.patch) {
+    patch = true; document.title = "Parche de OverdriveTuner";
+    if (!i.installed) { $("#e1").textContent = "OverdriveTuner no está instalado en este equipo. Ejecutá primero OverdriveTuner-Setup.exe."; $("#e1").classList.remove("hide"); }
+    const ch = i.changes || [];
+    $("#subp").textContent = (i.installedVersion ? "Instalada: " + i.installedVersion + ". " : "") + "Se actualiza a la versión " + i.version + (ch.length ? ". Esto es lo que cambia:" : ". No hay cambios nuevos para mostrar.");
+    $("#chg").innerHTML = ch.map(r => '<div class="rel"><h3>' + esc(r.title) + '<span>Versión ' + esc(r.version) + '</span></h3><ul>' +
+      r.changes.map(c => "<li><b>" + esc(c.t) + "</b><span>" + esc(c.x) + "</span></li>").join("") + "</ul></div>").join("");
+    $("#ckAutoP").checked = !!i.autostart;
+    if (!i.installed) { $("#goP").disabled = true; }
+    show("sp"); return;
+  }
+  $("#dir").value = i.dir;
+  if (i.installed) { $("#t1").textContent = "Actualizar OverdriveTuner"; $("#sub1").textContent = "Ya está instalado. Se actualizará en la misma carpeta."; $("#go").textContent = "Actualizar"; $("#dir").value = i.installedDir; }
+}
+$("#go").onclick = async () => {
+  $("#e1").classList.add("hide");
+  try { await api("install", { dir: $("#dir").value, desktop: $("#ckDesk").checked, startMenu: $("#ckStart").checked, rtss: $("#ckRtss").checked, coretemp: $("#ckCT").checked, autostart: $("#ckAuto").checked }); }
+  catch (e) { $("#e1").textContent = e.message; $("#e1").classList.remove("hide"); return; }
+  watch();
+};
+function watch() {
+  show("s2"); $("#s2 h2").textContent = patch ? "Aplicando parche…" : "Instalando…";
+  poll = setInterval(async () => {
+    try {
+      const p = await api("progress");
+      $("#bar").style.width = p.pct + "%"; $("#msg").textContent = p.msg;
+      if (p.err) { clearInterval(poll); $("#e2").textContent = p.err; $("#e2").classList.remove("hide"); $("#back").hidden = false; }
+      else if (p.done) { clearInterval(poll); if (patch) { $("#s3 h2").textContent = "Parche aplicado"; $("#s3 .s").textContent = "OverdriveTuner se actualizó. Tus ajustes se conservaron."; } if (p.note) { $("#s3 .s").textContent += " " + p.note; } show("s3"); $("#fin").focus(); }
+    } catch (e) { /* se reintenta */ }
+  }, 300);
+}
+$("#goP").onclick = async () => {
+  $("#ep").classList.add("hide");
+  try { await api("patch", { autostart: $("#ckAutoP").checked }); } catch (e) { $("#ep").textContent = e.message; $("#ep").classList.remove("hide"); return; }
+  watch();
+};
+$("#cancelP").onclick = () => api("finish", { launch: false }).catch(() => {}).then(() => window.close());
+$("#back").onclick = () => { $("#e2").classList.add("hide"); $("#back").hidden = true; show(patch ? "sp" : "s1"); };
+$("#cancel").onclick = () => api("finish", { launch: false }).catch(() => {}).then(() => window.close());
+$("#fin").onclick = () => api("finish", { launch: $("#ckRun").checked }).catch(() => {}).then(() => window.close());
+setInterval(() => api("heartbeat", {}).catch(() => {}), 3000);
+init().catch(e => { $("#e1").textContent = e.message; $("#e1").classList.remove("hide"); });
+</script>
+</body>
+</html>

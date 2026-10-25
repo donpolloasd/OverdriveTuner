@@ -1,0 +1,355 @@
+{
+ "adv.hypervisor": [
+  "cmd|||||0"
+ ],
+ "adv.spectre": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management|FeatureSettingsOverride|REG_DWORD||0",
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management|FeatureSettingsOverrideMask|REG_DWORD||0"
+ ],
+ "adv.vbs": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\\Scenarios\\HypervisorEnforcedCodeIntegrity|Enabled|REG_DWORD||0",
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard|EnableVirtualizationBasedSecurity|REG_DWORD||0"
+ ],
+ "apps.clipchamp": [
+  "ps|||||0"
+ ],
+ "apps.copilot": [
+  "ps|||||0"
+ ],
+ "apps.cortana": [
+  "ps|||||0"
+ ],
+ "apps.mail": [
+  "ps|||||0"
+ ],
+ "apps.media": [
+  "ps|||||0"
+ ],
+ "apps.msbloat": [
+  "ps|||||0"
+ ],
+ "apps.phone": [
+  "ps|||||0"
+ ],
+ "apps.teams": [
+  "ps|||||0"
+ ],
+ "apps.thirdparty": [
+  "ps|||||0"
+ ],
+ "db.bing": [
+  "reg|HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer|DisableSearchBoxSuggestions|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search|BingSearchEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search|CortanaConsent|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search|AllowCortana|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search|DisableWebSearch|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search|ConnectedSearchUseWeb|REG_DWORD||0"
+ ],
+ "db.chat": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Chat|ChatIcon|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|TaskbarMn|REG_DWORD||0"
+ ],
+ "db.consumer": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent|DisableWindowsConsumerFeatures|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent|DisableSoftLanding|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent|DisableCloudOptimizedContent|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent|DisableWindowsSpotlightFeatures|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent|DisableThirdPartySuggestions|REG_DWORD||0"
+ ],
+ "db.contextmenu": [
+  "reg|HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32||REG_SZ||0"
+ ],
+ "db.copilot": [
+  "reg|HKCU\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot|TurnOffWindowsCopilot|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot|TurnOffWindowsCopilot|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|ShowCopilotButton|REG_DWORD||0"
+ ],
+ "db.edge": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge|StartupBoostEnabled|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge|BackgroundModeEnabled|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge|EdgeShoppingAssistantEnabled|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge|ShowRecommendationsEnabled|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge|PersonalizationReportingEnabled|REG_DWORD||0"
+ ],
+ "db.highlights": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings|IsDynamicSearchBoxEnabled|REG_DWORD||0"
+ ],
+ "db.onedrive": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive|DisableFileSyncNGSC|REG_DWORD||0"
+ ],
+ "db.recall": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsAI|DisableAIDataAnalysis|REG_DWORD||0"
+ ],
+ "db.remoteassist": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Remote Assistance|fAllowToGetHelp|REG_DWORD||0"
+ ],
+ "db.startmenu": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|Start_TrackDocs|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|Start_IrisRecommendations|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|Start_AccountNotifications|REG_DWORD||0"
+ ],
+ "db.suggestions": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|ContentDeliveryAllowed|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|OemPreInstalledAppsEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|PreInstalledAppsEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|PreInstalledAppsEverEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SilentInstalledAppsEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SystemPaneSuggestionsEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SoftLandingEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|FeatureManagementEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|RotatingLockScreenEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|RotatingLockScreenOverlayEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SubscribedContent-310093Enabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SubscribedContent-338387Enabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SubscribedContent-338388Enabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SubscribedContent-338389Enabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SubscribedContent-338393Enabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SubscribedContent-353694Enabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SubscribedContent-353696Enabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager|SubscribedContent-353698Enabled|REG_DWORD||0"
+ ],
+ "db.taskview": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|ShowTaskViewButton|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search|SearchboxTaskbarMode|REG_DWORD||0"
+ ],
+ "db.welcome": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\UserProfileEngagement|ScoobeSystemSettingEnabled|REG_DWORD||0"
+ ],
+ "db.widgets": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh|AllowNewsAndInterests|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|TaskbarDa|REG_DWORD||0"
+ ],
+ "db.wudrivers": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate|ExcludeWUDriversInQualityUpdate|REG_DWORD||0"
+ ],
+ "db.wureboot": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU|NoAutoRebootWithLoggedOnUsers|REG_DWORD||0"
+ ],
+ "disk.indexing": [
+  "svc||||WSearch|4"
+ ],
+ "disk.lastaccess": [
+  "cmd|||||0"
+ ],
+ "disk.maint": [
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\Maintenance|MaintenanceDisabled|REG_DWORD||0"
+ ],
+ "disk.reserved": [
+  "cmd|||||0"
+ ],
+ "disk.wer": [
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting|Disabled|REG_DWORD||0",
+  "svc||||WerSvc|4"
+ ],
+ "fps.bgapps": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications|GlobalUserDisabled|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppPrivacy|LetAppsRunInBackground|REG_DWORD||0"
+ ],
+ "fps.fso": [
+  "reg|HKCU\\System\\GameConfigStore|GameDVR_FSEBehaviorMode|REG_DWORD||0",
+  "reg|HKCU\\System\\GameConfigStore|GameDVR_HonorUserFSEBehaviorMode|REG_DWORD||0",
+  "reg|HKCU\\System\\GameConfigStore|GameDVR_FSEBehavior|REG_DWORD||0",
+  "reg|HKCU\\System\\GameConfigStore|GameDVR_DXGIHonorFSEWindowsCompatible|REG_DWORD||0"
+ ],
+ "fps.gamebar": [
+  "reg|HKCU\\Software\\Microsoft\\GameBar|UseNexusForGameBarEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\GameBar|ShowStartupPanel|REG_DWORD||0"
+ ],
+ "fps.gamedvr": [
+  "reg|HKCU\\System\\GameConfigStore|GameDVR_Enabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR|AppCaptureEnabled|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR|AllowGameDVR|REG_DWORD||0"
+ ],
+ "fps.gamemode": [
+  "reg|HKCU\\Software\\Microsoft\\GameBar|AutoGameModeEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\GameBar|AllowAutoGameMode|REG_DWORD||0"
+ ],
+ "fps.mmcss": [
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games|GPU Priority|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games|Priority|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games|Scheduling Category|REG_SZ||0",
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games|SFIO Priority|REG_SZ||0"
+ ],
+ "fps.netthrottle": [
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile|NetworkThrottlingIndex|REG_DWORD||0"
+ ],
+ "fps.powerthrottle": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling|PowerThrottlingOff|REG_DWORD||0"
+ ],
+ "fps.priosep": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl|Win32PrioritySeparation|REG_DWORD||0"
+ ],
+ "fps.sysresp": [
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile|SystemResponsiveness|REG_DWORD||0"
+ ],
+ "fps.timer": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel|GlobalTimerResolutionRequests|REG_DWORD||0"
+ ],
+ "fps.windowed": [
+  "reg|HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences|DirectXUserGlobalSettings|REG_SZ||0"
+ ],
+ "gpu.amdcrash": [
+  "svc||||AMD Crash Defender Service|4"
+ ],
+ "gpu.hags": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers|HwSchMode|REG_DWORD||0"
+ ],
+ "gpu.mpo": [
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm|OverlayTestMode|REG_DWORD||0"
+ ],
+ "gpu.nvtelemetry": [
+  "svc||||NvTelemetryContainer|4",
+  "ps|||||0"
+ ],
+ "gpu.tdr": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers|TdrDelay|REG_DWORD||0",
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers|TdrDdiDelay|REG_DWORD||0"
+ ],
+ "gpu.transp": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize|EnableTransparency|REG_DWORD||0"
+ ],
+ "lat.dyntick": [
+  "cmd|||||0"
+ ],
+ "lat.hid": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Serialize|StartupDelayInMSec|REG_DWORD||0"
+ ],
+ "lat.kbd": [
+  "reg|HKCU\\Control Panel\\Keyboard|KeyboardDelay|REG_SZ||0",
+  "reg|HKCU\\Control Panel\\Keyboard|KeyboardSpeed|REG_SZ||0"
+ ],
+ "lat.mouseaccel": [
+  "reg|HKCU\\Control Panel\\Mouse|MouseSpeed|REG_SZ||0",
+  "reg|HKCU\\Control Panel\\Mouse|MouseThreshold1|REG_SZ||0",
+  "reg|HKCU\\Control Panel\\Mouse|MouseThreshold2|REG_SZ||0",
+  "cmd|||||0"
+ ],
+ "lat.sticky": [
+  "reg|HKCU\\Control Panel\\Accessibility\\StickyKeys|Flags|REG_SZ||0",
+  "reg|HKCU\\Control Panel\\Accessibility\\ToggleKeys|Flags|REG_SZ||0",
+  "reg|HKCU\\Control Panel\\Accessibility\\Keyboard Response|Flags|REG_SZ||0"
+ ],
+ "mem.memcomp": [
+  "ps|||||0"
+ ],
+ "mem.pagingexec": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management|DisablePagingExecutive|REG_DWORD||0"
+ ],
+ "mem.prefetch": [
+  "svc||||SysMain|4",
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters|EnablePrefetcher|REG_DWORD||0",
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters|EnableSuperfetch|REG_DWORD||0"
+ ],
+ "net.adapterpower": [
+  "ps|||||0"
+ ],
+ "net.delivopt": [
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\\Config|DODownloadMode|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization|DODownloadMode|REG_DWORD||0"
+ ],
+ "net.dns": [
+  "ps|||||0"
+ ],
+ "net.nagle": [
+  "ps|||||0"
+ ],
+ "net.rsc": [
+  "cmd|||||0"
+ ],
+ "pr.activity": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System|EnableActivityFeed|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System|PublishUserActivities|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System|UploadUserActivities|REG_DWORD||0"
+ ],
+ "pr.ads": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo|Enabled|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AdvertisingInfo|DisabledByGroupPolicy|REG_DWORD||0",
+  "reg|HKCU\\Control Panel\\International\\User Profile|HttpAcceptLanguageOptOut|REG_DWORD||0"
+ ],
+ "pr.appcompat": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat|AITEnable|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat|DisableInventory|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat|DisableUAR|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\AppCompat|DisablePCA|REG_DWORD||0"
+ ],
+ "pr.clipsync": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System|AllowCrossDeviceClipboard|REG_DWORD||0"
+ ],
+ "pr.inking": [
+  "reg|HKCU\\Software\\Microsoft\\InputPersonalization|RestrictImplicitInkCollection|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\InputPersonalization|RestrictImplicitTextCollection|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\InputPersonalization\\TrainedDataStore|HarvestContacts|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Personalization\\Settings|AcceptedPrivacyPolicy|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Speech_OneCore\\Settings\\OnlineSpeechPrivacy|HasAccepted|REG_DWORD||0"
+ ],
+ "pr.location": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors|DisableLocation|REG_DWORD||0"
+ ],
+ "pr.tailored": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Privacy|TailoredExperiencesWithDiagnosticDataEnabled|REG_DWORD||0",
+  "reg|HKCU\\Software\\Policies\\Microsoft\\Windows\\CloudContent|DisableTailoredExperiencesWithDiagnosticData|REG_DWORD||0"
+ ],
+ "pr.telemetry": [
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection|AllowTelemetry|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection|AllowTelemetry|REG_DWORD||0",
+  "reg|HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection|DoNotShowFeedbackNotifications|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Siuf\\Rules|NumberOfSIUFInPeriod|REG_DWORD||0"
+ ],
+ "pw.faststart": [
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power|HiberbootEnabled|REG_DWORD||0"
+ ],
+ "pw.hibernate": [
+  "cmd|||||0"
+ ],
+ "pw.plan": [
+  "plan|||||0"
+ ],
+ "svc.spooler": [
+  "svc||||Spooler|4"
+ ],
+ "svc.tasks": [
+  "ps|||||0"
+ ],
+ "svc.telemetry": [
+  "svc||||DiagTrack|4",
+  "svc||||dmwappushservice|4",
+  "svc||||diagnosticshub.standardcollector.service|4"
+ ],
+ "svc.unneeded": [
+  "svc||||Fax|4",
+  "svc||||RetailDemo|4",
+  "svc||||MapsBroker|4",
+  "svc||||TrkWks|4",
+  "svc||||WpcMonSvc|4",
+  "svc||||WMPNetworkSvc|4",
+  "svc||||PhoneSvc|4",
+  "svc||||SEMgrSvc|4",
+  "svc||||wisvc|4",
+  "svc||||lfsvc|4",
+  "svc||||AJRouter|4"
+ ],
+ "svc.xbox": [
+  "svc||||XblAuthManager|4",
+  "svc||||XblGameSave|4",
+  "svc||||XboxGipSvc|4",
+  "svc||||XboxNetApiSvc|4"
+ ],
+ "ui.anim": [
+  "reg|HKCU\\Control Panel\\Desktop\\WindowMetrics|MinAnimate|REG_SZ||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|TaskbarAnimations|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|ListviewAlphaSelect|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|ListviewShadow|REG_DWORD||0",
+  "reg|HKCU\\Software\\Microsoft\\Windows\\DWM|EnableAeroPeek|REG_DWORD||0"
+ ],
+ "ui.killapp": [
+  "reg|HKCU\\Control Panel\\Desktop|HungAppTimeout|REG_SZ||0",
+  "reg|HKCU\\Control Panel\\Desktop|WaitToKillAppTimeout|REG_SZ||0",
+  "reg|HKLM\\SYSTEM\\CurrentControlSet\\Control|WaitToKillServiceTimeout|REG_SZ||0"
+ ],
+ "ui.menudelay": [
+  "reg|HKCU\\Control Panel\\Desktop|MenuShowDelay|REG_SZ||0"
+ ],
+ "ui.shake": [
+  "reg|HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced|DisallowShaking|REG_DWORD||0"
+ ]
+}

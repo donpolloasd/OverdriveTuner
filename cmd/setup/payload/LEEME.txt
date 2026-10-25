@@ -1,0 +1,1 @@
+Aquí se copia OverdriveTuner.exe antes de compilar el instalador (ver build.sh).
