@@ -20,6 +20,9 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.6.9", "Detección de juegos", []Change{
+		{"Reconoce juegos en ventana sin conocer su nombre", "Si abrís un juego que no está en la lista (por ejemplo Minecraft con Java, que es javaw.exe), el overlay lo toma como juego cuando la ventana activa está usando fuerte la placa de video. Ya no hace falta escribir el nombre del .exe."},
+	}},
 	{"2.6.8", "Ventana maximizada", []Change{
 		{"Se abre a pantalla completa", "OverdriveTuner, el Setup y el Parche se abren maximizados, ocupando toda la pantalla (con su barra de título para minimizar o cerrar)."},
 	}},

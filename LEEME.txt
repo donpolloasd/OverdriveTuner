@@ -271,3 +271,6 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 
 == Versión 2.6.8 ==
 - OverdriveTuner, el Setup y el Parche se abren maximizados (toda la pantalla, con barra de título). El desinstalador sigue con ventana chica.
+
+== Versión 2.6.9 ==
+- Detección de juegos: si abrís un juego que no está en la lista (por ejemplo Minecraft con Java, javaw.exe), el overlay lo reconoce cuando la ventana activa usa fuerte la placa de video (3D, más de 15 %). Ya no hace falta escribir el nombre del .exe. Puede tardar unos segundos. Los FPS siguen saliendo de RTSS: RTSS tiene que estar abierto antes del juego.

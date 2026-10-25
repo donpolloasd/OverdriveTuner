@@ -29,7 +29,12 @@ type dRect struct{ L, T, R, B int32 }
 
 // foregroundFullscreenExe devuelve el programa de la ventana activa si ocupa toda la pantalla
 // (pantalla completa o sin bordes) y no es del sistema. Solo consulta ventanas: no toca el juego.
-func foregroundFullscreenExe() (exe string) {
+func foregroundFullscreenExe() string { return foregroundExe(true) }
+
+// foregroundAnyExe devuelve el programa de la ventana activa aunque esté en ventana (no del sistema).
+func foregroundAnyExe() string { return foregroundExe(false) }
+
+func foregroundExe(needFull bool) (exe string) {
 	defer func() {
 		if recover() != nil {
 			exe = ""
@@ -61,7 +66,7 @@ func foregroundFullscreenExe() (exe string) {
 		return ""
 	}
 	m := mi.Monitor
-	if wr.L > m.L || wr.T > m.T || wr.R < m.R || wr.B < m.B {
+	if needFull && (wr.L > m.L || wr.T > m.T || wr.R < m.R || wr.B < m.B) {
 		return ""
 	}
 	var pid uint32

@@ -5,20 +5,20 @@ import "testing"
 func TestPickGame(t *testing.T) {
 	out := "\"System\",\"4\",\"Services\",\"0\",\"8 K\"\r\n\"FC26.exe\",\"100\",\"Console\",\"1\",\"3 GB\"\r\n\"chrome.exe\",\"5\",\"Console\",\"1\",\"1 GB\"\r\n"
 	run := parseTasklist(out)
-	if g := pickGame(run, nil, "", "", ""); g != "FC26.exe" {
+	if g := pickGame(run, nil, "", "", "", ""); g != "FC26.exe" {
 		t.Fatalf("debía reconocer FC26.exe, fue %q", g)
 	}
-	if g := pickGame(run, []string{"chrome.exe"}, "", "", ""); g != "chrome.exe" {
+	if g := pickGame(run, []string{"chrome.exe"}, "", "", "", ""); g != "chrome.exe" {
 		t.Fatalf("lo que el usuario agregó tiene prioridad, fue %q", g)
 	}
 	only := parseTasklist("\"chrome.exe\",\"5\",\"Console\",\"1\",\"1 GB\"\r\n")
-	if g := pickGame(only, nil, "", "", "msedge.exe"); g != "" {
+	if g := pickGame(only, nil, "", "", "", "msedge.exe"); g != "" {
 		t.Fatalf("un navegador a pantalla completa no es un juego, fue %q", g)
 	}
-	if g := pickGame(only, nil, "", "", "miJuego.exe"); g != "miJuego.exe" {
+	if g := pickGame(only, nil, "", "", "", "miJuego.exe"); g != "miJuego.exe" {
 		t.Fatalf("un programa desconocido a pantalla completa sí cuenta, fue %q", g)
 	}
-	if g := pickGame(only, nil, "", "", "mi juego.exe"); g != "" {
+	if g := pickGame(only, nil, "", "", "", "mi juego.exe"); g != "" {
 		t.Fatalf("nombres no válidos se ignoran, fue %q", g)
 	}
 }
@@ -48,10 +48,10 @@ func TestAutoDetectStartsAndStops(t *testing.T) {
 
 func TestPickGameFromRTSS(t *testing.T) {
 	none := parseTasklist("")
-	if g := pickGame(none, nil, "desconocido.exe", "", ""); g != "desconocido.exe" {
+	if g := pickGame(none, nil, "desconocido.exe", "", "", ""); g != "desconocido.exe" {
 		t.Fatalf("el programa que mide RTSS es el juego, fue %q", g)
 	}
-	if g := pickGame(none, nil, "chrome.exe", "", ""); g != "" {
+	if g := pickGame(none, nil, "chrome.exe", "", "", ""); g != "" {
 		t.Fatalf("un navegador no es un juego, fue %q", g)
 	}
 }
@@ -118,5 +118,18 @@ func TestAlertaYCierre(t *testing.T) {
 	got := mergeClose([]string{"chrome.exe", "Steam.exe", "lsass.exe"}, []string{"steam.exe", "cs2.exe"}, "cs2.exe")
 	if len(got) != 2 || got[0] != "chrome.exe" || got[1] != "Steam.exe" {
 		t.Fatalf("mergeClose = %v", got)
+	}
+}
+
+func TestGpuBusy(t *testing.T) {
+	none := map[string]string{}
+	if g := pickGame(none, nil, "", "", "javaw.exe", ""); g != "javaw.exe" {
+		t.Errorf("javaw con la placa de video ocupada debería ser el juego, dio %q", g)
+	}
+	if g := pickGame(none, nil, "", "", "chrome.exe", ""); g != "" {
+		t.Errorf("un navegador no es un juego, dio %q", g)
+	}
+	if gpuBusyScript("javaw.exe") == "" || gpuBusyScript("x'; calc; '.exe") != "" || gpuBusyScript("a b.exe") != "" {
+		t.Error("el comando solo debe armarse con nombres seguros")
 	}
 }

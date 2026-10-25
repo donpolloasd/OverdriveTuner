@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -56,7 +58,7 @@ func parseTasklist(out string) map[string]string {
 
 // pickGame elige el juego entre los programas en ejecución: primero los que el usuario configuró,
 // después los conocidos y, si no hay ninguno, el programa que ocupa toda la pantalla (si lo hay).
-func pickGame(running map[string]string, user []string, rtssGame, pathGame, fullscreen string) string {
+func pickGame(running map[string]string, user []string, rtssGame, pathGame, gpuGame, fullscreen string) string {
 	for _, g := range user {
 		if n, ok := running[strings.ToLower(g)]; ok && ValidExe(n) {
 			return n
@@ -76,7 +78,73 @@ func pickGame(running map[string]string, user []string, rtssGame, pathGame, full
 	if fullscreen != "" && ValidExe(fullscreen) && !IsNotGame(fullscreen) {
 		return fullscreen
 	}
+	if gpuGame != "" && ValidExe(gpuGame) && !IsNotGame(gpuGame) {
+		return gpuGame
+	}
 	return ""
+}
+
+var safeExeName = regexp.MustCompile(`^[A-Za-z0-9._-]{1,64}$`)
+
+// gpuBusyScript arma el comando de PowerShell que suma el uso del motor 3D de la placa de video del
+// programa. Devuelve "" si el nombre tiene caracteres raros (no se arma el comando).
+func gpuBusyScript(exe string) string {
+	name := strings.TrimSuffix(exe, filepath.Ext(exe))
+	if !safeExeName.MatchString(name) {
+		return ""
+	}
+	return "$ids=@(Get-Process -Name '" + name + "' -ErrorAction SilentlyContinue | ForEach-Object Id); if(-not $ids){0;exit}; " +
+		"$t=0; (Get-Counter '\\GPU Engine(*engtype_3D)\\Utilization Percentage' -ErrorAction SilentlyContinue).CounterSamples | " +
+		"ForEach-Object { if($_.InstanceName -match 'pid_(\\d+)_' -and $ids -contains [int]$matches[1]){ $t+=$_.CookedValue } }; [int]$t"
+}
+
+// gpuBusyMin es el uso mínimo (%) del motor 3D para considerar que el programa activo es un juego.
+const gpuBusyMin = 15
+
+var (
+	gpuMu    sync.Mutex
+	gpuExe   string
+	gpuStamp time.Time
+	gpuRes   string
+)
+
+// gpuBusyGame devuelve el programa de la ventana activa si está usando la placa de video (3D) con fuerza:
+// así se reconocen los juegos en ventana (como Minecraft con Java) sin conocer su nombre. Se consulta
+// como mucho una vez cada 8 segundos por programa.
+func gpuBusyGame(sys system.System, running map[string]string) string {
+	gpuMu.Lock()
+	if gpuRes != "" { // ya se reconoció: se mantiene mientras el programa siga abierto (aunque cambies de ventana)
+		if _, ok := running[strings.ToLower(gpuRes)]; ok {
+			r := gpuRes
+			gpuMu.Unlock()
+			return r
+		}
+		gpuRes, gpuExe = "", ""
+	}
+	gpuMu.Unlock()
+	exe := foregroundAnyExe()
+	if exe == "" || !ValidExe(exe) || IsNotGame(exe) {
+		return ""
+	}
+	gpuMu.Lock()
+	defer gpuMu.Unlock()
+	if strings.EqualFold(exe, gpuExe) && time.Since(gpuStamp) < 8*time.Second {
+		return gpuRes
+	}
+	gpuExe, gpuStamp, gpuRes = exe, time.Now(), ""
+	script := gpuBusyScript(exe)
+	if script == "" {
+		return ""
+	}
+	out, _, err := sys.Exec(12*time.Second, "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script)
+	if err != nil {
+		return ""
+	}
+	if v, e := strconv.Atoi(strings.TrimSpace(out)); e == nil && v >= gpuBusyMin {
+		gpuRes = exe
+		presentmon.Diag("detección automática: %s usa la placa de video (%d %%), se toma como juego", exe, v)
+	}
+	return gpuRes
 }
 
 // rtssActiveGame devuelve el programa que RTSS (MSI Afterburner) está midiendo ahora, si hay uno.
@@ -115,7 +183,13 @@ func FindGame(sys system.System, userGames func() ([]string, []string)) string {
 	if userGames != nil {
 		user, extraDirs = userGames()
 	}
-	return pickGame(parseTasklist(out), user, rtssActiveGame(), launcherGame(append(append(epicDirs(), registryDirs()...), extraDirs...)), foregroundFullscreenExe())
+	running := parseTasklist(out)
+	rg, lg, fs := rtssActiveGame(), launcherGame(append(append(epicDirs(), registryDirs()...), extraDirs...)), foregroundFullscreenExe()
+	g := pickGame(running, user, rg, lg, "", fs)
+	if g == "" {
+		g = pickGame(running, user, rg, lg, gpuBusyGame(sys, running), fs)
+	}
+	return g
 }
 
 // gameDirs son carpetas donde los launchers instalan juegos (en minúsculas, con barras invertidas).
