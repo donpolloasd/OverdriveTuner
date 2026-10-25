@@ -1,61 +1,63 @@
 # OverdriveTuner
 
-Optimizador de PC para gaming en Windows 11, hecho en Go sin dependencias externas. Escanea el
-hardware, aplica ajustes reversibles, muestra un overlay de FPS y ayuda a instalar programas.
+**English** · [Español](README.es.md)
 
-> **Estado: beta.** Hecho y probado principalmente en una PC con Ryzen 5 5600G + RX 7600. Algunas
-> funciones no se probaron en otras configuraciones. Todos los ajustes se pueden revertir.
+A gaming PC optimizer for Windows 11, written in Go with no external dependencies. It scans your
+hardware, applies reversible tweaks, shows an FPS overlay and helps you install programs.
 
-## Qué hace
+> **Status: beta.** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600). Some features have not
+> been tested on other setups. Every tweak can be reverted. The interface is in Spanish with an English
+> translation (switch it in Settings); the English text was written by the author and may have mistakes.
 
-- **Ajustes de rendimiento** (más de 80) con revertir uno por uno o todos. Los que pueden afectar a un
-  anti-cheat piden doble confirmación.
-- **Diagnóstico de fluidez**: Hz del monitor (se detecta el máximo), gráfica conectada, memoria, red, discos.
-- **Overlay de FPS** (proceso aparte, no se inyecta en el juego): FPS, 1 % low, CPU, GPU, RAM, temperaturas
-  y aviso de sobrecalentamiento. Detecta solo el juego abierto (Steam, Epic, EA, GOG, Ubisoft, Xbox…).
-- **Modo juego**: lista de programas que se cierran al abrir un juego.
-- **Liberar RAM**, limpieza de temporales, administrador de programas de inicio.
-- **Instalar programas** con winget (launchers, utilidades, monitoreo, periféricos…).
-- **Benchmark** antes/después, historial, exportar/importar la configuración.
-- Interfaz en español e inglés.
+## What it does
 
-## Cómo funciona el overlay (y por qué no toca el juego)
+- **Performance tweaks** (80+), revertible one by one or all at once. Tweaks that may affect an
+  anti-cheat ask for a double confirmation.
+- **Smoothness diagnostics**: monitor Hz (maximum is detected), connected GPU, memory, network, disks.
+- **FPS overlay** (separate process, nothing is injected into the game): FPS, 1 % low, CPU, GPU, RAM,
+  temperatures and an overheating warning. It detects the running game on its own (Steam, Epic, EA,
+  GOG, Ubisoft, Xbox...).
+- **Game mode**: a list of programs that are closed when a game starts.
+- **Free RAM**, temp-file cleanup, startup program manager.
+- **Install programs** with winget (launchers, utilities, monitoring, peripherals...), with a link to
+  the official website when winget cannot install something.
+- **Benchmark** before/after, history, export/import of the configuration.
 
-Los FPS se miden con [PresentMon](https://github.com/GameTechDev/PresentMon), que escucha eventos de
-Windows (ETW) desde fuera del juego. Si un anti-cheat de kernel bloquea esa medición, el overlay puede
-leer los FPS de RTSS (solo lectura de su memoria compartida). Las temperaturas del procesador salen de
-Core Temp o MSI Afterburner si están abiertos. OverdriveTuner **no instala drivers de kernel ni inyecta
-código** en ningún juego.
+## How the overlay works (and why it does not touch the game)
 
-## Compilar
+FPS are read from [RTSS](https://www.guru3d.com/page/rtss/) (read-only access to its shared memory) and
+CPU temperature from [Core Temp](https://www.alcpu.com/CoreTemp/). The installer can install both and
+the overlay opens them in the background. OverdriveTuner **installs no kernel drivers and injects no
+code** into any game; what hooks into the game is RTSS, not OverdriveTuner.
 
-Requisitos: Go 1.24 o superior y bash (en Windows, Git Bash o WSL).
+## Build
+
+Requirements: Go 1.24 or newer and bash (on Windows, Git Bash or WSL).
 
 ```bash
 ./build.sh
 ```
 
-Hace `go vet`, corre las pruebas y genera en `dist/` el instalador, el parche y la versión portable para
-Windows 64 bits. Para probar la interfaz fuera de Windows (datos simulados):
+It runs `go vet`, the tests, and produces the installer, the patch and the portable build for 64-bit
+Windows in `dist/`. To try the interface outside Windows (simulated data):
 
 ```bash
 go run ./cmd/fpsforge --demo
 ```
 
-## Estructura
+## Layout
 
-- `cmd/fpsforge`: el programa (servidor local + ventana Edge/Chrome en modo aplicación).
-- `cmd/setup`: instalador y parche (la misma interfaz, con `-X main.patchMode=1` para el parche).
-- `internal/`: módulos (ajustes, escaneo, overlay, PresentMon, RTSS, apps, memoria, etc.).
+- `cmd/fpsforge`: the program (local server + Edge/Chrome window in app mode).
+- `cmd/setup`: installer and patch (same UI, built with `-X main.patchMode=1` for the patch).
+- `internal/`: modules (tweaks, scan, overlay, RTSS, apps, memory, etc.).
 
-## Avisos
+## Warnings
 
-- Los ejecutables **no están firmados digitalmente**, así que Windows Defender puede marcarlos como
-  sospechosos (por ejemplo con una detección genérica por aprendizaje automático). Podés revisar el código
-  y compilarlos vos mismo.
-- Pide permisos de administrador porque cambia ajustes del sistema.
-- Usalo bajo tu responsabilidad; ver la licencia.
+- The executables are **not code-signed**, so Windows Defender may flag them as suspicious (for example
+  with a generic machine-learning detection). You can read the code and build them yourself.
+- It asks for administrator rights because it changes system settings.
+- Use at your own risk; see the license.
 
-## Licencia
+## License
 
-MIT. Ver [LICENSE](LICENSE) y [THIRD_PARTY.md](THIRD_PARTY.md).
+MIT. See [LICENSE](LICENSE) and [THIRD_PARTY.md](THIRD_PARTY.md).
