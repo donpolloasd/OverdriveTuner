@@ -1,6 +1,8 @@
 package apps
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -54,5 +56,29 @@ func TestExitCodeNormalization(t *testing.T) {
 	// En Windows de 64 bits Go devuelve el código sin signo: 0x8A150061 llega como 2316632161.
 	if norm(2316632161) != exitAlreadyInstalled || norm(2316632107) != exitNoUpgrade || norm(0) != 0 {
 		t.Fatal("los códigos de winget no se normalizan bien")
+	}
+}
+
+func TestCoreTempConfig(t *testing.T) {
+	pf := t.TempDir()
+	t.Setenv("ProgramFiles", pf)
+	t.Setenv("ProgramFiles(x86)", "")
+	if coreTempDir() != "" {
+		t.Fatal("sin Core Temp no debe haber carpeta")
+	}
+	d := filepath.Join(pf, "Core Temp")
+	_ = os.MkdirAll(d, 0o755)
+	_ = os.WriteFile(filepath.Join(d, "Core Temp.exe"), []byte("x"), 0o644)
+	if err := writeCoreTempConfig(); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(filepath.Join(d, "CoreTemp.ini"))
+	if !strings.Contains(string(b), "Minimized=1;") {
+		t.Error("falta la configuración")
+	}
+	_ = os.WriteFile(filepath.Join(d, "CoreTemp.ini"), []byte("propio"), 0o644)
+	_ = writeCoreTempConfig()
+	if b, _ := os.ReadFile(filepath.Join(d, "CoreTemp.ini")); string(b) != "propio" {
+		t.Error("no debe pisar una configuración existente")
 	}
 }

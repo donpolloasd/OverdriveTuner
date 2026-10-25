@@ -274,3 +274,6 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 
 == Versión 2.6.9 ==
 - Detección de juegos: si abrís un juego que no está en la lista (por ejemplo Minecraft con Java, javaw.exe), el overlay lo reconoce cuando la ventana activa usa fuerte la placa de video (3D, más de 15 %). Ya no hace falta escribir el nombre del .exe. Puede tardar unos segundos. Los FPS siguen saliendo de RTSS: RTSS tiene que estar abierto antes del juego.
+
+== Versión 2.7.0 ==
+- Core Temp se instala ya configurado: sin un ícono por núcleo en la bandeja y con la ventana minimizada. Solo si no lo tenías instalado y no existe un CoreTemp.ini: si ya usabas Core Temp, no se toca tu configuración.

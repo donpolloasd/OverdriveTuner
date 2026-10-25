@@ -98,8 +98,23 @@ type Result struct {
 	Notes []string `json:"notes,omitempty"`
 }
 
-// Install instala todos los identificadores del programa.
+// Install instala todos los identificadores del programa. Con Core Temp, si no estaba instalado, deja su
+// configuración lista (sin íconos por núcleo en la bandeja y con la ventana minimizada).
 func Install(sys system.System, it Item) Result {
+	if it.ID != "coretemp" {
+		return install(sys, it)
+	}
+	before := coreTempDir() != ""
+	r := install(sys, it)
+	if r.OK && !before {
+		if err := writeCoreTempConfig(); err != nil {
+			r.Notes = append(r.Notes, "No se pudo dejar lista la configuración de Core Temp: "+err.Error())
+		}
+	}
+	return r
+}
+
+func install(sys system.System, it Item) Result {
 	var res Result
 	res.OK = true
 	for _, id := range it.IDs {

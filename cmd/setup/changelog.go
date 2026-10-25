@@ -20,6 +20,9 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.7.0", "Core Temp ya configurado", []Change{
+		{"Sin íconos por núcleo", "Al instalar Core Temp (desde el Setup o «Instalar programas») se deja una configuración lista: sin un ícono por núcleo en la bandeja y con la ventana minimizada. Si ya tenés Core Temp o su CoreTemp.ini, no se toca nada."},
+	}},
 	{"2.6.9", "Detección de juegos", []Change{
 		{"Reconoce juegos en ventana sin conocer su nombre", "Si abrís un juego que no está en la lista (por ejemplo Minecraft con Java, que es javaw.exe), el overlay lo toma como juego cuando la ventana activa está usando fuerte la placa de video. Ya no hace falta escribir el nombre del .exe."},
 	}},
