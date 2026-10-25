@@ -20,6 +20,9 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.7.1", "Parche sin pantalla de instalación", []Change{
+		{"Se corrigió la ventana del Parche", "Al abrir el Parche ya no aparece un instante la pantalla del instalador (con las opciones de RTSS y Core Temp). Muestra solo la del parche."},
+	}},
 	{"2.7.0", "Core Temp ya configurado", []Change{
 		{"Sin íconos por núcleo", "Al instalar Core Temp (desde el Setup o «Instalar programas») se deja una configuración lista: sin un ícono por núcleo en la bandeja y con la ventana minimizada. Si ya tenés Core Temp o su CoreTemp.ini, no se toca nada."},
 	}},

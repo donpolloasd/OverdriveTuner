@@ -46,7 +46,7 @@ input[type=text]:focus{border-color:var(--accent);outline:0}
   <ul><li>Escanea tu hardware</li><li>Más de 80 ajustes</li><li>Todo es reversible</li><li>Sin publicidad ni cuentas</li></ul>
 </aside>
 <section class="right">
-  <div id="s1">
+  <div id="s1" class="hide">
     <h2 id="t1">Instalar OverdriveTuner</h2>
     <p class="s" id="sub1">Elige dónde instalarlo y qué accesos directos crear.</p>
     <label class="f" for="dir">Carpeta de instalación</label>
@@ -98,7 +98,7 @@ async function init() {
   const i = await api("info");
   if (i.patch) {
     patch = true; document.title = "Parche de OverdriveTuner";
-    if (!i.installed) { $("#e1").textContent = "OverdriveTuner no está instalado en este equipo. Ejecutá primero OverdriveTuner-Setup.exe."; $("#e1").classList.remove("hide"); }
+    if (!i.installed) { $("#ep").textContent = "OverdriveTuner no está instalado en este equipo. Ejecutá primero OverdriveTuner-Setup.exe."; $("#ep").classList.remove("hide"); }
     const ch = i.changes || [];
     $("#subp").textContent = (i.installedVersion ? "Instalada: " + i.installedVersion + ". " : "") + "Se actualiza a la versión " + i.version + (ch.length ? ". Esto es lo que cambia:" : ". No hay cambios nuevos para mostrar.");
     $("#chg").innerHTML = ch.map(r => '<div class="rel"><h3>' + esc(r.title) + '<span>Versión ' + esc(r.version) + '</span></h3><ul>' +
@@ -107,6 +107,7 @@ async function init() {
     if (!i.installed) { $("#goP").disabled = true; }
     show("sp"); return;
   }
+  show("s1");
   $("#dir").value = i.dir;
   if (i.installed) { $("#t1").textContent = "Actualizar OverdriveTuner"; $("#sub1").textContent = "Ya está instalado. Se actualizará en la misma carpeta."; $("#go").textContent = "Actualizar"; $("#dir").value = i.installedDir; }
 }
@@ -137,7 +138,7 @@ $("#back").onclick = () => { $("#e2").classList.add("hide"); $("#back").hidden =
 $("#cancel").onclick = () => api("finish", { launch: false }).catch(() => {}).then(() => window.close());
 $("#fin").onclick = () => api("finish", { launch: $("#ckRun").checked }).catch(() => {}).then(() => window.close());
 setInterval(() => api("heartbeat", {}).catch(() => {}), 3000);
-init().catch(e => { $("#e1").textContent = e.message; $("#e1").classList.remove("hide"); });
+init().catch(e => { show("s1"); $("#e1").textContent = e.message; $("#e1").classList.remove("hide"); });
 </script>
 </body>
 </html>

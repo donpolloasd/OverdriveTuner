@@ -277,3 +277,6 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 
 == Versión 2.7.0 ==
 - Core Temp se instala ya configurado: sin un ícono por núcleo en la bandeja y con la ventana minimizada. Solo si no lo tenías instalado y no existe un CoreTemp.ini: si ya usabas Core Temp, no se toca tu configuración.
+
+== Versión 2.7.1 ==
+- Corregido: al abrir el Parche aparecía un instante la pantalla del instalador (con RTSS y Core Temp). Ahora muestra solo la del parche.
