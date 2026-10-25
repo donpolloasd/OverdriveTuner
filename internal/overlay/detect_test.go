@@ -1,6 +1,9 @@
 package overlay
 
-import "testing"
+import (
+	"sync/atomic"
+	"testing"
+)
 
 func TestPickGame(t *testing.T) {
 	out := "\"System\",\"4\",\"Services\",\"0\",\"8 K\"\r\n\"FC26.exe\",\"100\",\"Console\",\"1\",\"3 GB\"\r\n\"chrome.exe\",\"5\",\"Console\",\"1\",\"1 GB\"\r\n"
