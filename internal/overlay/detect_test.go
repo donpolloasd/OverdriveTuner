@@ -133,3 +133,10 @@ func TestGpuBusy(t *testing.T) {
 		t.Error("el comando solo debe armarse con nombres seguros")
 	}
 }
+
+func TestRtssFeedStopTwice(t *testing.T) {
+	var last atomic.Int64
+	stop := rtssFeed("x.exe", &last, func(float64) {})
+	stop()
+	stop() // antes provocaba «close of closed channel»
+}

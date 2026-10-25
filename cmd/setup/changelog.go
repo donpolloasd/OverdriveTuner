@@ -20,6 +20,9 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.7.2", "FPS estables", []Change{
+		{"Se corrigió el contador de FPS que se rompía", "Al abrir o reabrir un juego, el overlay podía detener su lector de RTSS por un error interno («close of closed channel») y quedarse sin FPS. Ya no pasa."},
+	}},
 	{"2.7.1", "Parche sin pantalla de instalación", []Change{
 		{"Se corrigió la ventana del Parche", "Al abrir el Parche ya no aparece un instante la pantalla del instalador (con las opciones de RTSS y Core Temp). Muestra solo la del parche."},
 	}},

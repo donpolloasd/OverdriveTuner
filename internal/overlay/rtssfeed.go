@@ -2,6 +2,7 @@ package overlay
 
 import (
 	"math"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -79,5 +80,6 @@ func rtssFeed(exe string, lastPM *atomic.Int64, onFrame func(float64)) func() {
 			}
 		}
 	}()
-	return func() { close(stop) }
+	var once sync.Once
+	return func() { once.Do(func() { close(stop) }) } // se puede llamar más de una vez
 }
