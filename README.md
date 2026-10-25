@@ -9,6 +9,8 @@ hardware, applies reversible tweaks, shows an FPS overlay and helps you install 
 > been tested on other setups. Every tweak can be reverted. The interface is in Spanish with an English
 > translation (switch it in Settings); the English text was written by the author and may have mistakes.
 
+> Created with **Claude Sonnet 5.5** (Anthropic), directed and tested by its author.
+
 ## What it does
 
 - **Performance tweaks** (80+), revertible one by one or all at once. Tweaks that may affect an

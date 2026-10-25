@@ -2,11 +2,13 @@
 
 [English](README.md) · **Español**
 
-Optimizador de PC para gaming en Windows 11 (Hecho por Claude Sonset 5.5), hecho en Go sin dependencias externas. Escanea el
+Optimizador de PC para gaming en Windows 11, hecho en Go sin dependencias externas. Escanea el
 hardware, aplica ajustes reversibles, muestra un overlay de FPS y ayuda a instalar programas.
 
 > **Estado: beta.** Hecho y probado principalmente en una PC con Ryzen 5 5600G + RX 7600. Algunas
 > funciones no se probaron en otras configuraciones. Todos los ajustes se pueden revertir.
+
+> Creado con **Claude Sonnet 5.5** (Anthropic), con la dirección y las pruebas de su autor.
 
 ## Qué hace
 
