@@ -5,8 +5,7 @@
 Optimizador de PC para gaming en Windows 11, hecho en Go sin dependencias externas. Escanea el
 hardware, aplica ajustes reversibles, muestra un overlay de FPS y ayuda a instalar programas.
 
-> **Estado: beta.** Hecho y probado principalmente en una PC con Ryzen 5 5600G + RX 7600. Algunas
-> funciones no se probaron en otras configuraciones. Todos los ajustes se pueden revertir.
+> **Versión estable 2.7.2.** Hecho y probado principalmente en una PC con Ryzen 5 5600G + RX 7600 (juegos de Steam, EA, Epic y Minecraft). No se probó en todas las configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir.
 
 > Creado con **Claude Sonnet 5.5** (Anthropic), con la dirección y las pruebas de su autor.
 
@@ -29,6 +28,10 @@ Los FPS se leen de [RTSS](https://www.guru3d.com/page/rtss/) (solo lectura de su
 las temperaturas del procesador de [Core Temp](https://www.alcpu.com/CoreTemp/). El Setup puede
 instalar los dos y el overlay los abre en segundo plano. OverdriveTuner **no instala drivers de kernel
 ni inyecta código** en ningún juego; lo que se mete en el juego es RTSS, no OverdriveTuner.
+
+## Descargar
+
+Bajá `OverdriveTuner-Setup.exe` (instalador) o `OverdriveTuner-Portable.exe` desde [Releases](../../releases) y comprobá el SHA-256 con `SHA256.txt`.
 
 ## Compilar
 
