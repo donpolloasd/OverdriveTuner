@@ -86,7 +86,7 @@ func SingleInstance(name string) bool {
 
 // Cleanup termina los procesos de OverdriveTuner (y sus hijos) distintos del actual.
 // mode: "stale-main" (otras copias de la app), "stale-overlay" (otros overlays) o
-// "window" (solo la ventana de la interfaz), "all" (todo: app, overlay, PresentMon propio y la ventana de la interfaz).
+// "window" (solo la ventana de la interfaz), "all" (todo: app, overlay y la ventana de la interfaz).
 func Cleanup(mode, dataDir string) {
 	exe, err := os.Executable()
 	if err != nil {
@@ -105,7 +105,6 @@ foreach ($p in @(Get-CimInstance Win32_Process -Filter "Name='$exe'")) {
   if ($mode -eq 'all' -or ($mode -eq 'stale-main' -and -not $ov) -or ($mode -eq 'stale-overlay' -and $ov)) { $kill += $p.ProcessId }
 }
 if ($mode -ne 'stale-overlay' -and $dir -ne '') {
-  if ($mode -eq 'all') { foreach ($p in @(Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'PresentMon.exe' -and [string]$_.ExecutablePath -like ($dir + '*') })) { $kill += $p.ProcessId } }
   foreach ($p in @(Get-CimInstance Win32_Process | Where-Object { $_.Name -in 'msedge.exe','chrome.exe' -and [string]$_.CommandLine -like ('*' + $dir + '*ventana*') })) { $kill += $p.ProcessId }
 }
 foreach ($id in ($kill | Select-Object -Unique)) { & taskkill.exe /F /T /PID $id | Out-Null }

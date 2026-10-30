@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"fpsforge/internal/presentmon"
+	"fpsforge/internal/fpslog"
 	"fpsforge/internal/rtss"
 	"fpsforge/internal/system"
 )
@@ -142,7 +142,7 @@ func gpuBusyGame(sys system.System, running map[string]string) string {
 	}
 	if v, e := strconv.Atoi(strings.TrimSpace(out)); e == nil && v >= gpuBusyMin {
 		gpuRes = exe
-		presentmon.Diag("detección automática: %s usa la placa de video (%d %%), se toma como juego", exe, v)
+		fpslog.Diag("detección automática: %s usa la placa de video (%d %%), se toma como juego", exe, v)
 	}
 	return gpuRes
 }
@@ -175,7 +175,7 @@ func FindGame(sys system.System, userGames func() ([]string, []string)) string {
 	if err != nil {
 		if !listFailed {
 			listFailed = true
-			presentmon.Diag("detección automática: no se pudo leer la lista de programas: %v", err)
+			fpslog.Diag("detección automática: no se pudo leer la lista de programas: %v", err)
 		}
 		return ""
 	}

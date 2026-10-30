@@ -109,6 +109,7 @@ func (s *Server) handleConfigImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	st := s.loadSettings()
+	b.Settings.AutoUpdate = nil // las actualizaciones automáticas no se activan desde un archivo importado
 	if msg := b.Settings.apply(&st); msg != "" {
 		fail(w, 400, "Configuración no válida: "+msg)
 		return

@@ -240,7 +240,13 @@ func ScheduleDelete(sys system.System, dir string) error {
 	// Solo se borran los archivos que instala OverdriveTuner y, si la carpeta queda vacía, la carpeta.
 	// Nunca se borra de forma recursiva: si el usuario instaló dentro de una carpeta que ya tenía
 	// otras cosas (Documentos, un disco de juegos), esas cosas no se tocan.
-	inner := "Start-Sleep -Seconds 3; foreach ($n in 'OverdriveTuner.exe','OverdriveTuner.exe.nuevo','overdrivetuner.ico','FPSForge.exe','fpsforge.ico','LEEME.txt') { Remove-Item -LiteralPath (Join-Path " + psq(dir) + " $n) -Force -ErrorAction SilentlyContinue }; " +
+	// También los restos de las actualizaciones automáticas: copias «.old», el candado y la carpeta «update» (con lo
+	// que baja el actualizador, que nunca tiene subcarpetas).
+	upd := "Join-Path " + psq(dir) + " 'update'"
+	inner := "Start-Sleep -Seconds 3; foreach ($n in 'OverdriveTuner.exe','OverdriveTuner.exe.nuevo','overdrivetuner.ico','FPSForge.exe','fpsforge.ico','LEEME.txt','update.lock') { Remove-Item -LiteralPath (Join-Path " + psq(dir) + " $n) -Force -ErrorAction SilentlyContinue }; " +
+		"Get-ChildItem -LiteralPath " + psq(dir) + " -Filter 'OverdriveTuner.exe.old*' -File -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue; " +
+		"foreach ($n in 'OverdriveTuner.exe','OverdriveTuner.part','meta.json') { Remove-Item -LiteralPath (Join-Path (" + upd + ") $n) -Force -ErrorAction SilentlyContinue }; " +
+		"if (-not (Get-ChildItem -LiteralPath (" + upd + ") -Force -ErrorAction SilentlyContinue)) { Remove-Item -LiteralPath (" + upd + ") -Force -ErrorAction SilentlyContinue }; " +
 		"if (-not (Get-ChildItem -LiteralPath " + psq(dir) + " -Force -ErrorAction SilentlyContinue)) { Remove-Item -LiteralPath " + psq(dir) + " -Force -ErrorAction SilentlyContinue }"
 	script := "Start-Process -WindowStyle Hidden -FilePath powershell.exe -ArgumentList @('-NoProfile','-Command'," + psq(inner) + ")"
 	_, err := sys.PowerShell(script, 30*time.Second)

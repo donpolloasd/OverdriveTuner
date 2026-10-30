@@ -20,6 +20,11 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.7.5", "Actualizaciones automáticas", []Change{
+		{"Se actualiza solo desde GitHub", "Si lo dejás activado, cuando sale una versión nueva en GitHub el programa la descarga, comprueba su SHA-256 y la instala sin que hagas nada (también desde el overlay que arranca con Windows). Solo consulta GitHub, sin enviar datos tuyos."},
+		{"Vos decidís en el instalador", "El Setup tiene una casilla para activarlas. Si la desactivás, el programa se queda en esa versión y solo cambia si aplicás el Parche. Se puede cambiar después en Configuración, donde también hay «Buscar actualizaciones»."},
+		{"PresentMon eliminado", "Ya no se incluye PresentMon: los FPS salen de RTSS y la temperatura del procesador de Core Temp. El programa pesa menos."},
+	}},
 	{"2.7.4", "Arranque más rápido", []Change{
 		{"La ventana aparece completa al abrir", "El programa guarda el último escaneo de tu equipo y lo muestra al instante al abrirse; el escaneo se repite en segundo plano. Antes había que esperar varios segundos."},
 		{"Instalación y parche más ágiles", "Los accesos directos se crean en una sola llamada a PowerShell, el parche ya no recrea los que existen y no se espera al cerrar un programa que no estaba abierto."},

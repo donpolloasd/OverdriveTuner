@@ -19,6 +19,9 @@ type settings struct {
 	IntroVol int    `json:"introVol"` // 0-100
 	TourSeen bool   `json:"tourSeen"` // ya vio (o descartó) el recorrido de la primera vez
 	HzManual bool   `json:"hzManual"` // la frecuencia la fijó el usuario; si no, se usa la máxima que detecta Windows
+	// AutoUpdate: instala solo las versiones nuevas que salen en GitHub. Lo elige el usuario en el Setup;
+	// si falta (instalaciones anteriores) queda desactivado: ahí solo se actualiza con el Parche.
+	AutoUpdate bool `json:"autoUpdate"`
 }
 
 // targetHz devuelve los Hz que debería tener el monitor: el valor fijado a mano o, si no hay, el máximo
@@ -47,19 +50,44 @@ func (st *settings) normalize() {
 	}
 }
 
-func (s *Server) loadSettings() settings {
+// readSettings lee settings.json de la carpeta de datos (con los valores por defecto si no existe).
+func readSettings(dir string) settings {
 	st := defaultSettings()
-	if b, err := os.ReadFile(filepath.Join(s.Dir, "settings.json")); err == nil {
+	if b, err := os.ReadFile(filepath.Join(dir, "settings.json")); err == nil {
 		_ = json.Unmarshal(b, &st)
 	}
 	st.normalize()
 	return st
 }
 
-func (s *Server) saveSettings(st settings) error {
+func writeSettings(dir string, st settings) error {
 	st.normalize()
 	b, _ := json.Marshal(st)
-	return os.WriteFile(filepath.Join(s.Dir, "settings.json"), b, 0o644)
+	_ = os.MkdirAll(dir, 0o755)
+	return os.WriteFile(filepath.Join(dir, "settings.json"), b, 0o644)
+}
+
+func (s *Server) loadSettings() settings { return readSettings(s.Dir) }
+
+func (s *Server) saveSettings(st settings) error { return writeSettings(s.Dir, st) }
+
+// DefaultDataDir es la carpeta de datos del programa (la misma que usa la aplicación).
+func DefaultDataDir() string {
+	if d := os.Getenv("ProgramData"); d != "" {
+		return filepath.Join(d, "FPSForge")
+	}
+	h, _ := os.UserHomeDir()
+	return filepath.Join(h, ".fpsforge")
+}
+
+// AutoUpdateOn dice si las actualizaciones automáticas están activadas en la carpeta de datos (lo usa el Setup).
+func AutoUpdateOn(dir string) bool { return readSettings(dir).AutoUpdate }
+
+// SetAutoUpdate guarda la elección de actualizaciones automáticas sin tocar el resto de los ajustes.
+func SetAutoUpdate(dir string, on bool) error {
+	st := readSettings(dir)
+	st.AutoUpdate = on
+	return writeSettings(dir, st)
 }
 
 // settingsPatch solo cambia los campos que vienen en la petición.
@@ -70,6 +98,8 @@ type settingsPatch struct {
 	IntroVol *int    `json:"introVol"`
 	TourSeen *bool   `json:"tourSeen"`
 	HzAuto   *bool   `json:"hzAuto"` // true: vuelve a usar la frecuencia máxima detectada
+	// AutoUpdate activa o desactiva las actualizaciones automáticas.
+	AutoUpdate *bool `json:"autoUpdate"`
 }
 
 func (p settingsPatch) apply(st *settings) string {
@@ -95,6 +125,9 @@ func (p settingsPatch) apply(st *settings) string {
 	if p.IntroOff != nil {
 		st.IntroOff = *p.IntroOff
 	}
+	if p.AutoUpdate != nil {
+		st.AutoUpdate = *p.AutoUpdate
+	}
 	if p.IntroVol != nil {
 		if *p.IntroVol < 0 || *p.IntroVol > 100 {
 			return "volumen no válido"
@@ -112,6 +145,7 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			fail(w, 400, "petición no válida")
 			return
 		}
+		was := st.AutoUpdate
 		if msg := in.apply(&st); msg != "" {
 			fail(w, 400, msg)
 			return
@@ -119,6 +153,9 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 		if err := s.saveSettings(st); err != nil {
 			fail(w, 500, err.Error())
 			return
+		}
+		if st.AutoUpdate && !was && s.Up != nil {
+			go s.Up.Cycle(true) // recién activadas: se busca de inmediato, sin esperar a la próxima vuelta
 		}
 	}
 	writeJSON(w, st)

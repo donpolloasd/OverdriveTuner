@@ -19,6 +19,7 @@ h2{font:600 24px var(--head);margin:0 0 6px}p.s{color:var(--muted);margin:0 0 20
 label.f{display:block;color:var(--muted);margin:14px 0 4px}
 input[type=text]{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 12px;font:inherit}
 input[type=text]:focus{border-color:var(--accent);outline:0}
+p.hint{margin:-4px 0 12px 28px;font-size:12.5px;line-height:1.45}
 .ck{display:flex;gap:10px;align-items:center;margin:12px 0}input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
 .btns{display:flex;gap:10px;margin-top:26px}
 .btn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:9px;padding:10px 20px;font:600 14px var(--body);cursor:pointer}
@@ -57,6 +58,8 @@ input[type=text]:focus{border-color:var(--accent);outline:0}
 <div class="ck"><input type="checkbox" id="ckRtss" checked><label for="ckRtss">Instalar RTSS (necesario para los FPS del overlay)</label></div>
 <div class="ck"><input type="checkbox" id="ckCT" checked><label for="ckCT">Instalar Core Temp (temperatura del procesador; el overlay lo abre solo)</label></div>
 <div class="ck"><input type="checkbox" id="ckAuto" checked><label for="ckAuto">Iniciar el overlay con Windows (se puede desactivar en Configuración)</label></div>
+<div class="ck"><input type="checkbox" id="ckUpd" checked><label for="ckUpd">Instalar las actualizaciones automáticamente apenas salgan (se puede cambiar en Configuración)</label></div>
+<p class="s hint" id="hintUpd">Solo consulta GitHub, sin enviar datos tuyos. Si lo desactivás, el programa se queda en esta versión y solo cambia si aplicás el Parche.</p>
     <div class="err hide" id="e1" role="alert"></div>
     <div class="btns"><button class="btn primary" id="go">Instalar</button><button class="btn" id="cancel">Cancelar</button></div>
   </div>
@@ -108,12 +111,13 @@ async function init() {
     show("sp"); return;
   }
   show("s1");
+  $("#ckUpd").checked = i.autoUpdate !== false;
   $("#dir").value = i.dir;
   if (i.installed) { $("#t1").textContent = "Actualizar OverdriveTuner"; $("#sub1").textContent = "Ya está instalado. Se actualizará en la misma carpeta."; $("#go").textContent = "Actualizar"; $("#dir").value = i.installedDir; }
 }
 $("#go").onclick = async () => {
   $("#e1").classList.add("hide");
-  try { await api("install", { dir: $("#dir").value, desktop: $("#ckDesk").checked, startMenu: $("#ckStart").checked, rtss: $("#ckRtss").checked, coretemp: $("#ckCT").checked, autostart: $("#ckAuto").checked }); }
+  try { await api("install", { dir: $("#dir").value, desktop: $("#ckDesk").checked, startMenu: $("#ckStart").checked, rtss: $("#ckRtss").checked, coretemp: $("#ckCT").checked, autostart: $("#ckAuto").checked, autoUpdate: $("#ckUpd").checked }); }
   catch (e) { $("#e1").textContent = e.message; $("#e1").classList.remove("hide"); return; }
   watch();
 };

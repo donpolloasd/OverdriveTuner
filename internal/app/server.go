@@ -26,7 +26,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "2.7.4"
+const Version = "2.7.5"
 
 // Server es el backend de la interfaz.
 type Server struct {
@@ -41,6 +41,8 @@ type Server struct {
 	DNSLookup tools.LookupFn
 	// SpawnOverlay abre el overlay en otro proceso (se reemplaza en las pruebas).
 	SpawnOverlay func() error
+	// Up busca e instala versiones nuevas desde GitHub.
+	Up *Updates
 
 	autostartDemo bool // en modo demostración no hay Programador de tareas: se recuerda en memoria
 	// ScanFn hace el escaneo del equipo (se reemplaza en las pruebas).
@@ -73,6 +75,10 @@ func New(sys system.System, dataDir string) (*Server, error) {
 	srv := &Server{Sys: sys, Eng: eng, Bench: bs, History: history.Open(dataDir), Dir: dataDir, Token: hex.EncodeToString(b), Closed: make(chan struct{})}
 	srv.SpawnOverlay = srv.spawnOverlay
 	srv.ScanFn = scan.Run
+	srv.Up = NewUpdates(sys, dataDir)
+	if _, demo := sys.(*system.Fake); demo {
+		srv.Up.Upd = demoUpdater{} // en demostración y en las pruebas no se usa la red
+	}
 	return srv, nil
 }
 
@@ -178,6 +184,11 @@ func (s *Server) Start() (string, error) {
 	mux.HandleFunc("/api/apps/winget", s.guard(s.handleAppsWinget))
 	mux.HandleFunc("/api/apps/open", s.guard(s.handleAppsOpen))
 	mux.HandleFunc("/api/apps/drivers", s.guard(s.handleAppsDrivers))
+	mux.HandleFunc("/api/update", s.guard(s.handleUpdate))
+	mux.HandleFunc("/api/update/check", s.guard(s.handleUpdateCheck))
+	mux.HandleFunc("/api/update/install", s.guard(s.handleUpdateInstall))
+	mux.HandleFunc("/api/update/restart", s.guard(s.handleUpdateRestart))
+	mux.HandleFunc("/api/update/page", s.guard(s.handleUpdatePage))
 	mux.HandleFunc("/api/heartbeat", s.guard(s.handleHeartbeat))
 	mux.HandleFunc("/api/quit", s.guard(s.handleQuit))
 	if h, ok := s.loadHardwareCache(); ok {

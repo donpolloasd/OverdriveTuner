@@ -33,6 +33,16 @@ ni inyecta código** en ningún juego; lo que se mete en el juego es RTSS, no Ov
 
 Bajá `OverdriveTuner-Setup.exe` (instalador) o `OverdriveTuner-Portable.exe` desde [Releases](../../releases) y comprobá el SHA-256 con `SHA256.txt`.
 
+## Actualizaciones automáticas
+
+El Setup tiene una opción (activada por defecto) para instalar solas las versiones nuevas. Si está activa, la
+app consulta el último Release estable de GitHub (solo `api.github.com` y las descargas de GitHub; no se envía
+nada tuyo), baja `OverdriveTuner-Portable.exe`, lo verifica con el SHA-256 de `SHA256.txt` del mismo Release y
+reemplaza el programa instalado; la versión nueva se usa al reiniciar. Si la desactivás (en el Setup o en
+Configuración), no se consulta nada y la app se queda en su versión hasta que apliques
+`OverdriveTuner-Patch.exe`. Los Releases deben tener el tag `vX.Y.Z` e incluir `OverdriveTuner-Portable.exe` y
+`SHA256.txt`. Los binarios no tienen firma digital: la confianza es esta cuenta de GitHub más el SHA-256.
+
 ## Compilar
 
 Requisitos: Go 1.24 o superior y bash (en Windows, Git Bash o WSL).
@@ -52,7 +62,7 @@ go run ./cmd/fpsforge --demo
 
 - `cmd/fpsforge`: el programa (servidor local + ventana Edge/Chrome en modo aplicación).
 - `cmd/setup`: instalador y parche (la misma interfaz, con `-X main.patchMode=1` para el parche).
-- `internal/`: módulos (ajustes, escaneo, overlay, PresentMon, RTSS, apps, memoria, etc.).
+- `internal/`: módulos (ajustes, escaneo, overlay, RTSS, apps, memoria, actualizaciones, etc.).
 
 ## Avisos
 

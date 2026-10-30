@@ -1,7 +1,6 @@
 package overlay
 
 import (
-	"sync/atomic"
 	"testing"
 )
 
@@ -138,8 +137,7 @@ func TestGpuBusy(t *testing.T) {
 }
 
 func TestRtssFeedStopTwice(t *testing.T) {
-	var last atomic.Int64
-	stop := rtssFeed("x.exe", &last, func(float64) {})
+	stop := rtssFeed("x.exe", func(float64) {})
 	stop()
 	stop() // antes provocaba «close of closed channel»
 }

@@ -291,3 +291,12 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 == Versión 2.7.4 ==
 - Arranque más rápido: el programa guarda el último escaneo del equipo (hardware_cache.json en C:\ProgramData\FPSForge) y lo muestra al instante al abrir; el escaneo se actualiza en segundo plano.
 - Setup y Parche más ágiles: accesos directos en una sola llamada a PowerShell; el Parche no recrea los accesos que ya existen; no se espera al cerrar un programa que no estaba abierto.
+
+== Versión 2.7.5 ==
+- Actualizaciones automáticas: el Setup tiene una casilla (marcada por defecto) para instalar solas las versiones nuevas que salgan en GitHub. El programa consulta solo GitHub (api.github.com), descarga OverdriveTuner-Portable.exe del último Release, comprueba su SHA-256 contra SHA256.txt del mismo Release y reemplaza el programa instalado; la versión nueva se usa al reiniciarlo (la ventana ofrece «Reiniciar ahora»). Se busca 25 segundos después de abrir y cada 6 horas, y también desde el overlay que arranca con Windows.
+- Si la desactivás (en el Setup o en Configuración → Actualizaciones), no se consulta nada y el programa se queda en esa versión hasta que apliques el Parche. En Configuración hay además «Buscar actualizaciones» (a mano) y «Actualizar ahora».
+- Instalaciones anteriores a 2.7.5 quedan con las automáticas desactivadas hasta que las actives.
+- Solo funciona si en GitHub hay un Release estable (no pre-release) con el tag vX.Y.Z y los archivos OverdriveTuner-Portable.exe y SHA256.txt. Los archivos de las actualizaciones no tienen firma digital: la confianza es la cuenta de GitHub del proyecto más el SHA-256.
+- El desinstalador también borra los restos del actualizador (copias «.old», carpeta «update»).
+- Se quitó PresentMon por completo (ya no se incluye en el programa).
+- Sin probar aún en Windows real: la descarga y el reemplazo se probaron con tests automáticos y un servidor falso.

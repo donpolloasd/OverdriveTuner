@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"fpsforge/internal/bench"
-	"fpsforge/internal/presentmon"
+	"fpsforge/internal/fpslog"
 	"fpsforge/internal/procs"
 	"fpsforge/internal/rtss"
 	"fpsforge/internal/system"
@@ -269,9 +269,9 @@ func (e *Engine) checkGame(cfg Config) {
 	e.mu.Unlock()
 	if cfg.AutoGame && e.d.FindGame != nil && (running != was || (running && !strings.EqualFold(game, exe))) {
 		if running {
-			presentmon.Diag("detección automática: juego %q", exe)
+			fpslog.Diag("detección automática: juego %q", exe)
 		} else {
-			presentmon.Diag("detección automática: ya no hay juego abierto")
+			fpslog.Diag("detección automática: ya no hay juego abierto")
 		}
 	}
 	switch {
@@ -308,8 +308,8 @@ func (e *Engine) gameStarted(cfg Config, exe string) {
 	}
 }
 
-// startPM lanza la medición de cuadros. Si PresentMon se cierra solo mientras el juego sigue abierto
-// (por ejemplo, porque otra sesión de seguimiento le quitó el control), se vuelve a lanzar.
+// startPM lanza la medición de cuadros. Si la medición termina sola mientras el juego sigue abierto,
+// se vuelve a lanzar.
 func (e *Engine) startPM(exe string, gen, attempt int) (func(), error) {
 	if e.d.StartPM == nil {
 		return nil, nil
@@ -347,18 +347,8 @@ func (e *Engine) watchFrames() {
 		return
 	}
 	if e.lastFrame.IsZero() || e.d.Now().Sub(e.lastFrame) > 5*time.Second {
-		if e.cfg.FpsSource == SrcRTSS {
-			e.msg = "RTSS no está midiendo " + e.pmGame + ". RTSS tiene que estar abierto antes de abrir el juego: reiniciá el juego o instalá RTSS desde «Instalar programas»."
-			return
-		}
-		e.msg = "PresentMon no entrega cuadros de " + e.pmGame + "."
-		if le := presentmon.LastError(); le != "" {
-			e.msg += " Windows respondió: " + le + "."
-			if strings.Contains(strings.ToLower(le), "access denied") {
-				e.msg += " Si pasa solo con este juego, su anti-cheat puede estar bloqueando la medición."
-			}
-		}
-	} else if strings.HasPrefix(e.msg, "PresentMon no entrega") {
+		e.msg = "RTSS no está midiendo " + e.pmGame + ". RTSS tiene que estar abierto antes de abrir el juego: reiniciá el juego o instalá RTSS desde «Instalar programas»."
+	} else if strings.HasPrefix(e.msg, "RTSS no está midiendo") {
 		e.msg = ""
 	}
 }

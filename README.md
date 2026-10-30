@@ -34,6 +34,16 @@ code** into any game; what hooks into the game is RTSS, not OverdriveTuner.
 
 Get `OverdriveTuner-Setup.exe` (installer) or `OverdriveTuner-Portable.exe` from the [Releases](../../releases) page and check the SHA-256 in `SHA256.txt`.
 
+## Automatic updates
+
+The installer has an option (on by default) to install new versions automatically. When on, the app checks
+the latest stable GitHub Release (only `api.github.com` / GitHub downloads, nothing about you is sent),
+downloads `OverdriveTuner-Portable.exe`, verifies it against the SHA-256 in the Release's `SHA256.txt` and
+replaces the installed program; the new version is used after a restart. When off (in the installer or in
+Settings), nothing is checked and the app stays on its version until you apply `OverdriveTuner-Patch.exe`.
+Releases must be tagged `vX.Y.Z` and include `OverdriveTuner-Portable.exe` and `SHA256.txt`. The binaries are
+not code-signed: trust comes from this GitHub account plus the SHA-256.
+
 ## Build
 
 Requirements: Go 1.24 or newer and bash (on Windows, Git Bash or WSL).
@@ -53,7 +63,7 @@ go run ./cmd/fpsforge --demo
 
 - `cmd/fpsforge`: the program (local server + Edge/Chrome window in app mode).
 - `cmd/setup`: installer and patch (same UI, built with `-X main.patchMode=1` for the patch).
-- `internal/`: modules (tweaks, scan, overlay, RTSS, apps, memory, etc.).
+- `internal/`: modules (tweaks, scan, overlay, RTSS, apps, memory, update, etc.).
 
 ## Warnings
 

@@ -54,9 +54,7 @@ type Config struct {
 
 // Fuentes de FPS.
 const (
-	SrcAuto       = "auto"
-	SrcPresentMon = "presentmon"
-	SrcRTSS       = "rtss"
+	SrcRTSS = "rtss"
 )
 
 // Default devuelve la configuración inicial.

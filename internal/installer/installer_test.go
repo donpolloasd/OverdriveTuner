@@ -128,4 +128,10 @@ func TestScheduleDeleteNoEsRecursivo(t *testing.T) {
 	if strings.Contains(f.PSLog[0], "-Recurse") {
 		t.Fatalf("el desinstalador no debe borrar carpetas de forma recursiva: %s", f.PSLog[0])
 	}
+	// también limpia lo que deja el actualizador automático, sin recursión
+	for _, want := range []string{"update.lock", "OverdriveTuner.exe.old*", "meta.json", "OverdriveTuner.part"} {
+		if !strings.Contains(f.PSLog[0], want) {
+			t.Errorf("el desinstalador debía limpiar %q: %s", want, f.PSLog[0])
+		}
+	}
 }

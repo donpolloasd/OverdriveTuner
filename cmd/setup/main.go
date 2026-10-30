@@ -126,7 +126,9 @@ func (s *setup) start() (string, error) {
 		iv := installer.InstalledVersion(s.sys)
 		writeJSON(w, map[string]any{"dir": installer.DefaultDir(), "installed": inst != "", "installedDir": inst, "version": app.Version,
 			"patch": patchMode == "1", "installedVersion": iv, "changes": releasesSince(iv),
-			"autostart": iv == "" || newer("2.6.0", iv) || autostart.Enabled(s.sys)})
+			"autostart": iv == "" || newer("2.6.0", iv) || autostart.Enabled(s.sys),
+			// instalación nueva: activado de entrada; si ya había una, se respeta lo que el usuario tenía
+			"autoUpdate": iv == "" || app.AutoUpdateOn(app.DefaultDataDir())})
 	}))
 	mux.HandleFunc("/api/patch", s.guard(s.handlePatch))
 	mux.HandleFunc("/api/install", s.guard(s.handleInstall))
@@ -197,6 +199,8 @@ func (s *setup) handleInstall(w http.ResponseWriter, r *http.Request) {
 		Rtss      bool   `json:"rtss"`
 		CoreTemp  bool   `json:"coretemp"`
 		Autostart bool   `json:"autostart"`
+		// AutoUpdate: instalar solas las versiones nuevas que salgan en GitHub.
+		AutoUpdate bool `json:"autoUpdate"`
 	}
 	if r.Method != http.MethodPost || json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<16)).Decode(&req) != nil {
 		fail(w, 400, "petición no válida")
@@ -228,8 +232,14 @@ func (s *setup) handleInstall(w http.ResponseWriter, r *http.Request) {
 			s.mu.Unlock()
 		})
 		note := ""
+		if err == nil {
+			if serr := app.SetAutoUpdate(app.DefaultDataDir(), req.AutoUpdate); serr != nil {
+				log.Println("actualizaciones automáticas:", serr)
+				note = "No se pudo guardar la elección de actualizaciones automáticas; podés cambiarla en Configuración."
+			}
+		}
 		if err == nil && req.Autostart {
-			note = s.setAutostart(true, filepath.Join(req.Dir, installer.ExeName))
+			note = strings.TrimSpace(note + " " + s.setAutostart(true, filepath.Join(req.Dir, installer.ExeName)))
 		}
 		if err == nil && req.Rtss {
 			note = strings.TrimSpace(note + " " + s.installRTSS())

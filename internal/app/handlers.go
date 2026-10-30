@@ -234,7 +234,8 @@ func (s *Server) handleHeartbeat(w http.ResponseWriter, r *http.Request) {
 	s.lastBeat = time.Now()
 	s.beaten = true
 	s.mu.Unlock()
-	writeJSON(w, map[string]any{"ok": true})
+	// «update» avisa a la ventana que ya hay una versión nueva instalada en el disco (para ofrecer reiniciar).
+	writeJSON(w, map[string]any{"ok": true, "update": s.Up.Applied()})
 }
 
 func (s *Server) handleQuit(w http.ResponseWriter, r *http.Request) {

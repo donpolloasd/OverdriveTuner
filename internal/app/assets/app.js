@@ -639,7 +639,22 @@ async function renderOverlay(m) {
 }
 
 /* ---------- arranque ---------- */
-setInterval(() => { api("heartbeat", {}).catch(() => { }); }, 3000);
-api("heartbeat", {}).catch(() => { });
+/* Si una actualización automática dejó instalada una versión nueva, se ofrece reiniciar (una sola vez por versión). */
+let updOffered = "";
+function offerRestart(v) {
+  if (!v || v === updOffered) return;
+  updOffered = v;
+  const bar = document.createElement("div");
+  bar.className = "toast"; bar.setAttribute("role", "status"); bar.style.cssText = "display:flex;gap:12px;align-items:center;bottom:24px";
+  const t = document.createElement("span"); t.textContent = "La versión " + v + " ya está instalada.";
+  const go = document.createElement("button"); go.className = "btn"; go.textContent = "Reiniciar ahora"; go.style.cssText = "height:30px;color:#000;border-color:#000";
+  const no = document.createElement("button"); no.className = "btn"; no.textContent = "Después"; no.style.cssText = "height:30px;color:#000;border-color:#0004";
+  go.onclick = async () => { go.disabled = true; try { await api("update/restart", {}); t.textContent = "Reiniciando…"; } catch (e) { toast(e.message, 5000); go.disabled = false; } };
+  no.onclick = () => bar.remove();
+  bar.append(t, go, no); document.body.appendChild(bar);
+}
+const beat = () => api("heartbeat", {}).then(r => { if (r && r.update) offerRestart(r.update); }).catch(() => { });
+setInterval(beat, 3000);
+beat();
 window.addEventListener("beforeunload", () => { /* el servidor se cierra solo al dejar de recibir latidos */ });
 load().catch(e => { $("#main").innerHTML = `<div class="banner bad">No se pudo cargar: ${esc(e.message)}</div>`; });

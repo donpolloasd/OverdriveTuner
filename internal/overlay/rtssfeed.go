@@ -3,22 +3,20 @@ package overlay
 import (
 	"math"
 	"sync"
-	"sync/atomic"
 	"time"
 
-	"fpsforge/internal/presentmon"
+	"fpsforge/internal/fpslog"
 	"fpsforge/internal/rtss"
 )
 
-// rtssFeed lee los FPS que publica RTSS (MSI Afterburner) y los entrega como cuadros, pero solo
-// mientras PresentMon no esté entregando datos (lastPM = último cuadro de PresentMon, en UnixNano).
+// rtssFeed lee los FPS que publica RTSS y los entrega como cuadros.
 // Devuelve la función que lo detiene.
-func rtssFeed(exe string, lastPM *atomic.Int64, onFrame func(float64)) func() {
+func rtssFeed(exe string, onFrame func(float64)) func() {
 	stop := make(chan struct{})
 	go func() {
 		defer func() { // un fallo acá nunca debe cerrar el overlay
 			if r := recover(); r != nil {
-				presentmon.Diag("RTSS: el lector se detuvo por un error interno: %v", r)
+				fpslog.Diag("RTSS: el lector se detuvo por un error interno: %v", r)
 			}
 		}()
 		const every = 50 * time.Millisecond
@@ -29,7 +27,7 @@ func rtssFeed(exe string, lastPM *atomic.Int64, onFrame func(float64)) func() {
 		note := func(st, msg string) {
 			if st != state {
 				state = st
-				presentmon.Diag("RTSS: %s", msg)
+				fpslog.Diag("RTSS: %s", msg)
 			}
 		}
 		for {
@@ -37,13 +35,6 @@ func rtssFeed(exe string, lastPM *atomic.Int64, onFrame func(float64)) func() {
 			case <-stop:
 				return
 			case <-tk.C:
-			}
-			if time.Since(time.Unix(0, lastPM.Load())) < 3*time.Second {
-				if using {
-					using = false
-					presentmon.Diag("RTSS: PresentMon volvió a entregar cuadros, se deja de usar RTSS")
-				}
-				continue
 			}
 			rtss.Fault = ""
 			es := rtss.Read()
@@ -69,7 +60,7 @@ func rtssFeed(exe string, lastPM *atomic.Int64, onFrame func(float64)) func() {
 			}
 			if !using {
 				using = true
-				presentmon.Diag("RTSS: se usan los FPS de RTSS/MSI Afterburner (%.0f FPS) porque PresentMon no entrega cuadros", fps)
+				fpslog.Diag("RTSS: llegan FPS de RTSS (%.0f FPS)", fps)
 			}
 			n := int(math.Round(fps * every.Seconds()))
 			if n < 1 {

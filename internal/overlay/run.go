@@ -2,17 +2,15 @@ package overlay
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
-	"fpsforge/internal/presentmon"
+	"fpsforge/internal/fpslog"
 	"fpsforge/internal/rtss"
 	"fpsforge/internal/system"
 	"fpsforge/internal/telemetry"
@@ -60,11 +58,11 @@ func Main(dataDir string, demo bool) error {
 	} else {
 		sys = system.New()
 	}
-	if !demo && LoadConfig(dataDir).FpsSource != SrcPresentMon {
+	if !demo {
 		// Si RTSS está instalado se deja abierto en segundo plano, para que enganche cada juego desde el inicio.
 		go func() {
 			if rtss.EnsureRunning() {
-				presentmon.Diag("RTSS estaba cerrado: se abrió en segundo plano")
+				fpslog.Diag("RTSS estaba cerrado: se abrió en segundo plano")
 			}
 		}()
 	}
@@ -72,7 +70,7 @@ func Main(dataDir string, demo bool) error {
 		// Core Temp (si está instalado) se deja abierto para poder leer la temperatura del procesador.
 		go func() {
 			if rtss.EnsureCoreTemp() {
-				presentmon.Diag("Core Temp estaba cerrado: se abrió en segundo plano")
+				fpslog.Diag("Core Temp estaba cerrado: se abrió en segundo plano")
 			}
 		}()
 	}
@@ -86,7 +84,7 @@ func Main(dataDir string, demo bool) error {
 			f()
 		}
 	}
-	presentmon.DiagPath = filepath.Join(dataDir, "presentmon_diagnostico.txt")
+	fpslog.DiagPath = filepath.Join(dataDir, "presentmon_diagnostico.txt")
 	d := Deps{Dir: dataDir, Sys: sys, PID: os.Getpid(), Quit: quit}
 	if demo {
 		d.GameRunning = func(string) bool { return true }
@@ -106,39 +104,16 @@ func Main(dataDir string, demo bool) error {
 		}
 		var rtssMu sync.Mutex
 		var curRTSS func()
-		d.StartPM = func(process string, on func(float64), onExit func(error)) (func(), error) {
-			presentmon.DiagPath = filepath.Join(dataDir, "presentmon_diagnostico.txt")
-			src := LoadConfig(dataDir).FpsSource
-			presentmon.Diag("overlay ejecutándose como administrador: %v; fuente de FPS: %s", sys.IsAdmin(), src)
-			var lastPM atomic.Int64
-			lastPM.Store(time.Now().UnixNano())
-			wrapped := func(ms float64) { lastPM.Store(time.Now().UnixNano()); on(ms) }
-			stopRTSS := func() {}
+		d.StartPM = func(process string, on func(float64), _ func(error)) (func(), error) {
+			fpslog.DiagPath = filepath.Join(dataDir, "presentmon_diagnostico.txt")
+			fpslog.Diag("overlay ejecutándose como administrador: %v; los FPS salen de RTSS", sys.IsAdmin())
 			rtssMu.Lock()
-			if curRTSS != nil { // un reinicio de PresentMon no debe dejar otro lector de RTSS activo
+			defer rtssMu.Unlock()
+			if curRTSS != nil { // un reinicio de la medición no debe dejar otro lector de RTSS activo
 				curRTSS()
-				curRTSS = nil
 			}
-			if src != SrcPresentMon { // «solo PresentMon» nunca lee RTSS
-				if src == SrcRTSS {
-					lastPM.Store(0) // sin PresentMon: RTSS desde el primer segundo
-				}
-				stopRTSS = rtssFeed(process, &lastPM, on)
-				curRTSS = stopRTSS
-			}
-			rtssMu.Unlock()
-			if src == SrcRTSS {
-				return stopRTSS, nil
-			}
-			exe, err := presentmon.Extract(filepath.Join(dataDir, "bin"))
-			if err != nil {
-				return stopRTSS, err
-			}
-			r, err := presentmon.Start(exe, process, wrapped, onExit)
-			if err != nil {
-				return stopRTSS, fmt.Errorf("PresentMon no arrancó (hace falta ejecutar como administrador): %w", err)
-			}
-			return func() { r.Stop(); stopRTSS() }, nil
+			curRTSS = rtssFeed(process, on)
+			return curRTSS, nil
 		}
 	}
 	e := NewEngine(d)
@@ -149,7 +124,7 @@ func Main(dataDir string, demo bool) error {
 		defer close(done)
 		defer func() {
 			if r := recover(); r != nil {
-				presentmon.Diag("el motor del overlay se detuvo por un error interno: %v\n%s", r, debug.Stack())
+				fpslog.Diag("el motor del overlay se detuvo por un error interno: %v\n%s", r, debug.Stack())
 			}
 		}()
 		e.Run(ctx, telemetry.Stream(stopSamples))

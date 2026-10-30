@@ -90,6 +90,7 @@ function tourSteps(id) {
       { sel: "#stHk", t: "Atajos globales", x: "Hacé clic en un recuadro y apretá la combinación nueva. Funcionan aunque estés dentro del juego. Si otro programa ya usa una, te avisamos." },
       { sel: "#stCfg", t: "Exportar e importar", x: "Guarda tu configuración en un archivo y la restaura en otra PC. Antes de importar ves exactamente qué se va a hacer." },
       { sel: "#stBoot", t: "Inicio con Windows", x: "El overlay arranca solo al encender la PC y aparece cuando abrís un juego. Acá ves si quedó activo y podés probarlo sin reiniciar." },
+      { sel: "#stUpd", t: "Actualizaciones", x: "Con la casilla activada, las versiones nuevas de GitHub se descargan, se verifican y se instalan solas. Desactivada, el programa se queda como está hasta que apliques el Parche. «Buscar actualizaciones» consulta a mano." },
       { sel: "#stWin", t: "La X y la bandeja", x: "Al cerrar la ventana el programa sigue en la bandeja. Desde acá (o con clic derecho en el ícono) lo cerrás por completo." },
       { sel: "#stIntro", t: "Animación de apertura", x: "Activala o desactivala, ajustá el volumen y probala. Se puede saltar con cualquier tecla." },
     ],

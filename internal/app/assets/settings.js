@@ -56,6 +56,8 @@ async function renderSettings(m) {
   const lang = UILANG;
   let au = { enabled: false };
   try { au = await api("autostart"); } catch (e) { /* sin dato */ }
+  let up = { auto: !!st.autoUpdate, installed: false, current: "", latest: "", available: false, busy: "", applied: "", error: "", checkedAt: 0, notes: "" };
+  try { up = await api("update"); } catch (e) { /* sin dato */ }
   const errs = (d.state && d.state.hotkeyErrors) || [];
   m.innerHTML = `<div class="top"><div><h2>Configuración</h2><p>Idioma, atajos de teclado, copia de tu configuración y animación de apertura.</p></div></div>${banners()}
   <h3 id="stLangH">Idioma</h3>
@@ -85,6 +87,13 @@ async function renderSettings(m) {
 
   <h3 id="stBootH" style="margin-top:22px">Inicio con Windows</h3>
   <div class="row" id="stBoot"><div><h4>Iniciar el overlay con Windows</h4><p>Al encender la PC el overlay arranca solo, en segundo plano, y aparece cuando abrís un juego. Mientras no hay juego no se ve ninguna ventana: solo un ícono en la bandeja junto al reloj. Usa una tarea programada con permisos de administrador, así que Windows no pide confirmación cada vez. Si lo apagás, el overlay solo se abre cuando abrís OverdriveTuner.</p><p class="note" id="bootSt"></p></div><span class="bar"><button class="btn" id="bootRun">Probar ahora</button><button class="sw" id="bootOn" role="switch" aria-checked="${au.enabled ? "true" : "false"}" aria-label="Iniciar el overlay con Windows"></button></span></div>
+
+  <h3 id="stUpdH" style="margin-top:22px">Actualizaciones</h3>
+  <div class="list" id="stUpd">
+   <div class="row"><div><h4>Instalar las actualizaciones automáticamente</h4><p>Cuando sale una versión nueva en GitHub, OverdriveTuner la descarga, comprueba su SHA-256 y la instala sola. Solo consulta GitHub, sin enviar datos tuyos. Si lo desactivás, el programa se queda en esta versión hasta que apliques el Parche.</p></div><button class="sw" id="updOn" role="switch" aria-checked="${up.auto ? "true" : "false"}" aria-label="Instalar las actualizaciones automáticamente"></button></div>
+   <div class="row"><div><h4 id="updCur"></h4><p class="note" id="updSt"></p></div><span class="bar"><button class="btn primary" id="updGo" hidden></button><button class="btn" id="updCheck">Buscar actualizaciones</button></span></div>
+   <div id="updNotes"></div>
+  </div>
 
   <h3 id="stWinH" style="margin-top:22px">Ventana</h3>
   <div class="row" id="stWin"><div><h4>Al tocar la X</h4><p>La ventana se cierra pero OverdriveTuner sigue activo en la bandeja, junto al reloj (el overlay y las grabaciones no se cortan). Hacé clic en su ícono para volver a abrirlo. Para cerrarlo del todo usá este botón o el clic derecho del ícono.</p></div><button class="btn danger" id="quitAll">Salir por completo</button></div>
@@ -120,6 +129,64 @@ async function renderSettings(m) {
     try { await api("autostart", { run: true }); await new Promise(r => setTimeout(r, 2500)); const r = await api("autostart"); $("#bootSt").textContent = bootText(r); toast(r.overlayRunning ? "El overlay está activo." : "Se ejecutó la tarea, pero el overlay no aparece activo."); }
     catch (err) { toast(err.message, 6000); }
     b.disabled = false;
+  };
+
+  // actualizaciones
+  let updAct = "", updTimer = null;
+  const updFmt = t => new Date(t * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const updPaint = u => {
+    if (view !== "settings" || !$("#updSt")) return;
+    up = u;
+    $("#updOn").setAttribute("aria-checked", u.auto ? "true" : "false");
+    $("#updCur").textContent = "Versión instalada: " + u.current;
+    let txt, act = "", label = "";
+    if (u.busy === "checking") txt = "Buscando actualizaciones…";
+    else if (u.busy === "installing") txt = "Descargando e instalando la versión " + u.latest + "…";
+    else if (u.applied) { txt = "La versión " + u.applied + " ya está instalada. Reiniciá OverdriveTuner para empezar a usarla."; act = "restart"; label = "Reiniciar ahora"; }
+    else if (u.error) txt = u.error;
+    else if (u.available && u.installed) { txt = "Hay una versión nueva: " + u.latest + "."; act = "install"; label = "Actualizar ahora"; }
+    else if (u.available) { txt = "Hay una versión nueva: " + u.latest + ". Esta copia no está instalada con el instalador: bajá la nueva desde GitHub."; act = "page"; label = "Abrir GitHub"; }
+    else if (u.checkedAt) txt = "Estás al día: no hay versiones nuevas. Última búsqueda: " + updFmt(u.checkedAt);
+    else txt = u.auto ? "Se busca sola cada pocas horas." : "Todavía no se buscó. Podés buscar a mano cuando quieras.";
+    $("#updSt").textContent = txt;
+    $("#updSt").style.color = u.error && !u.busy && !u.applied ? "var(--bad)" : "";
+    updAct = act;
+    const g = $("#updGo"); g.hidden = !act; g.textContent = label; g.disabled = !!u.busy;
+    $("#updCheck").disabled = !!u.busy;
+    const n = (u.available && u.notes) ? u.notes.trim() : "";
+    $("#updNotes").innerHTML = n ? `<div class="row" style="display:block"><h4>Qué trae la versión ${esc(u.latest)}</h4><pre class="note" style="white-space:pre-wrap;margin:6px 0 0;font:inherit;max-height:180px;overflow:auto">${esc(n.slice(0, 1500))}</pre></div>` : "";
+    if (u.busy) updWatch();
+  };
+  const updWatch = () => {
+    clearTimeout(updTimer);
+    updTimer = setTimeout(async () => {
+      if (view !== "settings") return;
+      try { updPaint(await api("update")); } catch (e) { /* se reintenta */ }
+    }, 900);
+  };
+  updPaint(up);
+  $("#updOn").onclick = async e => {
+    const b = e.currentTarget, want = b.getAttribute("aria-checked") !== "true";
+    b.disabled = true;
+    try {
+      await saveSettings({ autoUpdate: want });
+      toast(want ? "Actualizaciones automáticas activadas." : "Actualizaciones automáticas desactivadas: el programa se queda en esta versión hasta que apliques el Parche.", want ? 3500 : 6000);
+      updPaint(Object.assign({}, up, await api("update"), { auto: want }));
+      if (want) { up.busy = up.busy || "checking"; updPaint(up); }
+    } catch (err) { toast(err.message, 6000); }
+    b.disabled = false;
+  };
+  $("#updCheck").onclick = async () => {
+    updPaint(Object.assign({}, up, { busy: "checking", error: "" }));
+    try { updPaint(await api("update/check", {})); }
+    catch (err) { updPaint(Object.assign({}, up, { busy: "", error: err.message })); }
+  };
+  $("#updGo").onclick = async () => {
+    try {
+      if (updAct === "install") { updPaint(Object.assign({}, up, await api("update/install", {}))); }
+      else if (updAct === "restart") { if (!await ask("OverdriveTuner se va a cerrar y a volver a abrir con la versión nueva. También se reinicia el overlay. ¿Seguimos?", { title: "Reiniciar", ok: "Reiniciar ahora" })) return; await api("update/restart", {}); toast("Reiniciando…", 8000); }
+      else if (updAct === "page") await api("update/page", {});
+    } catch (err) { toast(err.message, 6000); }
   };
 
   // atajos

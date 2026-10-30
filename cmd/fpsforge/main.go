@@ -75,6 +75,13 @@ func main() {
 			})
 			winhost.TrayNotify("Overlay activo", "Aparece solo cuando abrís un juego. Clic en el ícono para abrir OverdriveTuner.")
 			defer winhost.TrayRemove()
+			// Si el usuario dejó activadas las actualizaciones automáticas, se buscan también desde acá: así llegan
+			// aunque nunca abra la ventana. Si las desactivó, no se consulta nada.
+			up := app.NewUpdates(system.New(), dir)
+			up.OnApplied = func(v string) {
+				winhost.TrayNotify("OverdriveTuner se actualizó", "La versión "+v+" ya está instalada. Se usa la próxima vez que abras el programa o reinicies la PC.")
+			}
+			up.Watch(nil, 90*time.Second, 6*time.Hour)
 		}
 		if err := overlay.Main(dir, *demo); err != nil {
 			log.Println("overlay:", err)
@@ -110,6 +117,10 @@ func main() {
 	log.Println("servidor en", url)
 	if !*demo {
 		go srv.AutoOpenOverlay()
+		srv.Up.OnApplied = func(v string) {
+			winhost.TrayNotify("OverdriveTuner se actualizó", "La versión "+v+" ya está instalada. Reiniciá el programa para usarla (Configuración → Actualizaciones).")
+		}
+		srv.Up.Watch(srv.Closed, 25*time.Second, 6*time.Hour) // solo actúa si las actualizaciones automáticas están activadas
 	}
 	if *noWindow {
 		fmt.Println(url)
@@ -161,7 +172,7 @@ func main() {
 	<-srv.Closed
 	time.Sleep(300 * time.Millisecond)
 	winhost.TrayRemove()
-	// Cierre total: overlay, PresentMon y la ventana, para poder volver a abrir sin conflictos.
+	// Cierre total: overlay y la ventana, para poder volver a abrir sin conflictos.
 	winhost.Cleanup("all", dir)
 	os.Exit(0)
 }
