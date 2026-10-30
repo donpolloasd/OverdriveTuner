@@ -50,6 +50,7 @@ type Config struct {
 	AlertGPU  int      `json:"alertGpu"`   // °C a partir de los que se avisa de la gráfica (60 a 110)
 	CloseList []string `json:"closeList"`  // Modo juego: programas que se cierran siempre al abrir un juego
 	Games     []Game   `json:"games"`
+	Style              // aspecto del panel: colores, forma y letra (se guarda en el mismo nivel del JSON)
 }
 
 // Fuentes de FPS.
@@ -62,7 +63,7 @@ func Default() Config {
 	return Config{Show: true, Corner: "tl", Layout: "card", Scale: 1, Opacity: 0.82,
 		ShowFPS: true, ShowLow: true, ShowGrph: true, ShowCPU: true, ShowGPU: true, ShowRAM: true,
 		ShowTemp: true, Hotkey: true, HkShow: "Ctrl+Alt+O", HkRecord: "Ctrl+Alt+R", HkCorner: "Ctrl+Alt+P", UpdateMs: 100, FpsSource: SrcRTSS, GameExe: "cs2.exe", AutoGame: true, OnlyGame: true, AutoOpen: true, AlertOn: true, AlertCPU: 90, AlertGPU: 85,
-		Games: []Game{{Exe: "cs2.exe", Priority: false}}}
+		Games: []Game{{Exe: "cs2.exe", Priority: false}}, Style: DefaultStyle()}
 }
 
 var corners = map[string]bool{"tl": true, "tr": true, "bl": true, "br": true}
@@ -154,6 +155,7 @@ func (c *Config) Normalize() {
 		}
 	}
 	c.Games = gs
+	c.Style.normalize()
 }
 
 // LoadConfig lee overlay.json (o devuelve los valores por defecto).

@@ -41,7 +41,8 @@ func TestBuildModelOptions(t *testing.T) {
 			t.Fatalf("sin temperaturas cada fila tiene un valor: %+v", r)
 		}
 	}
-	if tempPart(90, 85).Color != ColBad || tempPart(75, 85).Color != ColWarn {
+	p := DefaultStyle().Palette()
+	if tempPart(p, 90, 85).Color != ColBad || tempPart(p, 75, 85).Color != ColWarn {
 		t.Fatal("colores de temperatura")
 	}
 }
@@ -51,7 +52,8 @@ func TestSpark(t *testing.T) {
 	if SparkScale(sp) != 12 || Median(sp) != 4 {
 		t.Fatalf("%v %v", SparkScale(sp), Median(sp))
 	}
-	if SparkColor(40, 4) != ColBad || SparkColor(4.2, 4) != ColGood || SparkColor(8, 4) != ColWarn {
+	p := DefaultStyle().Palette()
+	if SparkColor(p, 40, 4) != ColBad || SparkColor(p, 4.2, 4) != ColGood || SparkColor(p, 8, 4) != ColWarn {
 		t.Fatal("colores del gráfico")
 	}
 }

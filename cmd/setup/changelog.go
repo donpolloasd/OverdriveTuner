@@ -20,6 +20,12 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.9.0", "Overlay a tu gusto: colores y estilo", []Change{
+		{"Cualquier color", "En la pestaña Overlay elegís el color del fondo, del número de FPS, de los valores, las etiquetas, el gráfico, los avisos y el borde: con una paleta o escribiendo el código (por ejemplo #00FF88)."},
+		{"Temas listos", "Clásico, Verde neón, Cian, Ámbar, Rojo gamer y Alto contraste, a un clic. Si cambiás un color, pasa a «Personalizado»."},
+		{"FPS de color según el valor", "Opcional: el número de FPS se pone rojo por debajo de un valor, amarillo por debajo de otro y verde desde ahí. Los límites los elegís vos."},
+		{"Fondo transparente, esquinas, borde y letra", "Podés dejar solo los números sobre el juego (con contorno para que se lean), redondear o no las esquinas, agregar un borde y elegir Segoe UI, Bahnschrift o Consolas, el grosor y el tamaño del número de FPS. La vista previa muestra los cambios al instante."},
+	}},
 	{"2.8.2", "Ventana propia, búsqueda, ayuda rápida y Diagnóstico más rápido", []Change{
 		{"Diagnóstico mucho más rápido", "La pestaña abre al instante: los chequeos lentos se preparan en segundo plano al abrir el programa. «Volver a revisar» pasó de unos 24 a unos 7 segundos."},
 		{"Menú de clic derecho propio", "En los cuadros de texto: Deshacer, Cortar, Copiar, Pegar, Eliminar y Seleccionar todo. Y donde dice «Historial» ahora podés hacer clic para ir a esa sección."},

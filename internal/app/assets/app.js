@@ -723,9 +723,22 @@ async function renderBisect(m) {
 let ovTimer = null;
 const OVL_ITEMS = [["showFps", "FPS"], ["showLow", "1% low"], ["showGraph", "Gráfico de cuadros"], ["showCpu", "CPU"], ["showGpu", "GPU"], ["showRam", "RAM"], ["showVram", "VRAM"], ["showTemps", "Temperaturas"]];
 
+// Colores del overlay que se eligen uno por uno (clave de la configuración y nombre en pantalla).
+const OVL_COLORS = [["colorBg", "Fondo"], ["colorFps", "Número de FPS"], ["colorValue", "Valores"], ["colorLabel", "Etiquetas"], ["colorGraph", "Gráfico"], ["colorGood", "Bien"], ["colorWarn", "Aviso"], ["colorBad", "Problema"], ["colorBorder", "Borde"]];
+const OVL_FONTS = { segoe: '"Segoe UI",system-ui,sans-serif', bahnschrift: 'Bahnschrift,"Segoe UI",sans-serif', consolas: 'Consolas,ui-monospace,monospace' };
+
+// ovStyle traduce el estilo del overlay a CSS para la vista previa (los mismos colores, letra y forma).
+function ovStyle(cfg, fps) {
+  const fpsCol = !cfg.fpsByValue ? cfg.colorFps : fps < cfg.fpsLow ? cfg.colorBad : fps < cfg.fpsMid ? cfg.colorWarn : cfg.colorGood;
+  const v = { bg: cfg.transparent ? "transparent" : cfg.colorBg, val: cfg.colorValue, lab: cfg.colorLabel, fps: fpsCol, gr: cfg.colorGraph, wn: cfg.colorWarn, bd: cfg.colorBad, wt: { normal: 400, semibold: 600, bold: 700 }[cfg.weight] || 600 };
+  return Object.entries(v).map(([k, x]) => `--o-${k}:${x}`).join(";") + `;font-family:${OVL_FONTS[cfg.font] || OVL_FONTS.segoe};opacity:${cfg.opacity};font-size:${13 * cfg.scale}px;` +
+    `border-radius:${cfg.transparent ? 0 : cfg.radius * cfg.scale}px;${cfg.border && !cfg.transparent ? `box-shadow:inset 0 0 0 ${cfg.border}px ${cfg.colorBorder},0 8px 30px #0008;` : ""}--o-fs:${cfg.fpsSize || 1}`;
+}
+
 function ovPreview(cfg, st) {
   const sm = (st && st.sample) || { cpu: 41, gpu: 70, gpuTemp: 54, cpuTemp: -1, ramUsedMb: 11800 };
   const fps = st && st.fps ? Math.round(st.fps) : 238, low = st && st.low1 ? Math.round(st.low1) : 126;
+  const look = `${cfg.transparent ? " tr" : ""}" style="${ovStyle(cfg, fps)}`;
   const t = v => v > 0 ? `<i class="${v >= 85 ? "bd" : v >= 70 ? "wn" : "gd"}">${Math.round(v)}°</i>` : `<i class="dm">—</i>`;
   const bars = Array.from({ length: 40 }, (_, i) => { const sp = i === 27 ? 26 : i === 11 ? 14 : 5 + (i * 7 % 3); return `<b class="${sp > 20 ? "bd" : sp > 10 ? "wn" : "gd"}" style="height:${sp / 26 * 100}%"></b>`; }).join("");
   const rows = [];
@@ -734,11 +747,11 @@ function ovPreview(cfg, st) {
   if (cfg.showVram) rows.push(`<div><span>VRAM</span><em>${((sm.gpuVramMb || 0) / 1024).toFixed(1)} GB</em></div>`);
   if (cfg.showRam) rows.push(`<div><span>RAM</span><em>${(sm.ramUsedMb / 1024).toFixed(1)} GB</em></div>`);
   if (cfg.layout === "line") {
-    const parts = []; if (cfg.showFps) parts.push(`<em>${fps} FPS</em>`);
+    const parts = []; if (cfg.showFps) parts.push(`<em class="fp">${fps} FPS</em>`);
     rows.forEach(r => parts.push(r.replace(/<\/?div>/g, "")));
-    return `<div class="ovp line" style="opacity:${cfg.opacity};font-size:${13 * cfg.scale}px">${parts.join(" ")}</div>`;
+    return `<div class="ovp line${look}">${parts.join(" ")}</div>`;
   }
-  return `<div class="ovp card" style="opacity:${cfg.opacity};font-size:${13 * cfg.scale}px">
+  return `<div class="ovp card${look}">
     ${cfg.showFps ? `<div class="top2"><strong>${fps}</strong><small>FPS</small>${cfg.showLow ? `<small class="r">1% ${low}</small>` : ""}</div>` : ""}
     ${cfg.showGraph ? `<div class="spk">${bars}</div>` : ""}${rows.join("")}</div>`;
 }
@@ -761,7 +774,8 @@ async function renderOverlay(m) {
   let d;
   try { d = await api("overlay"); } catch (e) { m.innerHTML = head + `<div class="banner bad">${esc(e.message)}</div>`; return; }
   const cfg = d.config;
-  const save = async () => { try { Object.assign(cfg, await api("overlay/config", cfg)); } catch (e) { toast(e.message, 5000); } $("#ovPrev").innerHTML = ovPreview(cfg, d.state); };
+  // save guarda y muestra lo que quedó (el programa corrige valores fuera de rango, por ejemplo límites de FPS al revés).
+  const save = async () => { try { Object.assign(cfg, await api("overlay/config", cfg)); syncColors(); $("#cFpsLow").value = cfg.fpsLow; $("#cFpsMid").value = cfg.fpsMid; } catch (e) { toast(e.message, 5000); } $("#ovPrev").innerHTML = ovPreview(cfg, d.running ? d.state : null); };
   m.innerHTML = head + banners() + `<div id="ovStatus">${ovStatus(d)}</div>
   <div class="ovgrid"><div><h3>Vista previa</h3><div class="ovstage" id="ovPrev">${ovPreview(cfg, d.running ? d.state : null)}</div><p class="note">Es una aproximación: el diseño real lo dibuja Windows y puede verse un poco distinto.</p></div>
   <div><h3>Apariencia</h3><div class="list">
@@ -770,6 +784,16 @@ async function renderOverlay(m) {
    <div class="row"><div><h4>Frecuencia de actualización</h4><p>Cuántas veces por segundo se actualiza el número de FPS. Más rápido sigue mejor los cambios.</p></div><select id="cUpd">${[[50, "20 por segundo"], [100, "10 por segundo"], [250, "4 por segundo"], [500, "2 por segundo"]].map(([v, n]) => `<option value="${v}" ${cfg.updateMs === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Tamaño</h4></div><input type="range" id="cScale" min="0.8" max="1.8" step="0.1" value="${cfg.scale}"></div>
    <div class="row"><div><h4>Transparencia</h4></div><input type="range" id="cOp" min="0.3" max="1" step="0.05" value="${cfg.opacity}"></div>
+   <div class="row"><div><h4>Tema de colores</h4><p>Elegí uno listo o cambiá cualquier color abajo: el tema pasa a «Personalizado».</p></div><select id="cTheme">${(d.themes || []).map(t => `<option value="${esc(t.id)}" ${cfg.theme === t.id ? "selected" : ""}>${esc(t.name)}</option>`).join("")}<option value="custom" ${cfg.theme === "custom" ? "selected" : ""}>Personalizado</option></select></div>
+   <div class="row"><div style="flex:1"><h4>Colores</h4><p>Hacé clic en un cuadrado para elegir cualquier color, o escribí el código (por ejemplo #00FF88).</p>
+     <div class="ovcolors" id="cColors">${OVL_COLORS.map(([k, n]) => `<label><input type="color" data-col="${k}" value="${esc(cfg[k])}" aria-label="${n}"><span>${n}<br><input type="text" data-hex="${k}" value="${esc(cfg[k])}" maxlength="7" spellcheck="false" aria-label="${n} (código)"></span></label>`).join("")}</div>
+     <div class="bar" style="margin-top:10px"><button class="btn" id="cColReset">Volver a los colores originales</button></div></div></div>
+   <div class="row"><div><h4>FPS de color según el valor</h4><p>El número de FPS usa el color «Problema» por debajo del primer valor, «Aviso» por debajo del segundo y «Bien» desde ahí.</p><div class="bar"><label>Problema bajo <input type="number" id="cFpsLow" min="10" max="1000" value="${cfg.fpsLow}" style="width:72px"></label><label>Aviso bajo <input type="number" id="cFpsMid" min="10" max="1000" value="${cfg.fpsMid}" style="width:72px"></label></div></div><input type="checkbox" data-k="fpsByValue" aria-label="FPS de color según el valor" ${cfg.fpsByValue ? "checked" : ""}></div>
+   <div class="row"><div><h4>Fondo transparente</h4><p>Sin tarjeta: solo los números sobre el juego, con un contorno oscuro para que se lean.</p></div><input type="checkbox" data-k="transparent" aria-label="Fondo transparente" ${cfg.transparent ? "checked" : ""}></div>
+   <div class="row"><div><h4>Esquinas</h4><p>De rectas a muy redondeadas.</p></div><input type="range" id="cRad" min="0" max="20" step="1" value="${cfg.radius}"></div>
+   <div class="row"><div><h4>Borde</h4></div><select id="cBorder">${[[0, "Sin borde"], [1, "Fino"], [2, "Medio"], [3, "Grueso"]].map(([v, n]) => `<option value="${v}" ${cfg.border === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+   <div class="row"><div><h4>Letra</h4><p>Consolas tiene todos los números del mismo ancho: el valor no «baila» al cambiar.</p></div><div class="bar"><select id="cFont">${[["segoe", "Segoe UI"], ["bahnschrift", "Bahnschrift"], ["consolas", "Consolas"]].map(([v, n]) => `<option value="${v}" ${cfg.font === v ? "selected" : ""}>${n}</option>`).join("")}</select><select id="cWeight">${[["normal", "Normal"], ["semibold", "Seminegrita"], ["bold", "Negrita"]].map(([v, n]) => `<option value="${v}" ${cfg.weight === v ? "selected" : ""}>${n}</option>`).join("")}</select></div></div>
+   <div class="row"><div><h4>Tamaño del número de FPS</h4></div><input type="range" id="cFpsSize" min="0.7" max="1.6" step="0.1" value="${cfg.fpsSize}"></div>
    <div class="row"><div><h4>Qué mostrar</h4><p style="display:flex;flex-wrap:wrap;gap:12px">${OVL_ITEMS.map(([k, n]) => `<label><input type="checkbox" data-k="${k}" ${cfg[k] ? "checked" : ""}> ${n}</label>`).join("")}</p></div></div>
    <div class="row"><div><h4>Avisar si la PC se calienta</h4><p>Cuando el procesador o la gráfica pasan el límite, el valor se pone en rojo y el overlay muestra un aviso de texto (sin sonido). La de la gráfica funciona siempre; la del procesador solo si Core Temp está instalado.</p></div><input type="checkbox" data-k="alertOn" aria-label="Avisar si la PC se calienta" ${cfg.alertOn ? "checked" : ""}></div>
    <div class="row"><div><h4>Temperatura del procesador</h4><p>Windows no la entrega en la mayoría de los procesadores. El overlay la lee de Core Temp, que se abre solo en segundo plano si lo tenés instalado. Solo lee: no se mete en el juego. Core Temp es gratis y está en «Instalar programas».</p></div></div>
@@ -792,10 +816,34 @@ async function renderOverlay(m) {
   $("#cCorner").onchange = e => { cfg.corner = e.target.value; save(); };
   $("#cUpd").onchange = e => { cfg.updateMs = +e.target.value; save(); };
   $("#cLayout").onchange = e => { cfg.layout = e.target.value; save(); };
-  $("#cScale").oninput = e => { cfg.scale = +e.target.value; $("#ovPrev").innerHTML = ovPreview(cfg, d.state); };
+  $("#cScale").oninput = e => { cfg.scale = +e.target.value; $("#ovPrev").innerHTML = ovPreview(cfg, d.running ? d.state : null); };
   $("#cScale").onchange = save;
-  $("#cOp").oninput = e => { cfg.opacity = +e.target.value; $("#ovPrev").innerHTML = ovPreview(cfg, d.state); };
+  $("#cOp").oninput = e => { cfg.opacity = +e.target.value; $("#ovPrev").innerHTML = ovPreview(cfg, d.running ? d.state : null); };
   $("#cOp").onchange = save;
+  // estilo: colores, tema, forma y letra
+  const prev = () => { $("#ovPrev").innerHTML = ovPreview(cfg, d.running ? d.state : null); };
+  const syncColors = () => OVL_COLORS.forEach(([k]) => { m.querySelector(`[data-col="${k}"]`).value = cfg[k]; m.querySelector(`[data-hex="${k}"]`).value = cfg[k]; });
+  const setColor = (k, v) => { cfg[k] = v.toUpperCase(); cfg.theme = "custom"; $("#cTheme").value = "custom"; syncColors(); };
+  const useTheme = id => { const t = (d.themes || []).find(x => x.id === id); if (t) { OVL_COLORS.forEach(([k]) => cfg[k] = t[k]); syncColors(); } cfg.theme = id; $("#cTheme").value = id; save(); };
+  $("#cTheme").onchange = e => useTheme(e.target.value);
+  $("#cColReset").onclick = () => useTheme("clasico");
+  m.querySelectorAll("[data-col]").forEach(c => {
+    c.oninput = () => { setColor(c.dataset.col, c.value); prev(); };
+    c.onchange = () => { setColor(c.dataset.col, c.value); save(); };
+  });
+  m.querySelectorAll("[data-hex]").forEach(c => c.onchange = () => {
+    let v = c.value.trim(); if (!v.startsWith("#")) v = "#" + v;
+    if (!/^#[0-9a-f]{6}$/i.test(v)) { c.value = cfg[c.dataset.hex]; return toast("El color tiene que ser un código como #00FF88.", 4000); }
+    setColor(c.dataset.hex, v); save();
+  });
+  const num = (id, k) => { $(id).onchange = e => { cfg[k] = +e.target.value; save(); }; };
+  num("#cFpsLow", "fpsLow"); num("#cFpsMid", "fpsMid"); num("#cBorder", "border");
+  $("#cRad").oninput = e => { cfg.radius = +e.target.value; prev(); };
+  $("#cRad").onchange = save;
+  $("#cFpsSize").oninput = e => { cfg.fpsSize = +e.target.value; prev(); };
+  $("#cFpsSize").onchange = save;
+  $("#cFont").onchange = e => { cfg.font = e.target.value; save(); };
+  $("#cWeight").onchange = e => { cfg.weight = e.target.value; save(); };
   $("#cAlC").onchange = e => { cfg.alertCpu = +e.target.value; save(); };
   $("#cAlG").onchange = e => { cfg.alertGpu = +e.target.value; save(); };
   $("#cDirs").onchange = e => { cfg.gameDirs = e.target.value.split("\n").map(x => x.trim()).filter(Boolean); save(); };

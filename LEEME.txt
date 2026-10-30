@@ -331,3 +331,13 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - La advertencia de «Desactivar optimizaciones de pantalla completa» ahora dice que ese ajuste pasa los juegos a pantalla completa exclusiva y que con él activo el overlay no se ve.
 - Probado en Windows 11 (modo demo): la ventana propia del programa, del instalador y del desinstalador, la barra de tareas, el clic derecho, F5, Ctrl+A, cerrar a la bandeja y volver a abrir, «Salir por completo», el aviso de responsabilidad, el buscador, el botón «?», el enlace a Historial y el menú de clic derecho con «Pegar». Los tiempos del Diagnóstico se midieron en esta PC sin permisos de administrador.
 - Sin probar aún en Windows real: la lectura nativa de procesos, la detección de pantalla completa exclusiva (SHQueryUserNotificationState) y la confirmación de shaders (solo se revisó su código).
+
+== Versión 2.9.0: overlay a tu gusto ==
+- Pestaña Overlay, «Apariencia»: cualquier color para el fondo, el número de FPS, los valores, las etiquetas, el gráfico, los avisos (bien, aviso, problema) y el borde, con paleta o escribiendo el código (#RRGGBB).
+- Temas listos: Clásico (el aspecto de siempre, que sigue siendo el predeterminado), Verde neón, Cian, Ámbar, Rojo gamer y Alto contraste. Si cambiás un color, el tema pasa a «Personalizado».
+- FPS de color según el valor (opcional): rojo por debajo de 60, amarillo por debajo de 144 y verde desde ahí; los dos límites se pueden cambiar.
+- Fondo transparente: solo los números sobre el juego, con contorno oscuro para que se lean sobre cualquier fondo.
+- Esquinas de rectas a muy redondeadas, borde (fino, medio o grueso), letra (Segoe UI, Bahnschrift o Consolas), grosor y tamaño del número de FPS.
+- La vista previa de la pestaña usa los mismos colores, letra y forma que el overlay.
+- Los textos que dibuja el overlay encima del juego («Aviso», «CPU caliente») siguen en español.
+- Probado en Windows 11 (modo demo): la pantalla de estilo, el cambio de tema y el overlay real dibujado con Verde neón, con fondo transparente (Bahnschrift, FPS grande y color propio) y con Cian, esquinas rectas, borde y Consolas. Arreglado de paso: al cambiar una opción con el overlay cerrado, la vista previa mostraba CPU, GPU y RAM en 0.

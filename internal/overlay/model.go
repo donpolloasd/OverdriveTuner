@@ -7,7 +7,7 @@ import (
 	"fpsforge/internal/telemetry"
 )
 
-// Colores (COLORREF 0x00BBGGRR).
+// Colores del tema clásico (COLORREF 0x00BBGGRR). Los que se usan al dibujar salen del estilo (Palette).
 const (
 	ColBG     = 0x0A0A0A // #0A0A0A
 	ColLabel  = 0x8A8A8A // #8A8A8A
@@ -32,6 +32,7 @@ type Row struct {
 
 // Model es lo que se dibuja: ya decidido qué mostrar y de qué color.
 type Model struct {
+	Pal      Palette // colores del estilo elegido
 	FPS      string
 	FPSColor uint32
 	Low      string // "1% 126"
@@ -41,16 +42,16 @@ type Model struct {
 	LineCols []Part
 }
 
-func tempPart(t float64, limit int) Part {
+func tempPart(p Palette, t float64, limit int) Part {
 	if t == telemetry.Unknown || t <= 0 {
-		return Part{"—", ColLabel}
+		return Part{"—", p.Label}
 	}
-	c := uint32(ColText)
+	c := p.Value
 	switch {
 	case t >= float64(limit):
-		c = ColBad
+		c = p.Bad
 	case t >= 70:
-		c = ColWarn
+		c = p.Warn
 	}
 	return Part{fmt.Sprintf("%.0f°", t), c}
 }
@@ -66,9 +67,10 @@ func (sn Snapshot) limit(v int) int {
 // BuildModel decide el contenido según la configuración y las mediciones.
 func BuildModel(sn Snapshot) Model {
 	c, s := sn.Cfg, sn.Sample
-	m := Model{FPS: "—", FPSColor: ColLabel}
+	p := c.Style.Palette()
+	m := Model{FPS: "—", FPSColor: p.Label, Pal: p}
 	if sn.FPS > 0 {
-		m.FPS, m.FPSColor = fmt.Sprintf("%.0f", sn.FPS), ColText
+		m.FPS, m.FPSColor = fmt.Sprintf("%.0f", sn.FPS), c.Style.fpsColor(p, sn.FPS)
 	} else if !sn.GameRunning {
 		m.FPS = "—"
 	}
@@ -79,31 +81,31 @@ func BuildModel(sn Snapshot) Model {
 		m.Spark = sn.Spark
 	}
 	if c.ShowCPU {
-		r := Row{Label: "CPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.CPU), ColText}}}
+		r := Row{Label: "CPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.CPU), p.Value}}}
 		if c.ShowTemp {
-			r.Parts = append(r.Parts, tempPart(s.CPUTemp, sn.limit(c.AlertCPU)))
+			r.Parts = append(r.Parts, tempPart(p, s.CPUTemp, sn.limit(c.AlertCPU)))
 		}
 		m.Rows = append(m.Rows, r)
 	}
 	if c.ShowGPU {
-		r := Row{Label: "GPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.GPU), ColText}}}
+		r := Row{Label: "GPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.GPU), p.Value}}}
 		if c.ShowTemp {
-			r.Parts = append(r.Parts, tempPart(s.GPUTemp, sn.limit(c.AlertGPU)))
+			r.Parts = append(r.Parts, tempPart(p, s.GPUTemp, sn.limit(c.AlertGPU)))
 		}
 		m.Rows = append(m.Rows, r)
 	}
 	if c.ShowVRAM {
-		m.Rows = append(m.Rows, Row{Label: "VRAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.GPUVRAMMB/1024), ColText}}})
+		m.Rows = append(m.Rows, Row{Label: "VRAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.GPUVRAMMB/1024), p.Value}}})
 	}
 	if c.ShowRAM {
-		m.Rows = append(m.Rows, Row{Label: "RAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.RAMUsedMB/1024), ColText}}})
+		m.Rows = append(m.Rows, Row{Label: "RAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.RAMUsedMB/1024), p.Value}}})
 	}
 	if c.AlertOn {
 		if sn.AlertCPU {
-			m.Rows = append(m.Rows, Row{Label: "Aviso", Parts: []Part{{"CPU caliente", ColBad}}})
+			m.Rows = append(m.Rows, Row{Label: "Aviso", Parts: []Part{{"CPU caliente", p.Bad}}})
 		}
 		if sn.AlertGPU {
-			m.Rows = append(m.Rows, Row{Label: "Aviso", Parts: []Part{{"GPU caliente", ColBad}}})
+			m.Rows = append(m.Rows, Row{Label: "Aviso", Parts: []Part{{"GPU caliente", p.Bad}}})
 		}
 	}
 	// Diseño de una línea: «238 FPS · CPU 41% 62° · GPU 70% 54° · RAM 11.2 GB»
@@ -111,7 +113,7 @@ func BuildModel(sn Snapshot) Model {
 		m.LineCols = append(m.LineCols, Part{m.FPS + " FPS", m.FPSColor})
 	}
 	for _, r := range m.Rows {
-		m.LineCols = append(m.LineCols, Part{"  " + r.Label + " ", ColLabel})
+		m.LineCols = append(m.LineCols, Part{"  " + r.Label + " ", p.Label})
 		for i, p := range r.Parts {
 			if i > 0 {
 				p.Text = " " + p.Text
@@ -141,14 +143,14 @@ func SparkScale(sp []float32) float32 {
 }
 
 // SparkColor colorea una barra según cuánto se aleja de lo normal.
-func SparkColor(ft, median float32) uint32 {
+func SparkColor(p Palette, ft, median float32) uint32 {
 	switch {
 	case ft > 2.5*median && ft-median > 4:
-		return ColBad
+		return p.Bad
 	case ft > 1.6*median && ft-median > 2:
-		return ColWarn
+		return p.Warn
 	}
-	return ColGood
+	return p.Graph
 }
 
 // Median devuelve la mediana de los tiempos de cuadro.

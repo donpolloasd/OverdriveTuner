@@ -66,7 +66,7 @@ func (s *Server) powerPlans() []plan {
 
 func (s *Server) handleOverlay(w http.ResponseWriter, r *http.Request) {
 	st, alive := s.overlayRunning()
-	writeJSON(w, map[string]any{"config": overlay.LoadConfig(s.Dir), "running": alive, "state": st, "plans": s.powerPlans()})
+	writeJSON(w, map[string]any{"config": overlay.LoadConfig(s.Dir), "running": alive, "state": st, "plans": s.powerPlans(), "themes": overlay.Themes})
 }
 
 func (s *Server) handleOverlayConfig(w http.ResponseWriter, r *http.Request) {

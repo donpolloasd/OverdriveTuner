@@ -2,6 +2,7 @@ package overlay
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
 	"syscall"
 	"unsafe"
@@ -48,6 +49,7 @@ var (
 	pBitBlt         = gdi.NewProc("BitBlt")
 	pCreateSolidBr  = gdi.NewProc("CreateSolidBrush")
 	pCreateRoundRgn = gdi.NewProc("CreateRoundRectRgn")
+	pFrameRgn       = gdi.NewProc("FrameRgn")
 	pGetModule      = kern.NewProc("GetModuleHandleW")
 )
 
@@ -97,7 +99,10 @@ const (
 	wmTimer         = 0x0113
 	wmHotkey        = 0x0312
 	lwaAlpha        = 0x2
-	srcCopy         = 0x00CC0020
+	lwaColorKey     = 0x1
+	// keyColor es el «color invisible» del fondo transparente: ningún tema lo usa y el texto lleva contorno negro.
+	keyColor = 0x010101
+	srcCopy  = 0x00CC0020
 )
 
 type win struct {
@@ -107,7 +112,10 @@ type win struct {
 	hwnd     uintptr
 	scale    float64
 	fonts    [3]uintptr // grande, normal, pequeña
-	fontKey  float64
+	fontKey  string
+	rgnKey   string // tamaño y forma con los que se armó la región de la ventana
+	layKey   string // opacidad y transparencia aplicadas
+	outline  bool   // fondo transparente: el texto lleva contorno para leerse sobre el juego
 	w, h     int
 	x, y     int
 	alpha    byte
@@ -120,8 +128,11 @@ var cur *win // una sola ventana por proceso
 
 func u16(s string) *uint16 { p, _ := syscall.UTF16PtrFromString(s); return p }
 
-func (w *win) makeFonts(scale float64) {
-	if w.fontKey == scale && w.fonts[0] != 0 {
+// makeFonts arma las tres letras (grande, normal, pequeña) según el tamaño y el estilo elegidos.
+func (w *win) makeFonts(c Config) {
+	st := c.Style
+	key := fmt.Sprint(c.Scale, st.Font, st.Weight, st.FpsSize, st.Transparent)
+	if w.fontKey == key && w.fonts[0] != 0 {
 		return
 	}
 	for _, f := range w.fonts {
@@ -129,13 +140,29 @@ func (w *win) makeFonts(scale float64) {
 			pDeleteObject.Call(f)
 		}
 	}
-	mk := func(px int, weight int, face string) uintptr {
-		h := -int32(float64(px) * scale)
-		r, _, _ := pCreateFont.Call(uintptr(h), 0, 0, 0, uintptr(weight), 0, 0, 0, 1, 0, 0, 5, 0, uintptr(unsafe.Pointer(u16(face))))
+	quality := uintptr(5) // CLEARTYPE_QUALITY
+	if st.Transparent {
+		quality = 4 // ANTIALIASED_QUALITY: sin bordes de colores sobre el fondo invisible
+	}
+	face := Fonts[st.Font]
+	mk := func(px float64, weight int, face string) uintptr {
+		h := -int32(px * c.Scale)
+		r, _, _ := pCreateFont.Call(uintptr(h), 0, 0, 0, uintptr(weight), 0, 0, 0, 1, 0, 0, quality, 0, uintptr(unsafe.Pointer(u16(face))))
 		return r
 	}
-	w.fonts = [3]uintptr{mk(30, 600, "Segoe UI Semibold"), mk(14, 600, "Segoe UI Semibold"), mk(12, 400, "Segoe UI")}
-	w.fontKey = scale
+	strong, light := 600, 400
+	switch st.Weight {
+	case "normal":
+		strong = 400
+	case "bold":
+		strong, light = 700, 600
+	}
+	sface := face
+	if st.Font == "segoe" && st.Weight == "semibold" {
+		sface = "Segoe UI Semibold" // el aspecto original
+	}
+	w.fonts = [3]uintptr{mk(30*st.FpsSize, strong, sface), mk(14, strong, sface), mk(12, light, face)}
+	w.fontKey = key
 }
 
 func (w *win) extent(hdc, font uintptr, s string) int {
@@ -148,10 +175,24 @@ func (w *win) extent(hdc, font uintptr, s string) int {
 
 func (w *win) text(hdc, font uintptr, x, y int, s string, col uint32) int {
 	pSelectObject.Call(hdc, font)
-	pSetTextColor.Call(hdc, uintptr(col))
 	u, _ := syscall.UTF16FromString(s)
+	if w.outline { // contorno negro alrededor de cada letra: se lee sobre cualquier fondo del juego
+		pSetTextColor.Call(hdc, 0)
+		for _, d := range [8][2]int{{-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}} {
+			pTextOut.Call(hdc, uintptr(x+d[0]), uintptr(y+d[1]), uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1))
+		}
+	}
+	pSetTextColor.Call(hdc, uintptr(col))
 	pTextOut.Call(hdc, uintptr(x), uintptr(y), uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)-1))
 	return w.extent(hdc, font, s)
+}
+
+// bg es el color del fondo: el del estilo o el «color invisible» si el fondo es transparente.
+func bg(sn Snapshot, p Palette) uint32 {
+	if sn.Cfg.Style.Transparent {
+		return keyColor
+	}
+	return p.BG
 }
 
 func (w *win) fill(hdc uintptr, l, t, r, b int, col uint32) {
@@ -175,7 +216,7 @@ func (w *win) layout(hdc uintptr, sn Snapshot, draw bool) (int, int) {
 		}
 		W, H := wd+2*pad, px(30)
 		if draw {
-			w.fill(hdc, 0, 0, W, H, ColBG)
+			w.fill(hdc, 0, 0, W, H, bg(sn, m.Pal))
 			x := pad
 			for _, p := range m.LineCols {
 				x += w.text(hdc, norm, x, px(5), p.Text, p.Color)
@@ -186,15 +227,16 @@ func (w *win) layout(hdc uintptr, sn Snapshot, draw bool) (int, int) {
 	W := px(180)
 	y := pad
 	if sn.Cfg.ShowFPS {
+		f := sn.Cfg.Style.FpsSize // el número de FPS puede ser más grande o más chico que el resto
 		if draw {
-			fw := w.text(hdc, big, pad, y-px(4), m.FPS, m.FPSColor)
-			w.text(hdc, small, pad+fw+px(5), y+px(14), "FPS", ColLabel)
+			fw := w.text(hdc, big, pad, y-px(4*f), m.FPS, m.FPSColor)
+			w.text(hdc, small, pad+fw+px(5), y+px(30*f)-px(16), "FPS", m.Pal.Label)
 			if m.Low != "" {
 				lw := w.extent(hdc, small, m.Low)
-				w.text(hdc, small, W-pad-lw, y+px(14), m.Low, ColLabel)
+				w.text(hdc, small, W-pad-lw, y+px(30*f)-px(16), m.Low, m.Pal.Label)
 			}
 		}
-		y += px(34)
+		y += px(34 * f)
 	}
 	if len(m.Spark) > 1 {
 		if draw {
@@ -216,14 +258,14 @@ func (w *win) layout(hdc uintptr, sn Snapshot, draw bool) (int, int) {
 				if bh < 2 {
 					bh = 2
 				}
-				w.fill(hdc, x0, y+gh-bh, x1, y+gh, SparkColor(ft, med))
+				w.fill(hdc, x0, y+gh-bh, x1, y+gh, SparkColor(m.Pal, ft, med))
 			}
 		}
 		y += px(20) + px(8)
 	}
 	for _, r := range m.Rows {
 		if draw {
-			w.text(hdc, small, pad, y+px(2), r.Label, ColLabel)
+			w.text(hdc, small, pad, y+px(2), r.Label, m.Pal.Label)
 			vx := pad + px(40)
 			w.text(hdc, norm, vx, y-px(1), r.Parts[0].Text, r.Parts[0].Color)
 			if len(r.Parts) > 1 {
@@ -291,7 +333,7 @@ func (w *win) refresh() {
 		w.timerMs = ms
 		pSetTimer.Call(w.hwnd, 1, uintptr(ms), 0)
 	}
-	w.makeFonts(sn.Cfg.Scale)
+	w.makeFonts(sn.Cfg)
 	hdc, _, _ := pCreateCompDC.Call(0)
 	W, H := w.layout(hdc, sn, false)
 	pDeleteDC.Call(hdc)
@@ -308,13 +350,19 @@ func (w *win) refresh() {
 	case "br":
 		x, y = int(sw)-W-mg, int(sh)-H-mg
 	}
-	if W != w.w || H != w.h {
-		rgn, _, _ := pCreateRoundRgn.Call(0, 0, uintptr(W+1), uintptr(H+1), uintptr(int(26*sn.Cfg.Scale)), uintptr(int(26*sn.Cfg.Scale)))
-		pSetWindowRgn.Call(w.hwnd, rgn, 1)
+	st := sn.Cfg.Style
+	if k := fmt.Sprint(W, H, st.Radius, st.Transparent, sn.Cfg.Scale); k != w.rgnKey {
+		w.rgnKey = k
+		pSetWindowRgn.Call(w.hwnd, w.region(W, H, sn.Cfg), 1) // Windows se queda con la región
 	}
 	a := byte(sn.Cfg.Opacity*255 + 0.5)
-	if a != w.alpha {
-		pSetLayeredAttr.Call(w.hwnd, 0, uintptr(a), lwaAlpha)
+	if k := fmt.Sprint(a, st.Transparent); k != w.layKey {
+		w.layKey = k
+		if st.Transparent { // el fondo («color invisible») desaparece y queda solo el texto
+			pSetLayeredAttr.Call(w.hwnd, keyColor, uintptr(a), lwaAlpha|lwaColorKey)
+		} else {
+			pSetLayeredAttr.Call(w.hwnd, 0, uintptr(a), lwaAlpha)
+		}
 		w.alpha = a
 	}
 	w.w, w.h, w.x, w.y = W, H, x, y
@@ -329,6 +377,17 @@ func (w *win) refresh() {
 	w.visible = vis
 }
 
+// region arma la forma de la tarjeta (esquinas redondeadas según el estilo). Con fondo transparente es un
+// rectángulo: no hay tarjeta que recortar y el contorno del texto no se corta en las esquinas.
+func (w *win) region(W, H int, c Config) uintptr {
+	d := 0
+	if !c.Style.Transparent {
+		d = int(float64(2*c.Style.Radius)*c.Scale + 0.5)
+	}
+	rgn, _, _ := pCreateRoundRgn.Call(0, 0, uintptr(W+1), uintptr(H+1), uintptr(d), uintptr(d))
+	return rgn
+}
+
 func (w *win) paint() {
 	var ps [128]byte
 	hdc, _, _ := pBeginPaint.Call(w.hwnd, uintptr(unsafe.Pointer(&ps[0])))
@@ -337,13 +396,24 @@ func (w *win) paint() {
 	}
 	defer pEndPaint.Call(w.hwnd, uintptr(unsafe.Pointer(&ps[0])))
 	sn := w.e.Snapshot()
-	w.makeFonts(sn.Cfg.Scale)
+	w.makeFonts(sn.Cfg)
+	st := sn.Cfg.Style
+	pal := st.Palette()
+	w.outline = st.Transparent
 	mem, _, _ := pCreateCompDC.Call(hdc)
 	bmp, _, _ := pCreateCompBmp.Call(hdc, uintptr(w.w), uintptr(w.h))
 	old, _, _ := pSelectObject.Call(mem, bmp)
 	pSetBkMode.Call(mem, 1)
-	w.fill(mem, 0, 0, w.w, w.h, ColBG)
+	w.fill(mem, 0, 0, w.w, w.h, bg(sn, pal))
 	w.layout(mem, sn, true)
+	if st.Border > 0 && !st.Transparent { // borde siguiendo la forma de la tarjeta
+		rgn := w.region(w.w, w.h, sn.Cfg)
+		br, _, _ := pCreateSolidBr.Call(uintptr(pal.Border))
+		b := uintptr(max(1, int(float64(st.Border)*sn.Cfg.Scale+0.5)))
+		pFrameRgn.Call(mem, rgn, br, b, b)
+		pDeleteObject.Call(br)
+		pDeleteObject.Call(rgn)
+	}
 	pBitBlt.Call(hdc, 0, 0, uintptr(w.w), uintptr(w.h), mem, 0, 0, srcCopy)
 	pSelectObject.Call(mem, old)
 	pDeleteObject.Call(bmp)

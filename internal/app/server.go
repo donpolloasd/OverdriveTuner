@@ -27,7 +27,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "2.8.2"
+const Version = "2.9.0"
 
 // Server es el backend de la interfaz.
 type Server struct {
