@@ -41,7 +41,7 @@ func TestInstallUninstall(t *testing.T) {
 	if !strings.HasSuffix(v.Data, "--uninstall") {
 		t.Errorf("UninstallString mal formado: %q", v.Data)
 	}
-	if len(f.PSLog) != 2 || !strings.Contains(f.PSLog[0], "CommonPrograms") || !strings.Contains(f.PSLog[1], "CommonDesktopDirectory") {
+	if len(f.PSLog) != 1 || !strings.Contains(f.PSLog[0], "CommonPrograms") || !strings.Contains(f.PSLog[0], "CommonDesktopDirectory") {
 		t.Errorf("accesos directos: %v", f.PSLog)
 	}
 	if err := Uninstall(f, dir); err != nil {

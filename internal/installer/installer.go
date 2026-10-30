@@ -132,16 +132,18 @@ func Install(sys system.System, o Options, progress Progress) error {
 			icon = ""
 		}
 	}
+	// Los accesos directos se crean en una sola llamada a PowerShell (cada llamada tarda más de un segundo).
+	var lnks []string
 	if o.StartMenu {
-		progress(50, "Creando acceso en el menú Inicio…")
-		if _, err := sys.PowerShell(shortcutScript("CommonPrograms", AppName+".lnk", exe, o.Dir, icon), time.Minute); err != nil {
-			return fmt.Errorf("no se pudo crear el acceso del menú Inicio: %w", err)
-		}
+		lnks = append(lnks, shortcutScript("CommonPrograms", AppName+".lnk", exe, o.Dir, icon))
 	}
 	if o.Desktop {
-		progress(65, "Creando acceso en el escritorio…")
-		if _, err := sys.PowerShell(shortcutScript("CommonDesktopDirectory", AppName+".lnk", exe, o.Dir, icon), time.Minute); err != nil {
-			return fmt.Errorf("no se pudo crear el acceso del escritorio: %w", err)
+		lnks = append(lnks, shortcutScript("CommonDesktopDirectory", AppName+".lnk", exe, o.Dir, icon))
+	}
+	if len(lnks) > 0 {
+		progress(55, "Creando accesos directos…")
+		if _, err := sys.PowerShell(strings.Join(lnks, "\n"), time.Minute); err != nil {
+			return fmt.Errorf("no se pudieron crear los accesos directos: %w", err)
 		}
 	}
 	progress(80, "Registrando en Aplicaciones instaladas…")
@@ -264,12 +266,18 @@ func Patch(sys system.System, exe, ico []byte, version string, progress Progress
 	if dir == "" {
 		return "", ErrNotInstalled
 	}
-	desk := false
-	if pub := os.Getenv("PUBLIC"); pub != "" {
-		if _, err := os.Stat(filepath.Join(pub, "Desktop", AppName+".lnk")); err == nil {
-			desk = true
+	// Un parche no recrea los accesos que ya existen (cada uno cuesta una llamada a PowerShell): solo el del
+	// menú Inicio si falta, y todos si viene de la versión anterior (FPS Forge), cuyos accesos apuntan a otro programa.
+	legacy := LegacyInstalled(sys)
+	exists := func(base, rel string) bool {
+		if base == "" {
+			return false
 		}
+		_, err := os.Stat(filepath.Join(base, rel, AppName+".lnk"))
+		return err == nil
 	}
-	err := Install(sys, Options{Dir: dir, Desktop: desk, StartMenu: true, Version: version, Exe: exe, Icon: ico}, progress)
+	desk := legacy && exists(os.Getenv("PUBLIC"), "Desktop")
+	start := legacy || !exists(filepath.Join(os.Getenv("ProgramData"), "Microsoft", "Windows", "Start Menu"), "Programs")
+	err := Install(sys, Options{Dir: dir, Desktop: desk, StartMenu: start, Version: version, Exe: exe, Icon: ico}, progress)
 	return dir, err
 }

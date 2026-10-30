@@ -177,6 +177,7 @@ func Info(msg string) { messageBox(msg, 0x40) }
 func KillByName(name string) {
 	cmd := exec.Command("taskkill.exe", "/F", "/T", "/FI", "PID ne "+strconv.Itoa(os.Getpid()), "/IM", name)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true, CreationFlags: 0x08000000}
-	_ = cmd.Run()
-	time.Sleep(500 * time.Millisecond)
+	if cmd.Run() == nil { // solo se espera si había algo que cerrar
+		time.Sleep(500 * time.Millisecond)
+	}
 }

@@ -287,3 +287,7 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 == Versión 2.7.3 ==
 - El desinstalador ya no borra la carpeta de instalación de forma recursiva: quita solo los archivos de OverdriveTuner y la carpeta si queda vacía (antes, si habías instalado dentro de una carpeta con otras cosas, también se borraban).
 - Los nombres de programa (.exe) ya no pueden llevar comillas simples, $ ni acentos graves.
+
+== Versión 2.7.4 ==
+- Arranque más rápido: el programa guarda el último escaneo del equipo (hardware_cache.json en C:\ProgramData\FPSForge) y lo muestra al instante al abrir; el escaneo se actualiza en segundo plano.
+- Setup y Parche más ágiles: accesos directos en una sola llamada a PowerShell; el Parche no recrea los accesos que ya existen; no se espera al cerrar un programa que no estaba abierto.

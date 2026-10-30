@@ -20,6 +20,10 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.7.4", "Arranque más rápido", []Change{
+		{"La ventana aparece completa al abrir", "El programa guarda el último escaneo de tu equipo y lo muestra al instante al abrirse; el escaneo se repite en segundo plano. Antes había que esperar varios segundos."},
+		{"Instalación y parche más ágiles", "Los accesos directos se crean en una sola llamada a PowerShell, el parche ya no recrea los que existen y no se espera al cerrar un programa que no estaba abierto."},
+	}},
 	{"2.7.3", "Más seguro", []Change{
 		{"El desinstalador solo borra lo suyo", "Antes borraba la carpeta de instalación completa. Si habías instalado dentro de una carpeta que ya tenía otras cosas, también se borraban. Ahora quita solo los archivos de OverdriveTuner y la carpeta únicamente si queda vacía."},
 		{"Nombres de programa más estrictos", "Los nombres de .exe (juegos, lista del Modo juego, configuración importada) ya no pueden llevar comillas simples, $ ni acentos graves, que PowerShell interpreta dentro de los comandos."},

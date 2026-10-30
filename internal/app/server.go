@@ -26,7 +26,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "2.7.3"
+const Version = "2.7.4"
 
 // Server es el backend de la interfaz.
 type Server struct {
@@ -92,11 +92,17 @@ func (s *Server) hardware(force bool) scan.Hardware {
 	}
 	h, err := s.ScanFn(s.Sys)
 	if err != nil {
+		if prev, ok := s.hardwareIfReady(); ok && prev.CPU != "No detectado" {
+			return prev // falló la actualización: se mantiene el último escaneo bueno
+		}
 		h = scan.Hardware{Computer: "equipo", CPU: "No detectado", OS: "Windows", Build: 22000, Admin: s.Sys.IsAdmin()}
 	}
 	s.mu.Lock()
 	s.hw = &h
 	s.mu.Unlock()
+	if err == nil {
+		s.saveHardwareCache(h)
+	}
 	return h
 }
 
@@ -174,7 +180,15 @@ func (s *Server) Start() (string, error) {
 	mux.HandleFunc("/api/apps/drivers", s.guard(s.handleAppsDrivers))
 	mux.HandleFunc("/api/heartbeat", s.guard(s.handleHeartbeat))
 	mux.HandleFunc("/api/quit", s.guard(s.handleQuit))
-	go s.hardware(false) // el escaneo arranca ya, mientras se abre la ventana
+	if h, ok := s.loadHardwareCache(); ok {
+		// Con el último escaneo guardado la interfaz aparece completa al instante; se actualiza en segundo plano.
+		s.mu.Lock()
+		s.hw = &h
+		s.mu.Unlock()
+		go s.hardware(true)
+	} else {
+		go s.hardware(false) // el escaneo arranca ya, mientras se abre la ventana
+	}
 	s.srv = &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	go func() { _ = s.srv.Serve(ln) }()
 	return "http://" + s.Addr + "/", nil
