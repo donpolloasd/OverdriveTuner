@@ -306,3 +306,9 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - Herramientas > «Ping a servidores de juegos»: mide el tiempo de conexión TCP (puerto 443) hacia servicios de juegos y regiones de AWS. No es el ping exacto de una partida (los servicios usan CDN); las regiones dan mejor idea de la distancia. La pérdida se estima por conexiones fallidas.
 - Configuración > Tareas programadas: limpieza semanal (solo objetivos seguros) y punto de restauración semanal, con día y hora a elección. Usan el Programador de tareas de Windows (OverdriveTuner.exe --task cleanup|restore), con permisos de administrador y solo con la sesión iniciada; si la PC estaba apagada, corren al encenderla. El desinstalador las quita.
 - Sin probar aún en Windows real: los scripts de PowerShell nuevos y las tareas programadas se probaron solo con tests y en modo demostración.
+
+== Versión 2.8.1 ==
+- Ping a servidores: los servicios de juegos se muestran solo con su nombre, sin aclarar qué juegos usan cada uno.
+- Corregido: el ejemplo «D:\Juegos» de las carpetas de juegos adicionales se veía como «D:Juegos».
+- Traducidas al inglés la guía de BIOS, el aviso del Modo juego y la ayuda de carpetas de juegos.
+- En modo demostración, «Instalar programas» ya no da error al no haber winget.

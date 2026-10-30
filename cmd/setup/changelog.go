@@ -20,6 +20,11 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.8.1", "Arreglos", []Change{
+		{"Ping a servidores más limpio", "Los servicios de juegos se muestran solo con su nombre (Steam, EA, Epic Games…), sin aclarar qué juegos usan cada uno."},
+		{"«D:\\Juegos» se veía mal", "En la lista de carpetas de juegos adicionales el ejemplo aparecía como «D:Juegos» (se perdía la barra). Ahora se ve bien."},
+		{"Más textos traducidos", "La guía de BIOS, el aviso del Modo juego y la ayuda de carpetas de juegos ahora también salen en inglés."},
+	}},
 	{"2.8.0", "Más chequeos, ping a servidores y tareas programadas", []Change{
 		{"Chequeos de hardware nuevos", "En Diagnóstico ahora ves si Resizable BAR está activo (placas NVIDIA), qué antigüedad tiene el driver de tu gráfica (con botón a la web oficial), el estado, desgaste y temperatura de tus discos, el espacio libre de Windows y una guía de los ajustes de la BIOS que conviene revisar."},
 		{"Ping a servidores de juegos", "Un botón mide la latencia, la variación y la pérdida hacia Steam, FACEIT, EA, Epic, Riot y regiones como São Paulo, Virginia o Fráncfort, para saber si el problema es tu internet o la distancia."},

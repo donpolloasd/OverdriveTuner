@@ -636,6 +636,13 @@ window.alert = m => _alert(trDialog(m));
   ["Quedan {} GB libres ({}%). Conviene dejar al menos un 20%, sobre todo si es un SSD.", "{1} GB free ({2}%). It is best to keep at least 20% free, especially on an SSD."],
   ["{} GB libres ({}%).", "{1} GB free ({2}%)."],
   ["Guía de ajustes de la BIOS", "BIOS settings guide"],
+  ["Esto no se cambia desde Windows: entrá a la BIOS (tecla Supr o F2 al encender) y revisá estos puntos.", "This cannot be changed from Windows: enter the BIOS (Del or F2 key at power-on) and check these points."],
+  ["Perfil de memoria {} activado.", "Memory profile {1} turned on."],
+  ["«Above 4G Decoding» y «Resizable BAR» activados (con una GPU reciente).", "«Above 4G Decoding» and «Resizable BAR» turned on (with a recent GPU)."],
+  ["Si un anti-cheat lo pide: Secure Boot, TPM (fTPM/PTT) y {} / IOMMU activados.", "If an anti-cheat requires it: Secure Boot, TPM (fTPM/PTT) and {1} / IOMMU turned on."],
+  ["Modo de arranque UEFI, no Legacy.", "UEFI boot mode, not Legacy."],
+  ["Actualizá la BIOS solo si tu placa lo recomienda para tu procesador o memoria, y nunca con el equipo en riesgo de apagarse.", "Update the BIOS only if your board recommends it for your processor or memory, and never when the computer might lose power."],
+  ["Una por línea. Todo programa con ventana que esté dentro de estas carpetas cuenta como juego. Los de Steam y Epic se reconocen solos, en cualquier disco; esto es para juegos instalados en otro lado, por ejemplo D:\\Juegos.", "One per line. Any program with a window inside these folders counts as a game. Steam and Epic games are recognized on their own, on any drive; this is for games installed elsewhere, for example D:\\Games."],
 ].forEach(([a, b]) => T(a, b));
 
 /* actualizaciones */
@@ -696,7 +703,7 @@ window.alert = m => _alert(trDialog(m));
   ["El overlay arrancará con Windows.", "The overlay will start with Windows."],
   ["El overlay ya no arranca con Windows.", "The overlay no longer starts with Windows."],
   ["Elegí los programas que querés que se cierren sí o sí cuando se abre un juego, para liberar procesador y memoria. Se cierran todos sus procesos apenas el overlay detecta el juego, y no se vuelven a abrir solos. Nunca se toca el juego ni los procesos de Windows.", "Choose the programs you want closed no matter what when a game opens, to free up processor and memory. All their processes are closed as soon as the overlay detects the game, and they do not reopen by themselves. The game and Windows processes are never touched."],
-  ["El Modo juego funciona junto con el overlay, que es el que detecta el juego, y ahora no está abierto. ", "Game mode works together with the overlay, which is what detects the game, and it is not open right now. "],
+  ["El Modo juego funciona junto con el overlay, que es el que detecta el juego, y ahora no está abierto.", "Game mode works together with the overlay, which is what detects the game, and it is not open right now."],
   ["Abrir overlay", "Open overlay"],
   ["Se cierran al abrir un juego", "Closed when a game opens"],
   ["Todavía no agregaste ningún programa. Por ejemplo: un navegador, Spotify o un cliente de descargas.", "You have not added any program yet. For example: a browser, Spotify or a download client."],

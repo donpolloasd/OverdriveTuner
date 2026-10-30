@@ -20,10 +20,10 @@ type GameTarget struct {
 // juegos usan CDN, así que miden el punto de entrada más cercano; las regiones (endpoints públicos de AWS)
 // dan una idea más fiel de la distancia a los servidores de partida.
 var GameTargets = []GameTarget{
-	{"games", "Steam (CS2, ETS2)", "steamcommunity.com"},
+	{"games", "Steam", "steamcommunity.com"},
 	{"games", "FACEIT", "api.faceit.com"},
-	{"games", "EA (FC 26)", "www.ea.com"},
-	{"games", "Epic Games (Fortnite)", "www.epicgames.com"},
+	{"games", "EA", "www.ea.com"},
+	{"games", "Epic Games", "www.epicgames.com"},
 	{"games", "Riot Games", "www.riotgames.com"},
 	{"games", "Battle.net", "www.battle.net"},
 	{"games", "Ubisoft", "www.ubisoft.com"},

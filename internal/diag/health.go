@@ -220,10 +220,10 @@ func BIOSGuide(hw scan.Hardware) Check {
 		virt = "Intel VT-x / VT-d"
 	}
 	return Check{ID: "bios_guide", Title: "Guía de ajustes de la BIOS", Status: Info,
-		Detail: "Esto no se cambia desde Windows: entrá a la BIOS (tecla Supr o F2 al encender) y revisá. " +
-			"1) Perfil de memoria " + mem + " activado. " +
-			"2) «Above 4G Decoding» y «Resizable BAR» activados (con una GPU reciente). " +
-			"3) Si un anti-cheat lo pide: Secure Boot, TPM (fTPM/PTT) y " + virt + " / IOMMU activados. " +
-			"4) Modo de arranque UEFI, no Legacy. " +
-			"5) Actualizá la BIOS solo si tu placa lo recomienda para tu procesador o memoria, y nunca con el equipo en riesgo de apagarse."}
+		Detail: "Esto no se cambia desde Windows: entrá a la BIOS (tecla Supr o F2 al encender) y revisá estos puntos. " +
+			"Perfil de memoria " + mem + " activado. " +
+			"«Above 4G Decoding» y «Resizable BAR» activados (con una GPU reciente). " +
+			"Si un anti-cheat lo pide: Secure Boot, TPM (fTPM/PTT) y " + virt + " / IOMMU activados. " +
+			"Modo de arranque UEFI, no Legacy. " +
+			"Actualizá la BIOS solo si tu placa lo recomienda para tu procesador o memoria, y nunca con el equipo en riesgo de apagarse."}
 }

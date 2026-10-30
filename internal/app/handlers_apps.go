@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"fpsforge/internal/apps"
+	"fpsforge/internal/system"
 )
 
 var (
@@ -62,6 +63,9 @@ func (s *Server) handleAppsInstalled(w http.ResponseWriter, r *http.Request) {
 	defer appsMu.Unlock()
 	if fresh || appsCache == nil || time.Since(appsCached) > time.Minute {
 		have, err := apps.Installed(s.Sys)
+		if _, demo := s.Sys.(*system.Fake); demo {
+			have, err = map[string]bool{}, nil // en demostración no hay winget
+		}
 		if err != nil {
 			fail(w, 500, "No se pudo consultar qué está instalado: "+err.Error())
 			return
