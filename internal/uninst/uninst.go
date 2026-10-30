@@ -247,26 +247,30 @@ func Run(s *Server, noWindow bool, profileDir string) {
 		<-s.Closed
 		return
 	}
-	proc := winhost.OpenWindow(url, profileDir)
-	go func() {
-		if proc == nil {
-			return
-		}
-		started := time.Now()
-		proc.Wait()
-		if time.Since(started) > 5*time.Second {
-			for { // si cierran la ventana a mitad de la desinstalación, se espera a que termine
-				s.mu.Lock()
-				r := s.running
-				s.mu.Unlock()
-				if !r {
-					break
-				}
-				time.Sleep(500 * time.Millisecond)
+	closed := func() { // si cierran la ventana a mitad de la desinstalación, se espera a que termine
+		for {
+			s.mu.Lock()
+			r := s.running
+			s.mu.Unlock()
+			if !r {
+				break
 			}
-			s.close()
+			time.Sleep(500 * time.Millisecond)
 		}
-	}()
+		s.close()
+	}
+	// Ventana propia (WebView2); si no se puede, Edge en modo aplicación.
+	if win, err := winhost.OpenApp(url, profileDir, winhost.AppOptions{Title: "Desinstalar OverdriveTuner", Maximized: true}); err == nil {
+		go func() { <-win.Done(); closed() }()
+	} else if proc := winhost.OpenWindowMax(url, profileDir); proc != nil {
+		go func() {
+			started := time.Now()
+			proc.Wait()
+			if time.Since(started) > 5*time.Second {
+				closed()
+			}
+		}()
+	}
 	go func() { // sin latidos durante 3 minutos (o nunca hubo): salir
 		start := time.Now()
 		for {

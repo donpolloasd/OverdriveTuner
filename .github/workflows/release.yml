@@ -1,0 +1,122 @@
+# Compila OverdriveTuner desde el código, lo firma con SignPath y deja un Release en borrador.
+# Se lanza al subir un tag vX.Y.Z (git tag v2.8.2 && git push origin v2.8.2) o a mano desde la pestaña Actions.
+# Requiere el proyecto aprobado en SignPath Foundation y estos datos en Settings > Secrets and variables > Actions:
+#   secreto  SIGNPATH_API_TOKEN          (token de un usuario de SignPath con permiso de envío)
+#   variable SIGNPATH_ORGANIZATION_ID    (ID de la organización en SignPath)
+#   variable SIGNPATH_PROJECT_SLUG       (por ejemplo: OverdriveTuner)
+#   variable SIGNPATH_POLICY_SLUG        (release-signing; test-signing para probar)
+# Mientras no estén cargados, el flujo compila y publica el borrador SIN firmar (sirve para probarlo).
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # para crear el Release en borrador
+
+jobs:
+  release:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      SIGN: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Pruebas
+        run: |
+          go vet ./...
+          go test ./internal/...
+
+      - name: Recursos de Windows (icono, manifiesto y ficha de versión)
+        run: |
+          mkdir -p dist
+          go run ./tools/mkres cmd/fpsforge/rsrc_windows_amd64.syso admin fpsforge dist/overdrivetuner.ico
+          go run ./tools/mkres cmd/setup/rsrc_windows_amd64.syso admin setup
+
+      - name: Compilar el programa
+        env: { GOOS: windows, GOARCH: amd64, CGO_ENABLED: "0" }
+        run: |
+          mkdir -p programa
+          go build -trimpath -ldflags "-H=windowsgui -s -w" -o programa/OverdriveTuner.exe ./cmd/fpsforge
+
+      # 1.ª firma: el programa. Va firmado dentro del instalador y del parche, y como Portable.
+      - name: Subir el programa sin firmar
+        id: up-programa
+        uses: actions/upload-artifact@v7
+        with:
+          name: programa-sin-firmar
+          path: programa/OverdriveTuner.exe
+
+      - name: Firmar el programa (SignPath)
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.up-programa.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: programa-firmado
+
+      - name: Compilar instalador y parche con el programa firmado
+        env: { GOOS: windows, GOARCH: amd64, CGO_ENABLED: "0" }
+        run: |
+          if [ -f programa-firmado/OverdriveTuner.exe ]; then cp programa-firmado/OverdriveTuner.exe programa/; fi
+          cp programa/OverdriveTuner.exe cmd/setup/payload/OverdriveTuner.exe
+          mkdir -p instaladores
+          go build -trimpath -ldflags "-H=windowsgui -s -w" -o instaladores/OverdriveTuner-Setup.exe ./cmd/setup
+          go build -trimpath -ldflags "-H=windowsgui -s -w -X main.patchMode=1" -o instaladores/OverdriveTuner-Patch.exe ./cmd/setup
+
+      # 2.ª firma: instalador y parche.
+      - name: Subir instalador y parche sin firmar
+        id: up-instaladores
+        uses: actions/upload-artifact@v7
+        with:
+          name: instaladores-sin-firmar
+          path: instaladores/*.exe
+
+      - name: Firmar instalador y parche (SignPath)
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.up-instaladores.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: instaladores-firmados
+
+      # Los nombres de archivo son los que espera el actualizador automático (OverdriveTuner-Portable.exe + SHA256.txt).
+      - name: Preparar los archivos del Release
+        run: |
+          if [ -d instaladores-firmados ]; then cp instaladores-firmados/*.exe instaladores/; fi
+          cp programa/OverdriveTuner.exe dist/OverdriveTuner-Portable.exe
+          cp instaladores/OverdriveTuner-Setup.exe instaladores/OverdriveTuner-Patch.exe dist/
+          cd dist && sha256sum OverdriveTuner-Setup.exe OverdriveTuner-Patch.exe OverdriveTuner-Portable.exe > SHA256.txt
+
+      # Queda en borrador: lo revisás y lo publicás a mano en la web de GitHub.
+      - name: Crear el Release en borrador
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --draft --title "OverdriveTuner ${GITHUB_REF_NAME#v}" \
+            --notes "Borrador creado por GitHub Actions. Completá las notas antes de publicar." \
+            dist/OverdriveTuner-Setup.exe dist/OverdriveTuner-Patch.exe dist/OverdriveTuner-Portable.exe dist/SHA256.txt
+
+      - name: Guardar los archivos finales
+        uses: actions/upload-artifact@v7
+        with:
+          name: OverdriveTuner
+          path: dist/

@@ -8,3 +8,6 @@ cmd/setup/payload/OverdriveTuner.exe
 # Archivos de prueba y temporales
 *.tmp
 *.log
+# Configuración local de herramientas (nunca se sube)
+.claude/
+CLAUDE.md

@@ -133,6 +133,8 @@ foreach ($g in @(Get-CimInstance Win32_VideoController)) {
   }
   [void]$gpus.Add([ordered]@{ name=$n; vendor=(Vendor $n); vramMB=$mb; driver=[string]$g.DriverVersion; refresh=[int]$g.CurrentRefreshRate; active=([int]$g.CurrentHorizontalResolution -gt 0); width=[int]$g.CurrentHorizontalResolution; height=[int]$g.CurrentVerticalResolution })
 }
+# Si un escaneo anterior ya obtuvo la memoria de esa gráfica, se reutiliza (dxdiag tarda unos 5 segundos).
+if ($knownVram) { foreach ($g2 in $gpus) { if ($g2.vramMB -le 0 -and $knownVram.ContainsKey($g2.name)) { $g2.vramMB = [int]$knownVram[$g2.name] } } }
 # Si el registro no dio la memoria de alguna gráfica, se la pide a DirectX (dxdiag): es lo que muestra Windows.
 if (@($gpus | Where-Object { $_.vramMB -le 0 }).Count -gt 0) {
   try {
@@ -190,13 +192,17 @@ ConvertTo-Json -InputObject $r -Compress -Depth 5
 `
 
 // Run escanea el equipo. En sistemas simulados devuelve datos de demostración.
-func Run(sys system.System) (Hardware, error) {
+func Run(sys system.System) (Hardware, error) { return RunKnown(sys, nil) }
+
+// RunKnown es como Run, pero reutiliza la memoria de video que ya se conocía de cada gráfica (por nombre)
+// en vez de volver a pedírsela a dxdiag.
+func RunKnown(sys system.System, knownVRAM map[string]int) (Hardware, error) {
 	if sys.Name() != "windows" {
 		h := Demo()
 		h.Admin = sys.IsAdmin()
 		return h, nil
 	}
-	out, err := sys.PowerShell(psScan, 90*time.Second)
+	out, err := sys.PowerShell(knownVRAMScript(knownVRAM)+psScan, 90*time.Second)
 	if err != nil {
 		return Hardware{}, fmt.Errorf("no se pudo escanear el hardware: %w", err)
 	}
@@ -206,6 +212,33 @@ func Run(sys system.System) (Hardware, error) {
 	}
 	h.Admin = sys.IsAdmin()
 	return h, nil
+}
+
+// KnownVRAM devuelve la memoria de video ya detectada de cada gráfica (por nombre), para RunKnown.
+func (h Hardware) KnownVRAM() map[string]int {
+	m := map[string]int{}
+	for _, g := range h.GPUs {
+		if g.VRAMMB > 0 {
+			m[g.Name] = g.VRAMMB
+		}
+	}
+	return m
+}
+
+// knownVRAMScript arma la línea de PowerShell con la memoria de video ya conocida ($knownVram).
+func knownVRAMScript(known map[string]int) string {
+	if len(known) == 0 {
+		return ""
+	}
+	var b strings.Builder
+	b.WriteString("$knownVram = @{")
+	for name, mb := range known {
+		if mb > 0 && !strings.ContainsAny(name, "\r\n") {
+			fmt.Fprintf(&b, "'%s'=%d;", strings.ReplaceAll(name, "'", "''"), mb)
+		}
+	}
+	b.WriteString("}\n")
+	return b.String()
 }
 
 // Parse interpreta la salida JSON del escáner.

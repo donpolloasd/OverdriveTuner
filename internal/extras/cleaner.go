@@ -18,6 +18,23 @@ type Target struct {
 	Paths []string `json:"-"`
 	Safe  bool     `json:"safe"` // incluido por defecto
 	Deep  bool     `json:"deep"` // limpieza profunda: caché de navegadores y apps
+	// Confirm: si no está vacío, borrarlo pide confirmación explícita del usuario (este texto la explica).
+	Confirm string `json:"confirm,omitempty"`
+}
+
+// NeedsConfirm devuelve los objetivos pedidos que exigen confirmación del usuario antes de borrarse.
+func NeedsConfirm(ids []string) []Target {
+	want := map[string]bool{}
+	for _, id := range ids {
+		want[id] = true
+	}
+	var out []Target
+	for _, t := range Targets() {
+		if want[t.ID] && t.Confirm != "" {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 // CleanInfo es el tamaño estimado de un objetivo.
@@ -69,7 +86,9 @@ func Targets() []Target {
 			Paths: clean(os.TempDir())},
 		{ID: "wintemp", Name: "Temporales de Windows", Desc: "C:\\Windows\\Temp", Safe: true,
 			Paths: clean(join(win, "Temp"))},
-		{ID: "shaders", Name: "Caché de shaders (DirectX, NVIDIA, AMD)", Desc: "Se regenera al abrir los juegos; la primera partida puede tardar un poco más.", Safe: true,
+		// Los shaders no van marcados por defecto ni en la limpieza semanal: borrarlos sin querer provoca tirones.
+		{ID: "shaders", Name: "Caché de shaders (DirectX, NVIDIA, AMD)", Desc: "Se regenera al abrir los juegos; las primeras partidas después pueden tener tirones. Pide confirmación.",
+			Confirm: "Vas a borrar la caché de shaders de DirectX, NVIDIA y AMD.\n\nLos juegos la vuelven a crear solos, pero las primeras partidas después pueden tardar más en cargar y tener tirones (microcortes) mientras se compilan de nuevo. Conviene hacerlo solo si un juego tiene errores gráficos o después de cambiar el driver de la placa de video, y no justo antes de una partida competitiva.\n\nLo hacés bajo tu responsabilidad: los archivos borrados no se pueden recuperar.",
 			Paths: clean(join(local, "D3DSCache"), join(local, "NVIDIA", "DXCache"), join(local, "NVIDIA", "GLCache"),
 				join(local, "AMD", "DxCache"), join(local, "AMD", "GLCache"), join(local, "AMD", "VkCache"))},
 		{ID: "crash", Name: "Volcados y reportes de errores", Desc: "Minidumps y reportes de WER", Safe: true,

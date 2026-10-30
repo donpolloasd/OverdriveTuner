@@ -38,7 +38,7 @@ function hkSet(m, k, v) {
 
 const SCH_DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const SCH_JOBS = [
-  ["cleanup", "Limpieza semanal", "Borra los archivos temporales, la caché de shaders, los volcados de errores y las miniaturas (solo lo seguro, igual que la selección por defecto de «Limpieza»). Corre sin ventana. Si la PC estaba apagada a esa hora, corre al encenderla."],
+  ["cleanup", "Limpieza semanal", "Borra los archivos temporales, los volcados de errores y las miniaturas (solo lo seguro, igual que la selección por defecto de «Limpieza»). No borra la caché de shaders. Corre sin ventana. Si la PC estaba apagada a esa hora, corre al encenderla."],
   ["restore", "Punto de restauración semanal", "Crea un punto de restauración de Windows para poder volver atrás si algo sale mal. Requiere la Protección del sistema activada en Windows."],
 ];
 

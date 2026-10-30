@@ -88,6 +88,7 @@ func main() {
 				winhost.TrayNotify("OverdriveTuner se actualizó", "La versión "+v+" ya está instalada. Se usa la próxima vez que abras el programa o reinicies la PC.")
 			}
 			up.Watch(nil, 90*time.Second, 6*time.Hour)
+			go watchExclusive(dir, nil)
 		}
 		if err := overlay.Main(dir, *demo); err != nil {
 			log.Println("overlay:", err)
@@ -127,6 +128,7 @@ func main() {
 			winhost.TrayNotify("OverdriveTuner se actualizó", "La versión "+v+" ya está instalada. Reiniciá el programa para usarla (Configuración → Actualizaciones).")
 		}
 		srv.Up.Watch(srv.Closed, 25*time.Second, 6*time.Hour) // solo actúa si las actualizaciones automáticas están activadas
+		go watchExclusive(dir, srv.Closed)
 	}
 	if *noWindow {
 		fmt.Println(url)
@@ -171,16 +173,51 @@ func main() {
 		winhost.Cleanup("window", dir) // restos de la ventana anterior, para abrir una limpia
 		watch(winhost.OpenWindowMax(url+"?nointro=1", dir))
 	}
+	// Ventana propia (WebView2, el motor web de Windows): ícono y nombre propios en la barra de tareas,
+	// sin menú ni atajos de navegador. Si no se puede, se usa Edge en modo aplicación como antes.
+	win, err := winhost.OpenApp(url, dir, winhost.AppOptions{Title: "OverdriveTuner", Maximized: true, HideOnClose: true, OnClose: windowGone})
+	if err == nil {
+		openUI = win.Show
+	} else {
+		log.Println("ventana propia no disponible, se usa Edge:", err)
+	}
 	winhost.StartTray("OverdriveTuner", openUI, srv.Close)
 	winhost.ListenActivate(openUI)
-	srv.WatchWindow(40*time.Second, windowGone)
-	watch(winhost.OpenWindowMax(url, dir))
+	if win == nil {
+		srv.WatchWindow(40*time.Second, windowGone)
+		watch(winhost.OpenWindowMax(url, dir))
+	}
 	<-srv.Closed
+	if win != nil {
+		win.Close()
+		select { // se deja que WebView2 guarde y cierre sus procesos
+		case <-win.Done():
+		case <-time.After(3 * time.Second):
+		}
+	}
 	time.Sleep(300 * time.Millisecond)
 	winhost.TrayRemove()
 	// Cierre total: overlay y la ventana, para poder volver a abrir sin conflictos.
 	winhost.Cleanup("all", dir)
 	os.Exit(0)
+}
+
+// watchExclusive avisa en la bandeja cuando el juego está en pantalla completa exclusiva: ahí Windows no
+// deja que el overlay se dibuje encima y, sin este aviso, parecería que no anda.
+func watchExclusive(dir string, stop <-chan struct{}) {
+	tk := time.NewTicker(3 * time.Second)
+	defer tk.Stop()
+	for {
+		select {
+		case <-stop:
+			return
+		case <-tk.C:
+		}
+		if st, ok := overlay.LoadState(dir); ok && st.Alive(time.Now()) && overlay.ClaimExclusiveNotice(dir, st) {
+			winhost.TrayNotify("El overlay no puede verse en "+st.Game,
+				"El juego está en pantalla completa exclusiva. Ponelo en «ventana sin bordes» en sus opciones de video.")
+		}
+	}
 }
 
 // runTask hace una tarea de mantenimiento programada, sin ventana, y termina.

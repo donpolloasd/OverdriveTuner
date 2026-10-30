@@ -11,7 +11,6 @@ import (
 
 	"fpsforge/internal/bench"
 	"fpsforge/internal/bisect"
-	"fpsforge/internal/diag"
 	"fpsforge/internal/system"
 	"fpsforge/internal/tools"
 	"fpsforge/internal/tweaks"
@@ -156,7 +155,7 @@ func (s *Server) handleReport(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(&b, `<tr><th>Gráficos</th><td>%s%s</td></tr>`, e(g.Name), act)
 	}
 	b.WriteString("</table>")
-	cs := diag.Run(s.Sys, hw, s.loadSettings().targetHz(hw))
+	cs := s.diagChecks(hw, s.loadSettings().targetHz(hw), false)
 	b.WriteString(`<h2>Diagnóstico de fluidez</h2><table>`)
 	for _, c := range cs {
 		fmt.Fprintf(&b, `<tr><td class="%s"><b>%s</b></td><td>%s</td></tr>`, e(c.Status), e(c.Title), e(c.Detail))

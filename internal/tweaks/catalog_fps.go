@@ -34,7 +34,7 @@ func fpsTweaks() []Tweak {
 			}},
 		{ID: "fps.fso", Test: true, Cat: "fps", Name: "Desactivar optimizaciones de pantalla completa (global)",
 			Desc: "Usa pantalla completa exclusiva clásica: puede bajar latencia en juegos DX9/DX11.",
-			Warn: "Algunos juegos DX12 funcionan mejor con las optimizaciones activadas; si notas problemas, revierte.",
+			Warn: "Algunos juegos DX12 funcionan mejor con las optimizaciones activadas; si notas problemas, revierte. Con este ajuste los juegos en pantalla completa pasan a pantalla completa exclusiva y el overlay de OverdriveTuner no se ve encima (Windows no lo permite); en «ventana sin bordes» sí se ve.",
 			Risk: 1, Comp: true, Ops: []Op{
 				D(gameCfg, "GameDVR_FSEBehaviorMode", "2", Del),
 				D(gameCfg, "GameDVR_HonorUserFSEBehaviorMode", "1", Del),

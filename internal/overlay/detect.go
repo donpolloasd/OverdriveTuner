@@ -106,11 +106,13 @@ var (
 	gpuExe   string
 	gpuStamp time.Time
 	gpuRes   string
+	gpuBusy  bool // hay una consulta de PowerShell en curso
 )
 
 // gpuBusyGame devuelve el programa de la ventana activa si está usando la placa de video (3D) con fuerza:
 // así se reconocen los juegos en ventana (como Minecraft con Java) sin conocer su nombre. Se consulta
-// como mucho una vez cada 8 segundos por programa.
+// como mucho una vez cada 8 segundos por programa. La consulta (PowerShell, tarda unos segundos) corre
+// aparte: mientras tanto se devuelve el último resultado y el overlay sigue funcionando sin trabarse.
 func gpuBusyGame(sys system.System, running map[string]string) string {
 	gpuMu.Lock()
 	if gpuRes != "" { // ya se reconoció: se mantiene mientras el programa siga abierto (aunque cambies de ventana)
@@ -128,7 +130,7 @@ func gpuBusyGame(sys system.System, running map[string]string) string {
 	}
 	gpuMu.Lock()
 	defer gpuMu.Unlock()
-	if strings.EqualFold(exe, gpuExe) && time.Since(gpuStamp) < 8*time.Second {
+	if gpuBusy || (strings.EqualFold(exe, gpuExe) && time.Since(gpuStamp) < 8*time.Second) {
 		return gpuRes
 	}
 	gpuExe, gpuStamp, gpuRes = exe, time.Now(), ""
@@ -136,15 +138,21 @@ func gpuBusyGame(sys system.System, running map[string]string) string {
 	if script == "" {
 		return ""
 	}
-	out, _, err := sys.Exec(12*time.Second, "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script)
-	if err != nil {
-		return ""
-	}
-	if v, e := strconv.Atoi(strings.TrimSpace(out)); e == nil && v >= gpuBusyMin {
-		gpuRes = exe
-		fpslog.Diag("detección automática: %s usa la placa de video (%d %%), se toma como juego", exe, v)
-	}
-	return gpuRes
+	gpuBusy = true
+	go func() {
+		out, _, err := sys.Exec(12*time.Second, "powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script)
+		gpuMu.Lock()
+		defer gpuMu.Unlock()
+		gpuBusy = false
+		if err != nil || !strings.EqualFold(exe, gpuExe) {
+			return
+		}
+		if v, e := strconv.Atoi(strings.TrimSpace(out)); e == nil && v >= gpuBusyMin {
+			gpuRes = exe
+			fpslog.Diag("detección automática: %s usa la placa de video (%d %%), se toma como juego", exe, v)
+		}
+	}()
+	return ""
 }
 
 // rtssActiveGame devuelve el programa que RTSS (MSI Afterburner) está midiendo ahora, si hay uno.
@@ -171,19 +179,22 @@ var listFailed bool
 
 // FindGame busca el juego que está abierto («» si no hay). Es lo que usa la detección automática.
 func FindGame(sys system.System, userGames func() ([]string, []string)) string {
-	out, _, err := sys.Exec(8*time.Second, "tasklist.exe", "/NH", "/FO", "CSV")
-	if err != nil {
-		if !listFailed {
-			listFailed = true
-			fpslog.Diag("detección automática: no se pudo leer la lista de programas: %v", err)
+	running, ok := runningExes()
+	if !ok { // respaldo: tasklist.exe (más lento)
+		out, _, err := sys.Exec(8*time.Second, "tasklist.exe", "/NH", "/FO", "CSV")
+		if err != nil {
+			if !listFailed {
+				listFailed = true
+				fpslog.Diag("detección automática: no se pudo leer la lista de programas: %v", err)
+			}
+			return ""
 		}
-		return ""
+		running = parseTasklist(out)
 	}
 	var user, extraDirs []string
 	if userGames != nil {
 		user, extraDirs = userGames()
 	}
-	running := parseTasklist(out)
 	rg, lg, fs := rtssActiveGame(), launcherGame(append(append(epicDirs(), registryDirs()...), extraDirs...)), foregroundFullscreenExe()
 	g := pickGame(running, user, rg, lg, "", fs)
 	if g == "" {

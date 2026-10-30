@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"fpsforge/internal/scan"
@@ -55,8 +56,26 @@ func regDword(sys system.System, key, name string) (int, bool) {
 	return n, err == nil
 }
 
-// Run ejecuta todos los chequeos para un monitor de targetHz.
+// Run ejecuta todos los chequeos para un monitor de targetHz: los rápidos, los lentos y la guía de BIOS.
 func Run(sys system.System, hw scan.Hardware, targetHz int) []Check {
+	out := append(Fast(sys, hw, targetHz), Slow(sys, hw)...)
+	return append(out, BIOSGuide(hw))
+}
+
+// Slow son los chequeos que necesitan PowerShell (anti-cheat de kernel; salud de discos, driver y
+// Resizable BAR): tardan unos segundos, así que corren a la vez y la interfaz los guarda un rato.
+func Slow(sys system.System, hw scan.Hardware) []Check {
+	var ac, hl []Check
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() { defer wg.Done(); ac = antiCheat(sys) }()
+	go func() { defer wg.Done(); hl = Health(sys, hw) }()
+	wg.Wait()
+	return append(ac, hl...)
+}
+
+// Fast son los chequeos que se resuelven al instante (hardware ya escaneado, registro, plan de energía).
+func Fast(sys system.System, hw scan.Hardware, targetHz int) []Check {
 	var out []Check
 	add := func(c Check) { out = append(out, c) }
 
@@ -152,9 +171,6 @@ func Run(sys system.System, hw scan.Hardware, targetHz int) []Check {
 		add(Check{ID: "hags", Title: "Programación de GPU acelerada por hardware", Status: Info,
 			Detail: fmt.Sprintf("Está %s. En algunos juegos mejora la fluidez y en otros la empeora: si la cambiás, medilo con el benchmark.", state)})
 	}
-	out = append(out, antiCheat(sys)...)
-	out = append(out, Health(sys, hw)...)
-	out = append(out, BIOSGuide(hw))
 	return out
 }
 

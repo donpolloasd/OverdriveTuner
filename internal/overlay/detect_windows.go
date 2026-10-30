@@ -23,9 +23,52 @@ var (
 	pOpenProcess     = dKernel32.NewProc("OpenProcess")
 	pQueryImageName  = dKernel32.NewProc("QueryFullProcessImageNameW")
 	pCloseHandle     = dKernel32.NewProc("CloseHandle")
+	pQueryUNS        = syscall.NewLazyDLL("shell32.dll").NewProc("SHQueryUserNotificationState")
 )
 
 type dRect struct{ L, T, R, B int32 }
+
+// exclusiveFullscreen dice si Windows informa que hay un programa Direct3D en pantalla completa exclusiva
+// (QUNS_RUNNING_D3D_FULL_SCREEN). En ese modo ninguna ventana externa, tampoco el overlay, puede dibujarse
+// encima. Solo consulta el estado del escritorio: no toca el juego.
+func exclusiveFullscreen() (on bool) {
+	defer func() {
+		if recover() != nil {
+			on = false
+		}
+	}()
+	var st uint32
+	if r, _, _ := pQueryUNS.Call(uintptr(unsafe.Pointer(&st))); r != 0 { // HRESULT distinto de S_OK
+		return false
+	}
+	return st == 3
+}
+
+// runningExes lista los programas abiertos (minúsculas → nombre original) leyendo la lista de procesos de
+// Windows directamente, sin lanzar tasklist.exe (que tarda cientos de milisegundos). ok=false si falló.
+func runningExes() (m map[string]string, ok bool) {
+	defer func() {
+		if recover() != nil {
+			m, ok = nil, false
+		}
+	}()
+	snap, _, _ := pSnapshot.Call(2, 0) // TH32CS_SNAPPROCESS
+	if snap == ^uintptr(0) || snap == 0 {
+		return nil, false
+	}
+	defer pCloseHandle.Call(snap)
+	m = map[string]string{}
+	var pe procEntry
+	pe.Size = uint32(unsafe.Sizeof(pe))
+	r, _, _ := pProcFirst.Call(snap, uintptr(unsafe.Pointer(&pe)))
+	for r != 0 {
+		if name := syscall.UTF16ToString(pe.Exe[:]); name != "" {
+			m[strings.ToLower(name)] = name
+		}
+		r, _, _ = pProcNext.Call(snap, uintptr(unsafe.Pointer(&pe)))
+	}
+	return m, len(m) > 0
+}
 
 // foregroundFullscreenExe devuelve el programa de la ventana activa si ocupa toda la pantalla
 // (pantalla completa o sin bordes) y no es del sistema. Solo consulta ventanas: no toca el juego.

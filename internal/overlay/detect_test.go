@@ -2,6 +2,7 @@ package overlay
 
 import (
 	"testing"
+	"time"
 )
 
 func TestPickGame(t *testing.T) {
@@ -152,5 +153,37 @@ func TestValidExeRechazaCaracteresDePowerShell(t *testing.T) {
 		if !ValidExe(ok) {
 			t.Errorf("%q debería ser válido", ok)
 		}
+	}
+}
+
+func TestExclusiveFullscreenNotice(t *testing.T) {
+	e, clk, _, _, dir := newEng(t)
+	cur, excl := "", true
+	e.d.FindGame = func() string { return cur }
+	e.d.Exclusive = func() bool { return excl }
+	e.Tick()
+	if st, _ := LoadState(dir); st.Exclusive {
+		t.Fatal("sin juego abierto no se avisa de pantalla completa exclusiva")
+	}
+	cur = "cs2.exe"
+	e.Tick() // se detecta en el primer segundo
+	st, _ := LoadState(dir)
+	if !e.gameRun || !st.Exclusive || st.ExclusiveSince == 0 {
+		t.Fatalf("debía avisar de pantalla completa exclusiva: gameRun=%v estado=%+v", e.gameRun, st)
+	}
+	if !ClaimExclusiveNotice(dir, st) || ClaimExclusiveNotice(dir, st) {
+		t.Fatal("el aviso de la bandeja sale una sola vez por cada vez que pasa")
+	}
+	excl = false
+	e.Tick()
+	if st, _ := LoadState(dir); st.Exclusive {
+		t.Fatal("en ventana sin bordes no hay aviso")
+	}
+	clk.t = clk.t.Add(time.Minute)
+	excl = true
+	e.Tick()
+	st, _ = LoadState(dir)
+	if !ClaimExclusiveNotice(dir, st) {
+		t.Fatal("si vuelve a pasar, se avisa de nuevo")
 	}
 }

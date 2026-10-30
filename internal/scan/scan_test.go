@@ -23,3 +23,17 @@ func TestParseAndConditions(t *testing.T) {
 		t.Error("sin datos de disco no se asume SSD")
 	}
 }
+
+func TestKnownVRAMScript(t *testing.T) {
+	if knownVRAMScript(nil) != "" {
+		t.Fatal("sin datos no se agrega nada")
+	}
+	s := knownVRAMScript(map[string]int{"Placa 'X'": 8192})
+	if s != "$knownVram = @{'Placa ''X'''=8192;}\n" {
+		t.Fatalf("comillas mal escapadas: %q", s)
+	}
+	h := Hardware{GPUs: []GPU{{Name: "A", VRAMMB: 8150}, {Name: "B"}}}
+	if k := h.KnownVRAM(); len(k) != 1 || k["A"] != 8150 {
+		t.Fatalf("%v", k)
+	}
+}

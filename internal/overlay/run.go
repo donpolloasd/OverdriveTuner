@@ -21,6 +21,10 @@ func tasklistRunning(sys system.System, exe string) bool {
 	if !ValidExe(exe) {
 		return false
 	}
+	if m, ok := runningExes(); ok {
+		_, found := m[strings.ToLower(exe)]
+		return found
+	}
 	out, _, err := sys.Exec(8*time.Second, "tasklist.exe", "/FI", "IMAGENAME eq "+exe, "/NH", "/FO", "CSV")
 	return err == nil && strings.Contains(strings.ToLower(out), `"`+strings.ToLower(exe)+`"`)
 }
@@ -92,6 +96,7 @@ func Main(dataDir string, demo bool) error {
 		d.StartPM = func(_ string, on func(float64), _ func(error)) (func(), error) { return demoFrames(on), nil }
 	} else {
 		d.GameRunning = func(exe string) bool { return tasklistRunning(sys, exe) }
+		d.Exclusive = exclusiveFullscreen
 		d.FindGame = func() string {
 			return FindGame(sys, func() ([]string, []string) {
 				var l []string

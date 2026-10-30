@@ -47,6 +47,8 @@ input[type=text]:focus{border-color:var(--accent);outline:0}
 .note2{color:var(--muted);font-size:13px;margin:14px 0 0}
 .warn{border:1px solid #ffc85755;background:#ffc8571a;color:#ffe2a6;border-radius:10px;padding:10px 14px;margin-top:14px;font-size:13px}
 @media (max-width:900px){.cols{grid-template-columns:1fr}}
+body{-webkit-user-select:none;user-select:none;cursor:default}
+input,textarea{-webkit-user-select:text;user-select:text}
 </style>
 </head>
 <body>
@@ -84,6 +86,12 @@ input[type=text]:focus{border-color:var(--accent);outline:0}
 </section>
 <script>
 const T = "__TOKEN__", $ = s => document.querySelector(s);
+// Que se sienta un programa: sin menú ni atajos del navegador y sin soltar archivos encima.
+document.addEventListener("contextmenu", e => { if (!e.target.closest("input, textarea")) e.preventDefault(); });
+document.addEventListener("keydown", e => { const k = e.key.toLowerCase(), c = e.ctrlKey || e.metaKey; if (["f3", "f5", "f7", "f12", "browserback", "browserrefresh"].includes(k) || (e.altKey && k === "arrowleft") || (c && ["r", "p", "s", "u", "o", "g", "h", "j", "f", "+", "=", "-", "0"].includes(k)) || (c && e.shiftKey && ["i", "j", "c"].includes(k))) e.preventDefault(); }, true);
+document.addEventListener("wheel", e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => e.preventDefault());
 async function api(p, b) {
   const o = { headers: { "X-Token": T } };
   if (b !== undefined) { o.method = "POST"; o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(b); }

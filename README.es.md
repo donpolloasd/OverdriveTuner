@@ -5,7 +5,7 @@
 Optimizador de PC para gaming en Windows 11, hecho en Go sin dependencias externas. Escanea el
 hardware, aplica ajustes reversibles, muestra un overlay de FPS y ayuda a instalar programas.
 
-> **Estado: beta (2.7.2).** Hecho y probado principalmente en una PC con Ryzen 5 5600G + RX 7600 (juegos de Steam, EA, Epic y Minecraft). Algunas funciones no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir.
+> **Estado: beta (2.8.2).** Hecho y probado principalmente en una PC con Ryzen 5 5600G + RX 7600 (juegos de Steam, EA, Epic y Minecraft). Algunas funciones no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir.
 
 > Creado con **Claude Sonnet 5.5** (Anthropic), con la dirección y las pruebas de su autor.
 
@@ -62,7 +62,7 @@ go run ./cmd/fpsforge --demo
 
 ## Estructura
 
-- `cmd/fpsforge`: el programa (servidor local + ventana Edge/Chrome en modo aplicación).
+- `cmd/fpsforge`: el programa (servidor local + ventana propia con WebView2, el motor web que trae Windows; Edge en modo aplicación como respaldo).
 - `cmd/setup`: instalador y parche (la misma interfaz, con `-X main.patchMode=1` para el parche).
 - `internal/`: módulos (ajustes, escaneo, overlay, RTSS, apps, memoria, actualizaciones, etc.).
 

@@ -34,9 +34,11 @@ type Deps struct {
 	FindGame func() string
 	// StartPM empieza a medir cuadros y devuelve la función para detenerlo.
 	StartPM func(process string, onFrame func(ms float64), onExit func(error)) (func(), error)
-	Now     func() time.Time
-	PID     int
-	Quit    func()
+	// Exclusive dice si hay un juego en pantalla completa exclusiva (nil: no se consulta).
+	Exclusive func() bool
+	Now       func() time.Time
+	PID       int
+	Quit      func()
 }
 
 // Engine reúne mediciones, cuadros, grabación y perfiles.
@@ -62,10 +64,11 @@ type Engine struct {
 	lastSession string
 	lastSeq     int
 	profile     *profileState
-	tick        int
 	hkErrs      []string
 	alertCPU    bool
 	alertGPU    bool
+	exclusive   bool  // el juego está en pantalla completa exclusiva (el overlay no puede verse)
+	exclSince   int64 // desde cuándo (Unix ms): identifica cada vez que pasa, para avisar una sola vez
 }
 
 // NewEngine crea el motor.
@@ -228,10 +231,8 @@ func (e *Engine) Run(ctx context.Context, samples <-chan telemetry.Sample) {
 // Tick hace el trabajo de cada segundo: configuración, órdenes, juego y estado.
 func (e *Engine) Tick() {
 	e.mu.Lock()
-	e.tick++
 	e.cfg = LoadConfig(e.d.Dir)
 	cfg := e.cfg
-	tk := e.tick
 	e.mu.Unlock()
 
 	if c, ok := loadCmd(e.d.Dir); ok && c.Seq != e.lastSeq {
@@ -249,9 +250,8 @@ func (e *Engine) Tick() {
 			return
 		}
 	}
-	if tk%2 == 0 {
-		e.checkGame(cfg)
-	}
+	e.checkGame(cfg) // cada segundo: el juego se detecta apenas se abre
+	e.checkExclusive()
 	e.watchFrames()
 	e.writeState()
 }
@@ -337,6 +337,27 @@ func (e *Engine) startPM(exe string, gen, attempt int) (func(), error) {
 		}
 		e.mu.Unlock()
 	})
+}
+
+// checkExclusive anota si el juego está en pantalla completa exclusiva. En ese modo Windows no deja que
+// ninguna ventana externa se dibuje encima, así que el overlay no se ve aunque esté midiendo bien.
+func (e *Engine) checkExclusive() {
+	e.mu.Lock()
+	run, game := e.gameRun, e.pmGame
+	e.mu.Unlock()
+	on := run && e.d.Exclusive != nil && e.d.Exclusive()
+	e.mu.Lock()
+	changed := on != e.exclusive
+	e.exclusive = on
+	if on && changed {
+		e.exclSince = e.d.Now().UnixMilli()
+	}
+	e.mu.Unlock()
+	if changed && on {
+		fpslog.Diag("%s está en pantalla completa exclusiva: el overlay no puede dibujarse encima", game)
+	} else if changed {
+		fpslog.Diag("ya no hay un juego en pantalla completa exclusiva")
+	}
 }
 
 // watchFrames avisa en el estado cuando el juego lleva varios segundos abierto y no llegan cuadros.
@@ -438,6 +459,9 @@ func (e *Engine) writeState() {
 	st := State{PID: e.d.PID, Updated: e.d.Now(), Visible: e.visible, Game: e.gameName(), GameRunning: e.gameRun,
 		FPS: sn.FPS, Low1: sn.Low1, Recording: e.rec, RecLabel: e.recLabel, RecFrames: len(e.recBuf),
 		Sample: e.sample, Message: e.msg, LastSession: e.lastSession, HotkeyErrs: e.hkErrs}
+	if e.exclusive {
+		st.Exclusive, st.ExclusiveSince = true, e.exclSince
+	}
 	if e.rec && len(e.recBuf) > 0 {
 		for _, v := range e.recBuf {
 			st.RecSeconds += v

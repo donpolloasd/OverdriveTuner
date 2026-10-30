@@ -6,6 +6,80 @@ let view = "home";       // sección actual
 let query = "";          // filtro de búsqueda
 let busyOp = false;      // hay una operación en curso
 
+/* Que se sienta un programa y no una página: sin el menú del navegador, sin sus atajos (recargar, imprimir,
+   ver código, zoom, buscar…) y sin soltar archivos encima. La ventana propia ya los apaga; esto cubre
+   también la ventana de Edge que se usa de respaldo. Ctrl+F lleva al buscador del programa. */
+(function appFeel() {
+  document.addEventListener("contextmenu", e => {
+    e.preventDefault();
+    const el = e.target.closest("textarea, input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file])");
+    if (el) textMenu(el, e.clientX, e.clientY);
+  });
+  document.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase(), c = e.ctrlKey || e.metaKey;
+    const block = ["f3", "f5", "f7", "f12", "browserback", "browserforward", "browserrefresh"].includes(k) || (e.altKey && (k === "arrowleft" || k === "arrowright")) ||
+      (c && !e.shiftKey && ["r", "p", "s", "u", "o", "g", "h", "j", "d", "f", "+", "=", "-", "0"].includes(k)) || (c && e.shiftKey && ["i", "j", "c", "r", "o", "delete"].includes(k));
+    if (!block) return;
+    e.preventDefault(); e.stopPropagation();
+    if (c && k === "f" && window.focusSearch) window.focusSearch();
+  }, true);
+  document.addEventListener("wheel", e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+  document.addEventListener("dragover", e => e.preventDefault());
+  document.addEventListener("drop", e => e.preventDefault());
+})();
+
+/* Menú propio de clic derecho para los cuadros de texto (el del navegador está apagado). */
+function textMenu(el, x, y) {
+  closeTextMenu();
+  const ro = el.readOnly || el.disabled;
+  let sel = "";
+  try { sel = el.value.substring(el.selectionStart, el.selectionEnd); } catch (e) { /* los campos numéricos no exponen la selección */ }
+  const run = (cmd, txt) => { el.focus(); return document.execCommand(cmd, false, txt); };
+  const items = [
+    ["Deshacer", "Ctrl+Z", ro, () => run("undo")],
+    null,
+    ["Cortar", "Ctrl+X", ro || !sel, async () => { await navigator.clipboard.writeText(sel); run("delete"); }],
+    ["Copiar", "Ctrl+C", !sel, () => navigator.clipboard.writeText(sel)],
+    ["Pegar", "Ctrl+V", ro, async () => { const t = await navigator.clipboard.readText(); if (t) run("insertText", t); }],
+    ["Eliminar", "Supr", ro || !sel, () => run("delete")],
+    null,
+    ["Seleccionar todo", "Ctrl+A", !el.value, () => { el.focus(); el.select(); }],
+  ];
+  const m = document.createElement("div");
+  m.className = "ctx"; m.setAttribute("role", "menu");
+  m.innerHTML = items.map((it, i) => it ? `<button type="button" role="menuitem" data-i="${i}" ${it[2] ? "disabled" : ""}><span>${it[0]}</span><small>${it[1]}</small></button>` : '<hr>').join("");
+  document.body.appendChild(m);
+  const r = m.getBoundingClientRect();
+  if (!x && !y) { const b = el.getBoundingClientRect(); x = b.left + 8; y = b.bottom; } // tecla de menú o Mayús+F10
+  m.style.left = Math.min(x, innerWidth - r.width - 6) + "px";
+  m.style.top = Math.min(y, innerHeight - r.height - 6) + "px";
+  const btns = [...m.querySelectorAll("button:not([disabled])")];
+  m.addEventListener("mousedown", e => e.preventDefault()); // el cuadro de texto conserva el foco y la selección
+  m.addEventListener("click", async e => {
+    const b = e.target.closest("button[data-i]");
+    if (!b) return;
+    closeTextMenu();
+    try { await items[+b.dataset.i][3](); } catch (err) { toast("No se pudo usar el portapapeles.", 4000); }
+  });
+  m.addEventListener("keydown", e => {
+    const i = btns.indexOf(document.activeElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); btns[(i + (e.key === "ArrowDown" ? 1 : btns.length - 1)) % btns.length].focus(); }
+    else if (e.key === "Escape") { e.preventDefault(); closeTextMenu(); el.focus(); }
+  });
+  textMenu.el = m;
+  setTimeout(() => {
+    document.addEventListener("mousedown", textMenu.away = e => { if (!m.contains(e.target)) closeTextMenu(); }, true);
+    addEventListener("blur", closeTextMenu, { once: true });
+    addEventListener("resize", closeTextMenu, { once: true });
+    document.addEventListener("scroll", closeTextMenu, { once: true, capture: true });
+  });
+}
+function closeTextMenu() {
+  if (!textMenu.el) return;
+  textMenu.el.remove(); textMenu.el = null;
+  document.removeEventListener("mousedown", textMenu.away, true);
+}
+
 async function api(path, body) {
   const opt = { headers: { "X-Token": window.TOKEN } };
   if (body !== undefined) { opt.method = "POST"; opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
@@ -49,14 +123,31 @@ function ask(msg, o = {}) {
     const prev = document.activeElement, inp = v.querySelector("input");
     const close = r => { document.removeEventListener("keydown", key, true); v.remove(); if (prev && prev.focus) try { prev.focus(); } catch (e) { /* sin foco */ } res(r); };
     const accept = () => { if (o.word) { const w = inp.value.trim().toUpperCase(); return close(o.word.includes(w) && w ? w : null); } close(true); };
-    const key = e => { if (e.key === "Escape") { e.stopPropagation(); close(o.word ? null : false); } else if (e.key === "Enter" && document.activeElement !== v.querySelector('[data-k="0"]')) { e.preventDefault(); accept(); } };
+    const key = e => { if (e.key === "Escape") { e.stopPropagation(); if (!o.sticky) close(o.word ? null : false); } else if (e.key === "Enter" && document.activeElement !== v.querySelector('[data-k="0"]')) { e.preventDefault(); accept(); } };
     document.addEventListener("keydown", key, true);
     v.querySelector('[data-k="0"]').onclick = () => close(o.word ? null : false);
     v.querySelector('[data-k="1"]').onclick = accept;
-    v.addEventListener("mousedown", e => { if (e.target === v) close(o.word ? null : false); });
+    v.addEventListener("mousedown", e => { if (e.target === v && !o.sticky) close(o.word ? null : false); });
     document.body.appendChild(v);
     (inp || v.querySelector('[data-k="0"]')).focus();
   });
+}
+
+/* ---------- aviso de responsabilidad (se acepta una sola vez) ---------- */
+const TERMS = "OverdriveTuner cambia configuraciones de Windows: registro, servicios, energía, red y programas instalados. Cada cambio guarda una copia y se puede revertir, y antes de aplicar un perfil se crea un punto de restauración, pero ningún optimizador puede garantizar el mismo resultado en todos los equipos.\n\n" +
+  "Lo usás bajo tu responsabilidad. El programa se entrega «tal cual», sin garantías (licencia MIT): su autor no se hace responsable por fallas, pérdida de datos, problemas con anti-cheat ni otros daños que puedan surgir de su uso.\n\n" +
+  "Recomendación: aplicá los cambios de a poco, probá tus juegos y revertí lo que no te convenza.";
+
+async function termsGate() {
+  if (window.BOOT && window.BOOT.termsOk) return;
+  if (!await ask(TERMS, { title: "Antes de empezar", ok: "Entiendo y acepto", cancel: "Salir", sticky: true })) {
+    try { await api("quit", {}); } catch (e) { /* se cierra */ }
+    document.body.innerHTML = "";
+    return;
+  }
+  try { await api("settings", { termsOk: true }); } catch (e) { /* se vuelve a pedir la próxima vez */ }
+  window.BOOT = Object.assign(window.BOOT || {}, { termsOk: true });
+  document.dispatchEvent(new Event("ot-terms"));
 }
 
 /* ---------- carga de estado ---------- */
@@ -72,6 +163,7 @@ async function load() {
   $("#ver").textContent = "v" + S.version;
   render();
   hideBoot();
+  termsGate();
   // El escaneo del equipo sigue en segundo plano: se completa solo cuando termina.
   while (S.scanning) {
     await new Promise(r => setTimeout(r, 700));
@@ -84,16 +176,73 @@ function tweaksOf(cat) { return S.tweaks.filter(t => t.cat === cat); }
 function activeCount(cat) { const l = tweaksOf(cat).filter(t => t.suitable); return [l.filter(t => t.active).length, l.length]; }
 
 /* ---------- navegación ---------- */
+const TOOLS = [["install", "Instalar programas"], ["overlay", "Overlay en juego"], ["gamemode", "Modo juego"], ["fluidez", "Diagnóstico"], ["bench", "Benchmark"], ["clean", "Limpieza"], ["startup", "Inicio de Windows"]];
+const PROGRAM = [["history", "Historial"], ["settings", "Configuración"]];
 let drvOpen = false;
+
+/* ---------- búsqueda global: lleva al ajuste o a la sección ---------- */
+const fold = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+let gHits = [], gSel = 0;
+
+function gSearch(q) {
+  const words = fold(q).split(/\s+/).filter(Boolean);
+  if (!words.length || !S) return [];
+  const has = (...txt) => { const h = fold(txt.join(" ")); return words.every(w => h.includes(w)); };
+  const catName = id => (S.categories.find(c => c.id === id) || {}).name || "";
+  const lang = s => UILANG === "en" ? trText(s) : s;
+  const secs = [...S.categories.map(c => [c.id, c.name]), ...TOOLS, ...PROGRAM]
+    .filter(([, n]) => has(n, lang(n))).map(([id, n]) => ({ kind: "sec", id, name: n, where: "Sección" }));
+  const tws = S.tweaks.filter(t => has(t.name, t.desc, t.warn || "", catName(t.cat), lang(catName(t.cat))))
+    .map(t => ({ kind: "tw", id: t.id, cat: t.cat, name: t.name, where: catName(t.cat), first: has(t.name) }))
+    .sort((a, b) => b.first - a.first);
+  return [...secs, ...tws].slice(0, 9);
+}
+
+function gShow() {
+  const box = $("#gres"), inp = $("#gq");
+  if (!inp.value.trim()) { box.hidden = true; inp.setAttribute("aria-expanded", "false"); return; }
+  box.innerHTML = gHits.length ? gHits.map((h, i) => `<button type="button" role="option" class="${i === gSel ? "on" : ""}" aria-selected="${i === gSel}" data-i="${i}"><span>${esc(h.name)}</span><small>${esc(h.where)}</small></button>`).join("")
+    : '<div class="empty">No hay resultados.</div>';
+  box.hidden = false; inp.setAttribute("aria-expanded", "true");
+}
+
+function gGo(h) {
+  const inp = $("#gq");
+  inp.value = ""; gHits = []; gShow(); inp.blur();
+  query = "";
+  if (h.kind === "sec") { view = h.id; render(); $("#main").scrollTop = 0; return; }
+  view = h.cat; render();
+  const row = document.querySelector(`.row[data-tid="${CSS.escape(h.id)}"]`);
+  if (!row) return;
+  row.scrollIntoView({ block: "center" });
+  row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
+  const sw = row.querySelector(".sw"); if (sw && !sw.disabled) sw.focus({ preventScroll: true });
+}
+
+(function setupSearch() {
+  const inp = $("#gq"), box = $("#gres");
+  inp.oninput = () => { gHits = gSearch(inp.value); gSel = 0; gShow(); };
+  inp.onkeydown = e => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); if (gHits.length) { gSel = (gSel + (e.key === "ArrowDown" ? 1 : gHits.length - 1)) % gHits.length; gShow(); } }
+    else if (e.key === "Enter") { e.preventDefault(); if (gHits[gSel]) gGo(gHits[gSel]); }
+    else if (e.key === "Escape") { inp.value = ""; gHits = []; gShow(); }
+  };
+  inp.onblur = () => setTimeout(() => { box.hidden = true; inp.setAttribute("aria-expanded", "false"); }, 120);
+  inp.onfocus = () => { if (inp.value.trim()) gShow(); };
+  box.addEventListener("mousedown", e => e.preventDefault()); // que el clic llegue antes de perder el foco
+  box.addEventListener("click", e => { const b = e.target.closest("button[data-i]"); if (b) gGo(gHits[+b.dataset.i]); });
+  window.focusSearch = () => { inp.focus(); inp.select(); };
+  document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); window.focusSearch(); } });
+})();
 function renderNav() {
   const btn = (id, name, cnt) => `<button data-v="${id}" class="${view === id ? "on" : ""}" ${view === id ? 'aria-current="page"' : ""}><span>${esc(name)}</span>${cnt || ""}</button>`;
   let html = btn("home", "Inicio");
   html += '<div class="grp">Optimizar</div>';
   for (const c of S.categories) html += btn(c.id, c.name, (([a, n]) => `<span class="cnt">${a}/${n}</span>`)(activeCount(c.id)));
   html += '<div class="grp">Herramientas</div>';
-  for (const [id, name] of [["apps", "Instalar programas"], ["overlay", "Overlay en juego"], ["gamemode", "Modo juego"], ["fluidez", "Diagnóstico"], ["bench", "Benchmark"], ["clean", "Limpieza"], ["startup", "Inicio de Windows"]]) html += btn(id, name);
+  for (const [id, name] of TOOLS) html += btn(id, name);
   html += '<div class="grp">Programa</div>';
-  html += btn("history", "Historial") + btn("settings", "Configuración");
+  for (const [id, name] of PROGRAM) html += btn(id, name);
   $("#nav").innerHTML = html;
   $("#nav").querySelectorAll("button").forEach(b => b.onclick = () => { view = b.dataset.v; query = ""; render(); $("#main").scrollTop = 0; });
   const hwv = S.hardware || {}, mine = (hwv.gpus || []).map(g => g.vendor).concat(hwv.cpuVendor || "");
@@ -112,7 +261,7 @@ function render() {
   renderNav();
   const m = $("#main");
   if (view === "home") return renderHome(m);
-  if (view === "apps") return renderApps(m);
+  if (view === "install") return renderApps(m);
   if (view === "overlay") return renderOverlay(m);
   if (view === "gamemode") return renderGameMode(m);
   if (view === "fluidez") return renderFluidez(m);
@@ -209,7 +358,7 @@ function renderCategory(m, cat) {
   <div class="top"><div><h2>${esc(c.name)}</h2><p>${esc(c.desc)}</p></div>
     <div class="search"><input id="q" type="search" placeholder="Buscar en esta sección" aria-label="Buscar" value="${esc(query)}"></div></div>
   ${banners()}
-  ${cat === "apps" || cat === "debloat" ? '<div class="banner">Todo lo de esta sección se puede deshacer: apagá el interruptor o usá «Revertir los de esta sección». Cada cambio queda anotado en <b>Historial</b>.</div>' : ""}
+  ${cat === "apps" || cat === "debloat" ? '<div class="banner">Todo lo de esta sección se puede deshacer: apagá el interruptor o usá «Revertir los de esta sección». Cada cambio queda anotado en <a href="#" class="golink" data-go="history">Historial</a>.</div>' : ""}
   ${(typeof CAT_INFO !== "undefined" && CAT_INFO[cat]) ? `<p class="note">${esc(CAT_INFO[cat])}</p>` : ""}
   <div class="bar">
     <button class="btn" id="allOn" ${S.admin ? "" : "disabled"}>Aplicar todos los compatibles</button>
@@ -220,7 +369,11 @@ function renderCategory(m, cat) {
   const q$ = $("#q");
   q$.oninput = () => { query = q$.value; const pos = q$.selectionStart; renderCategory(m, cat); const n2 = $("#q"); n2.focus(); n2.setSelectionRange(pos, pos); };
   $("#list").querySelectorAll(".sw").forEach(b => b.onclick = () => toggle(b.dataset.id, b));
-  $("#allOn").onclick = () => runIds(`Aplicar: ${c.name}`, tweaksOf(cat).filter(t => t.suitable && !t.active && t.risk < 2).map(t => t.id), "apply");
+  $("#allOn").onclick = async () => {
+    const ids = tweaksOf(cat).filter(t => t.suitable && !t.active && t.risk < 2).map(t => t.id);
+    if (ids.length && !await ask(`Se aplicarán ${ids.length} ajustes de «${c.name}». Cada uno se puede revertir.\n\nLo aplicás bajo tu responsabilidad. ¿Continuar?`, { title: `Aplicar: ${c.name}`, ok: "Aplicar" })) return;
+    runIds(`Aplicar: ${c.name}`, ids, "apply");
+  };
   $("#allOff").onclick = () => runIds(`Revertir: ${c.name}`, tweaksOf(cat).filter(t => t.active).map(t => t.id), "revert");
 }
 
@@ -231,18 +384,48 @@ function rowHtml(t) {
     (t.active && !t.applied ? '<span class="tag">Ya activo en tu sistema</span>' : "") +
     (t.drift ? '<span class="tag bad">Windows lo deshizo: desactivalo y volvé a activarlo</span>' : "") +
     (!t.suitable ? `<span class="tag">No disponible: ${esc(t.whyNot)}</span>` : "");
-  return `<div class="row ${t.active ? "on" : ""} ${t.suitable ? "" : "na"}">
-    <div><h4>${esc(t.name)} <span class="risk r${t.risk}">${meter}${riskTxt}</span> ${tags}</h4>
-      <p>${esc(t.desc)}</p>${t.warn ? `<div class="warn"><b>Ojo:</b>${esc(t.warn)}</div>` : ""}</div>
+  return `<div class="row ${t.active ? "on" : ""} ${t.suitable ? "" : "na"}" data-tid="${esc(t.id)}">
+    <div><h4>${esc(t.name)} <button type="button" class="qhelp" data-help="${esc(t.id)}" aria-expanded="false" aria-label="Qué hace este ajuste" title="Qué hace este ajuste">?</button> <span class="risk r${t.risk}">${meter}${riskTxt}</span> ${tags}</h4>
+      <p>${esc(t.desc)}</p>${t.warn ? `<div class="warn"><b>Ojo:</b>${esc(t.warn)}</div>` : ""}<div class="qbox" hidden></div></div>
     <button class="sw" role="switch" aria-checked="${t.active}" aria-label="${esc(t.name)}" data-id="${esc(t.id)}" ${t.suitable && S.admin ? "" : "disabled"}></button>
   </div>`;
 }
+
+/* Explicación rápida de un ajuste (botón «?»): qué hace, qué toca en Windows, riesgo y cómo se revierte. */
+function helpHtml(t) {
+  const n = (k, one, many) => { const c = (t.ops || {})[k] || 0; return c ? (c === 1 ? one : `${c} ${many}`) : ""; };
+  const touches = [n("reg", "1 valor del registro", "valores del registro"), n("svc", "1 servicio", "servicios"),
+    n("ps", "1 script de PowerShell", "scripts de PowerShell"), n("cmd", "1 comando de Windows", "comandos de Windows"),
+    n("plan", "el plan de energía", "planes de energía")].filter(Boolean).join(" · ");
+  const risk = ["Seguro: no debería causar problemas.", "Riesgo medio: puede no convenirle a todos los equipos; probá tus juegos después.",
+    "Avanzado: baja la seguridad o la estabilidad; no está en ningún perfil."][t.risk];
+  const prof = t.rec && t.comp ? "Está en los perfiles Recomendado y Competitivo." : t.rec ? "Está en el perfil Recomendado." : t.comp ? "Está en el perfil Competitivo." : "No está en ningún perfil.";
+  const L = (b, x) => `<p><b>${b}</b> ${esc(x)}</p>`;
+  return L("Qué hace:", t.desc) + (touches ? L("Qué cambia en Windows:", touches) : "") + L("Riesgo:", risk) + L("Perfiles:", prof) +
+    (t.test ? L("Probalo:", "su efecto depende del juego y del equipo; medilo con Benchmark antes y después.") : "") +
+    (t.reboot ? L("Reinicio:", "necesita reiniciar la PC para completarse.") : "") +
+    (t.ac ? L("Anti-cheat:", `desactiva ${t.ac}, que exigen los anti-cheat de kernel; pide doble confirmación.`) : "") +
+    `<p><b>Cómo se deshace:</b> ${esc("apagá el interruptor y vuelve al valor que tenías antes.")} <a href="#" class="golink" data-go="history">Ver en Historial</a></p>`;
+}
+
+document.addEventListener("click", e => {
+  const go = e.target.closest(".golink"); // enlaces internos («Historial»): llevan a esa sección
+  if (go) { e.preventDefault(); view = go.dataset.go; query = ""; render(); $("#main").scrollTop = 0; return; }
+  const b = e.target.closest(".qhelp");
+  if (!b) return;
+  const box = b.closest(".row").querySelector(".qbox"), t = S.tweaks.find(x => x.id === b.dataset.help);
+  if (!box || !t) return;
+  const open = box.hidden;
+  if (open) box.innerHTML = helpHtml(t);
+  box.hidden = !open; b.setAttribute("aria-expanded", open);
+});
 
 async function toggle(id, btn) {
   if (busyOp) return;
   const t = S.tweaks.find(x => x.id === id);
   const turningOn = !t.active;
   if (turningOn && t.risk >= 2 && !t.ac && !await ask(`${t.warn || "Este ajuste es avanzado."}\n\n¿Quieres aplicarlo de todos modos?`, { title: t.name, ok: "Aplicar de todos modos" })) return;
+  if (turningOn && t.risk === 1 && !t.ac && !await ask(`${t.warn ? t.warn + "\n\n" : ""}Riesgo medio: puede no convenirle a todos los equipos. Probá tus juegos después de aplicarlo; se revierte con el mismo interruptor.\n\nLo aplicás bajo tu responsabilidad. ¿Continuar?`, { title: t.name, ok: "Aplicar" })) return;
   let confirmN = 0;
   if (turningOn && t.ac) {
     if (!await ask(`«${t.name}» desactiva: ${t.ac}.\nLos anti-cheat de kernel lo exigen: si lo desactivás probablemente no puedas jugar partidas competitivas hasta volver a activarlo.\n\nPrimera confirmación: ¿querés continuar?`, { title: "Anti-cheat", ok: "Continuar", danger: true })) return;
@@ -298,7 +481,7 @@ async function runProfile(name, title) {
   const r = await api("profile", { name });
   if (!r.ids.length) { toast("Ese perfil ya está aplicado en tu equipo."); return; }
   const names = r.ids.map(id => S.tweaks.find(t => t.id === id).name);
-  if (!await ask(`${title}: se aplicarán ${r.ids.length} ajustes compatibles con tu equipo.\nSe creará antes un punto de restauración y podrás revertir cada ajuste.\n\n¿Continuar?`, { title, ok: "Aplicar" })) return;
+  if (!await ask(`${title}: se aplicarán ${r.ids.length} ajustes compatibles con tu equipo.\nSe creará antes un punto de restauración y podrás revertir cada ajuste.\n\nLo aplicás bajo tu responsabilidad. ¿Continuar?`, { title, ok: "Aplicar" })) return;
   runIds(title, r.ids, "apply", true);
   void names;
 }
@@ -346,9 +529,12 @@ async function renderClean(m) {
   $("#doClean").onclick = async () => {
     const ids = [...m.querySelectorAll(".ck:checked")].map(c => c.dataset.id);
     if (!ids.length) return toast("Selecciona qué limpiar.");
+    for (const x of info.filter(i => i.confirm && ids.includes(i.id))) {
+      if (!await ask(x.confirm, { title: x.name, ok: "Borrar igual", danger: true })) return toast("Cancelado: no se borró nada.");
+    }
     modal.open("Limpiando"); modal.log("Borrando archivos…", "note");
     try {
-      const res = await api("clean/run", { ids });
+      const res = await api("clean/run", { ids, confirm: 1 });
       let freed = 0; res.forEach(r => { freed += r.freed; modal.log(`${info.find(i => i.id === r.id).name}: ${fmtBytes(r.freed)} liberados` + (r.skipped ? ` (${r.skipped} en uso, omitidos)` : ""), "ok"); });
       modal.log(`Total liberado: ${fmtBytes(freed)}`, "ok");
     } catch (e) { modal.log(e.message, "bad"); }
@@ -407,11 +593,11 @@ function biosGuide() {
 const stCls = { ok: "ok", warn: "warn", bad: "bad", info: "note" };
 const stIc = s => `<span class="st ${s}" aria-hidden="true"></span>`;
 
-async function renderFluidez(m) {
+async function renderFluidez(m, fresh) {
   const head = `<div class="top"><div><h2>Diagnóstico</h2><p>Revisa lo que más causa microcortes y falta de fluidez, sobre todo en monitores de alta frecuencia. Nada se cambia solo.</p></div></div>`;
-  m.innerHTML = head + '<p class="note">Revisando…</p>';
+  m.innerHTML = head + (fresh ? '<p class="note">Volviendo a escanear el equipo… puede tardar unos 20 segundos.</p>' : '<p class="note">Revisando…</p>');
   let d;
-  try { d = await api("diag"); } catch (e) { m.innerHTML = head + `<div class="banner bad">${esc(e.message)}</div>`; return; }
+  try { d = await api(fresh ? "diag?fresh=1" : "diag"); } catch (e) { m.innerHTML = head + `<div class="banner bad">${esc(e.message)}</div>`; return; }
   if (view !== "fluidez") return;
   m.innerHTML = head + banners() +
     `<div class="banner ${d.bad ? "bad" : ""}">${d.bad ? d.bad + " problema(s) importante(s)" : "Sin problemas importantes"}${d.warn ? " · " + d.warn + " aviso(s)" : ""} · monitor objetivo: ${d.targetHz ? d.targetHz + " Hz" + (d.manual ? "" : " (detectado)") : "sin detectar"}</div>` +
@@ -426,7 +612,7 @@ async function renderFluidez(m) {
   m.querySelectorAll("[data-a]").forEach(b => b.onclick = () => api("diag/action", { action: b.dataset.a }).catch(e => toast(e.message, 5000)));
   $("#hzSave").onclick = async () => { try { await api("settings", { targetHz: +$("#hz").value }); renderFluidez(m); } catch (e) { toast(e.message, 5000); } };
   if ($("#hzAuto")) $("#hzAuto").onclick = async () => { try { await api("settings", { hzAuto: true }); renderFluidez(m); } catch (e) { toast(e.message, 5000); } };
-  $("#dgAgain").onclick = async () => { await api("diag?fresh=1"); renderFluidez(m); };
+  $("#dgAgain").onclick = () => renderFluidez(m, true);
   const tout = $("#tOut");
   const rowsOf = (items, f) => `<div class="list">${items.map(f).join("")}</div>`;
   const st = x => `<span class="tag">${esc(({ ok: "bien", warn: "aviso", bad: "problema", info: "info", error: "sin datos" })[x] || x)}</span>`;
@@ -564,6 +750,7 @@ function ovStatus(d) {
   return `<div class="row ${a ? "on" : ""}"><div><h4>${a ? "Overlay abierto" : "Overlay cerrado"} ${a && st.gameRunning ? '<span class="tag">' + esc(st.game) + " detectado</span>" : a ? '<span class="tag">esperando ' + (st.game ? esc(st.game) : "un juego") + "</span>" : ""}</h4>
     <p>${a ? `FPS ${Math.round(st.fps || 0)} · 1% low ${Math.round(st.low1 || 0)} · CPU ${Math.round(sm.cpu || 0)}% (hilo más cargado ${Math.round(sm.cpuThread || 0)}%) · GPU ${Math.round(sm.gpu || 0)}% ${tmp(sm.gpuTemp)} · RAM ${((sm.ramUsedMb || 0) / 1024).toFixed(1)} GB · temp. CPU ${tmp(sm.cpuTemp)}` : "Abrilo para ver FPS y uso mientras jugás."}</p>
     ${a && st.verdict && st.verdict.kind !== "none" ? `<p><b>Qué limita tus FPS:</b> ${esc(st.verdict.text)}</p>` : ""}
+    ${a && st.exclusive ? `<div class="banner warn">El juego está en pantalla completa exclusiva: Windows no deja que ninguna ventana externa (tampoco este overlay) se dibuje encima. Ponelo en «ventana sin bordes» en sus opciones de video. Si aplicaste «Desactivar optimizaciones de pantalla completa», revertilo.</div>` : ""}
     ${a && st.message ? `<p class="note">${esc(st.message)}</p>` : ""}</div>
     <button class="btn ${a ? "" : "primary"}" id="ovToggle" ${S.admin ? "" : "disabled"}>${a ? "Cerrar overlay" : "Abrir overlay"}</button></div>`;
 }

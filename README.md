@@ -5,7 +5,7 @@
 A gaming PC optimizer for Windows 11, written in Go with no external dependencies. It scans your
 hardware, applies reversible tweaks, shows an FPS overlay and helps you install programs.
 
-> **Status: beta (2.7.2).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings); the English text was written by the author and may have mistakes.
+> **Status: beta (2.8.2).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings); the English text was written by the author and may have mistakes.
 
 > Created with **Claude Sonnet 5.5** (Anthropic), directed and tested by its author.
 
@@ -63,7 +63,7 @@ go run ./cmd/fpsforge --demo
 
 ## Layout
 
-- `cmd/fpsforge`: the program (local server + Edge/Chrome window in app mode).
+- `cmd/fpsforge`: the program (local server + its own window with WebView2, the web engine built into Windows; Edge in app mode as a fallback).
 - `cmd/setup`: installer and patch (same UI, built with `-X main.patchMode=1` for the patch).
 - `internal/`: modules (tweaks, scan, overlay, RTSS, apps, memory, update, etc.).
 

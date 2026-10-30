@@ -20,6 +20,20 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.8.2", "Ventana propia, búsqueda, ayuda rápida y Diagnóstico más rápido", []Change{
+		{"Diagnóstico mucho más rápido", "La pestaña abre al instante: los chequeos lentos se preparan en segundo plano al abrir el programa. «Volver a revisar» pasó de unos 24 a unos 7 segundos."},
+		{"Menú de clic derecho propio", "En los cuadros de texto: Deshacer, Cortar, Copiar, Pegar, Eliminar y Seleccionar todo. Y donde dice «Historial» ahora podés hacer clic para ir a esa sección."},
+		{"Ventana propia, sin Microsoft Edge", "OverdriveTuner, el instalador y el desinstalador ahora tienen su propia ventana. En la barra de tareas aparece OverdriveTuner con su logo (ya no «Microsoft Edge»), el clic derecho no muestra el menú del navegador y no funcionan atajos como F5, Ctrl+P o F12. Por dentro usa WebView2, el motor web que ya trae Windows."},
+		{"La interfaz no se selecciona como una página", "Arrastrar el mouse o apretar Ctrl+A ya no pinta todo el texto de la interfaz; sí se puede seleccionar en los cuadros de texto. Ctrl+F lleva al buscador del programa."},
+		{"Buscador en el menú", "Arriba del menú hay una barra para buscar cualquier ajuste o sección (también con Ctrl+K). Elegí un resultado y te lleva directo al ajuste, resaltado."},
+		{"Botón «?» en cada ajuste", "Al lado del nombre de cada ajuste: explica en pocas líneas qué hace, qué toca en Windows, su riesgo, en qué perfiles está y cómo se deshace."},
+		{"«Apps preinstaladas» se puede abrir", "La categoría «Apps preinstaladas» abría por error «Instalar programas». Ahora cada una abre lo suyo."},
+		{"Borrar shaders pide confirmación", "La caché de shaders ya no viene marcada en Limpieza ni entra en la limpieza semanal. Si la elegís, se explica que las primeras partidas pueden tener tirones y hay que confirmarlo."},
+		{"Aviso de responsabilidad", "La primera vez que abrís el programa se explica qué cambia en Windows y que se usa bajo tu responsabilidad; hay que aceptarlo para seguir. Los ajustes de riesgo medio, «Aplicar todo» de una categoría y los perfiles también piden confirmación."},
+		{"El juego se detecta al instante", "El overlay revisa cada segundo (antes cada dos) y lee la lista de programas directo de Windows, sin lanzar tasklist. La comprobación por uso de la placa de video corre aparte y ya no traba el overlay."},
+		{"Aviso de pantalla completa exclusiva", "Si el juego está en pantalla completa exclusiva, Windows no deja dibujar nada encima y el overlay no se ve. Ahora se avisa en la bandeja y en la pestaña Overlay: ponelo en «ventana sin bordes»."},
+		{"Advertencia en «Desactivar optimizaciones de pantalla completa»", "Ese ajuste pasa los juegos a pantalla completa exclusiva; ahora su advertencia dice que con él activo el overlay no se ve."},
+	}},
 	{"2.8.1", "Arreglos", []Change{
 		{"Ping a servidores más limpio", "Los servicios de juegos se muestran solo con su nombre (Steam, EA, Epic Games…), sin aclarar qué juegos usan cada uno."},
 		{"«D:\\Juegos» se veía mal", "En la lista de carpetas de juegos adicionales el ejemplo aparecía como «D:Juegos» (se perdía la barra). Ahora se ve bien."},

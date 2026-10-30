@@ -36,7 +36,7 @@ var enCatalog = map[string]EnText{
 	"fps.gamemode":      {"Turn on Windows Game Mode", "Prioritizes the foreground game and stops Windows Update from installing drivers or restarting while you play.", "", ""},
 	"fps.gamedvr":       {"Turn off Game DVR (background recording)", "Stops Windows from recording clips in the background: less GPU/CPU use and fewer micro-stutters.", "", ""},
 	"fps.gamebar":       {"Turn off the Xbox Game Bar overlay", "Removes the Game Bar panel and its start-up notice. The Win+G shortcut no longer opens it.", "", ""},
-	"fps.fso":           {"Turn off fullscreen optimizations (global)", "Uses classic exclusive fullscreen: it can lower latency in DX9/DX11 games.", "Some DX12 games work better with the optimizations on; if you notice problems, revert.", ""},
+	"fps.fso":           {"Turn off fullscreen optimizations (global)", "Uses classic exclusive fullscreen: it can lower latency in DX9/DX11 games.", "Some DX12 games work better with the optimizations on; if you notice problems, revert. With this setting, fullscreen games switch to exclusive fullscreen and the OverdriveTuner overlay cannot be seen on top (Windows does not allow it); in borderless window it can.", ""},
 	"fps.windowed":      {"Windowed game optimizations (VRR + flip)", "Turns on Variable Refresh Rate and the flip model for DX10/11 games in a window or borderless. It overwrites that key; reverting restores the previous value.", "", ""},
 	"fps.mmcss":         {"Maximum CPU/GPU priority for games (MMCSS)", "Raises the multimedia scheduler priority for the 'Games' category.", "", ""},
 	"fps.sysresp":       {"Less CPU reserved for background tasks", "Lowers the MMCSS CPU reservation (SystemResponsiveness) from 20% to 10%.", "", ""},

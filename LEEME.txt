@@ -312,3 +312,22 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - Corregido: el ejemplo «D:\Juegos» de las carpetas de juegos adicionales se veía como «D:Juegos».
 - Traducidas al inglés la guía de BIOS, el aviso del Modo juego y la ayuda de carpetas de juegos.
 - En modo demostración, «Instalar programas» ya no da error al no haber winget.
+
+== Versión 2.8.2 ==
+- Diagnóstico mucho más rápido: abre al instante (los chequeos lentos se calculan en segundo plano al abrir el programa, corren a la vez y se reutilizan 10 minutos) y «Volver a revisar» bajó de unos 24 a unos 7 segundos: el escaneo y los chequeos corren a la vez, la pantalla ya no pide todo dos veces y la memoria de video ya conocida evita volver a correr dxdiag (unos 5 segundos).
+- Donde dice «Historial» (Apps preinstaladas, Debloat y el botón «?» de cada ajuste) ahora es un enlace que lleva a esa sección.
+- Todas las ventanas se abren maximizadas, también el desinstalador.
+- Menú propio de clic derecho en los cuadros de texto (Deshacer, Cortar, Copiar, Pegar, Eliminar y Seleccionar todo), también en la carpeta del instalador. «Pegar» no pide permiso.
+- Ventana propia, sin Microsoft Edge: OverdriveTuner, el instalador, el parche y el desinstalador abren su propia ventana (con WebView2, el motor web que ya trae Windows 10/11). En la barra de tareas aparece «OverdriveTuner» con su logo, el clic derecho no muestra el menú del navegador (Atrás, Actualizar, Imprimir, Inspeccionar…) y no funcionan F5, Ctrl+R, Ctrl+P, Ctrl+U, F12 ni el zoom con Ctrl+rueda. La X sigue dejando el programa en la bandeja. Si a una PC le faltara WebView2, se usa la ventana de Edge como antes.
+- El .exe ahora tiene ficha de versión: el Administrador de tareas y las propiedades del archivo muestran «OverdriveTuner» y la versión.
+- El texto de la interfaz ya no se selecciona como en una página web (sí en los cuadros de texto). Ctrl+F lleva al buscador.
+- Buscador en el menú lateral (también con Ctrl+K): encuentra cualquier ajuste (por nombre, descripción o advertencia) o sección y te lleva directo, con el ajuste resaltado. Funciona en español y en inglés.
+- Botón «?» al lado de cada ajuste: explicación rápida de qué hace, qué toca en Windows (valores del registro, servicios, scripts), su riesgo, en qué perfiles está y cómo se deshace.
+- Arreglo: la categoría «Apps preinstaladas» abría «Instalar programas» (las dos usaban el mismo nombre interno). Ahora cada una abre lo suyo.
+- Limpieza: la caché de shaders ya no viene marcada ni entra en la limpieza semanal. Si la elegís, un diálogo explica que las primeras partidas pueden tener tirones y hay que confirmarlo (el servidor también exige esa confirmación).
+- Aviso de responsabilidad: la primera vez que se abre el programa (también al actualizar) se explica qué cambia en Windows y que se usa bajo tu responsabilidad, sin garantías (licencia MIT). Hay que aceptarlo para seguir; «Salir» cierra el programa. Los ajustes de riesgo medio, «Aplicar todo» de una categoría y los perfiles también piden confirmación.
+- Overlay: el juego se detecta más rápido. Se revisa cada segundo (antes cada dos) leyendo la lista de programas directo de Windows, sin lanzar tasklist; la comprobación por uso de la placa de video (PowerShell) corre aparte y ya no traba el overlay.
+- Overlay: si el juego está en pantalla completa exclusiva, Windows no deja que ninguna ventana externa se dibuje encima, así que el overlay no se ve. Ahora se avisa en la bandeja (una vez cada vez que pasa) y en la pestaña Overlay: hay que poner el juego en «ventana sin bordes». El diagnóstico (presentmon_diagnostico.txt) anota cuándo pasa.
+- La advertencia de «Desactivar optimizaciones de pantalla completa» ahora dice que ese ajuste pasa los juegos a pantalla completa exclusiva y que con él activo el overlay no se ve.
+- Probado en Windows 11 (modo demo): la ventana propia del programa, del instalador y del desinstalador, la barra de tareas, el clic derecho, F5, Ctrl+A, cerrar a la bandeja y volver a abrir, «Salir por completo», el aviso de responsabilidad, el buscador, el botón «?», el enlace a Historial y el menú de clic derecho con «Pegar». Los tiempos del Diagnóstico se midieron en esta PC sin permisos de administrador.
+- Sin probar aún en Windows real: la lectura nativa de procesos, la detección de pantalla completa exclusiva (SHQueryUserNotificationState) y la confirmación de shaders (solo se revisó su código).

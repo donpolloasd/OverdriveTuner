@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"fpsforge/internal/telemetry"
@@ -27,6 +28,24 @@ type State struct {
 	Message     string            `json:"message,omitempty"`
 	LastSession string            `json:"lastSession,omitempty"`
 	HotkeyErrs  []string          `json:"hotkeyErrors,omitempty"`
+	// Exclusive: el juego está en pantalla completa exclusiva y el overlay no puede verse encima.
+	Exclusive      bool  `json:"exclusive,omitempty"`
+	ExclusiveSince int64 `json:"exclusiveSince,omitempty"` // Unix ms
+}
+
+// ClaimExclusiveNotice dice si hay que avisar en la bandeja que el juego está en pantalla completa
+// exclusiva. Avisa una sola vez cada vez que pasa, aunque lo consulten la ventana principal y el overlay
+// que arrancó con Windows: el primero que lo reclama avisa y el otro no lo repite.
+func ClaimExclusiveNotice(dir string, st State) bool {
+	if !st.Exclusive || st.ExclusiveSince == 0 {
+		return false
+	}
+	p := filepath.Join(dir, "overlay_exclusive_aviso.txt")
+	mark := strconv.FormatInt(st.ExclusiveSince, 10)
+	if b, err := os.ReadFile(p); err == nil && string(b) == mark {
+		return false
+	}
+	return os.WriteFile(p, []byte(mark), 0o644) == nil
 }
 
 // Cmd es una orden de la interfaz hacia el overlay (cmd.json).

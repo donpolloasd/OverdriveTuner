@@ -27,6 +27,8 @@ type TweakView struct {
 	Applied  bool   `json:"applied"`         // aplicado por el programa (se puede revertir con copia)
 	Active   bool   `json:"active"`          // los valores ya están en ese estado
 	Drift    bool   `json:"drift,omitempty"` // lo aplicó el programa, pero Windows (u otro programa) lo deshizo
+	// Ops cuenta qué toca en Windows (reg, svc, ps, cmd, plan): lo usa la explicación rápida del botón «?».
+	Ops map[string]int `json:"ops,omitempty"`
 }
 
 func (s *Server) views(hw scan.Hardware, scanning bool, lang string) []TweakView {
@@ -48,6 +50,14 @@ func (s *Server) views(hw scan.Hardware, scanning bool, lang string) []TweakView
 		}
 		v.Active = applied || detected[t.ID]
 		v.Drift = t.Watch && applied && !detected[t.ID]
+		for _, o := range t.Ops {
+			if !o.Aux {
+				if v.Ops == nil {
+					v.Ops = map[string]int{}
+				}
+				v.Ops[string(o.Kind)]++
+			}
+		}
 		if lang == "en" {
 			if e, ok := tweaks.English(t.ID); ok {
 				v.Name, v.Desc, v.Warn, v.AC = e.Name, e.Desc, e.Warn, e.AC
@@ -195,6 +205,10 @@ func (s *Server) handleCleanRun(w http.ResponseWriter, r *http.Request) {
 	var req idReq
 	if r.Method != http.MethodPost || readJSON(r, &req) != nil {
 		fail(w, 400, "petición no válida")
+		return
+	}
+	if len(extras.NeedsConfirm(req.IDs)) > 0 && req.Confirm < 1 {
+		fail(w, 428, "Borrar la caché de shaders necesita la confirmación del usuario.")
 		return
 	}
 	writeJSON(w, extras.Run(req.IDs))

@@ -50,3 +50,11 @@ func TestDeepTargetsAreScopedAndSafe(t *testing.T) {
 		}
 	}
 }
+
+func TestShadersNeedConfirmAndAreNotDefault(t *testing.T) {
+	for _, x := range Targets() { // vacío fuera de Windows
+		if x.ID == "shaders" && (x.Safe || x.Confirm == "") {
+			t.Fatalf("la caché de shaders no va marcada por defecto y pide confirmación: %+v", x)
+		}
+	}
+}

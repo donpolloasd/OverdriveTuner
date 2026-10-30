@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"fpsforge/internal/extras"
 	"fpsforge/internal/system"
 )
 
@@ -488,5 +489,41 @@ func TestStateEnglish(t *testing.T) {
 	call(t, s, base, "/api/settings", `{"lang":"en"}`, nil)
 	if _, b := call(t, s, base, "/api/state", ``, nil); !strings.Contains(b, "Turn on Windows Game Mode") {
 		t.Fatal("el idioma guardado debe aplicarse sin parámetro")
+	}
+}
+
+func TestShaderCleanNeedsConfirmAndTermsAreSaved(t *testing.T) {
+	s, base, _ := newTestServer(t)
+	if len(extras.NeedsConfirm([]string{"shaders"})) > 0 { // solo en Windows hay objetivos de limpieza
+		if c, b := call(t, s, base, "/api/clean/run", `{"ids":["shaders"]}`, nil); c != 428 {
+			t.Fatalf("borrar shaders sin confirmar debe ser 428, fue %d %s", c, b)
+		}
+	}
+	if c, b := call(t, s, base, "/api/settings", `{"termsOk":true}`, nil); c != 200 || !strings.Contains(b, `"termsOk":true`) {
+		t.Fatalf("el aviso aceptado debe guardarse: %d %s", c, b)
+	}
+}
+
+func TestDiagReusesSlowChecks(t *testing.T) {
+	s, base, f := newTestServer(t)
+	slow := func() int {
+		n := 0
+		for _, p := range f.PSLog {
+			if strings.Contains(p, "Confirm-SecureBootUEFI") {
+				n++
+			}
+		}
+		return n
+	}
+	for i := 0; i < 2; i++ {
+		if c, b := call(t, s, base, "/api/diag", "", nil); c != 200 {
+			t.Fatalf("%d %s", c, b)
+		}
+	}
+	if n := slow(); n != 1 {
+		t.Fatalf("los chequeos lentos se reutilizan: corrieron %d veces", n)
+	}
+	if c, _ := call(t, s, base, "/api/diag?fresh=1", "", nil); c != 200 || slow() != 2 {
+		t.Fatalf("«Volver a revisar» los repite: %d", slow())
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"fpsforge/internal/bench"
 	"fpsforge/internal/diag"
@@ -19,6 +20,7 @@ type settings struct {
 	IntroOff bool   `json:"introOff"` // desactiva la animación de inicio
 	IntroVol int    `json:"introVol"` // 0-100
 	TourSeen bool   `json:"tourSeen"` // ya vio (o descartó) el recorrido de la primera vez
+	TermsOK  bool   `json:"termsOk"`  // aceptó el aviso de responsabilidad de la primera vez
 	HzManual bool   `json:"hzManual"` // la frecuencia la fijó el usuario; si no, se usa la máxima que detecta Windows
 	// AutoUpdate: instala solo las versiones nuevas que salen en GitHub. Lo elige el usuario en el Setup;
 	// si falta (instalaciones anteriores) queda desactivado: ahí solo se actualiza con el Parche.
@@ -98,6 +100,7 @@ type settingsPatch struct {
 	IntroOff *bool   `json:"introOff"`
 	IntroVol *int    `json:"introVol"`
 	TourSeen *bool   `json:"tourSeen"`
+	TermsOK  *bool   `json:"termsOk"`
 	HzAuto   *bool   `json:"hzAuto"` // true: vuelve a usar la frecuencia máxima detectada
 	// AutoUpdate activa o desactiva las actualizaciones automáticas.
 	AutoUpdate *bool `json:"autoUpdate"`
@@ -122,6 +125,9 @@ func (p settingsPatch) apply(st *settings) string {
 	}
 	if p.TourSeen != nil {
 		st.TourSeen = *p.TourSeen
+	}
+	if p.TermsOK != nil {
+		st.TermsOK = *p.TermsOK
 	}
 	if p.IntroOff != nil {
 		st.IntroOff = *p.IntroOff
@@ -162,11 +168,44 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, st)
 }
 
+// slowDiagTTL es cuánto se reutilizan los chequeos lentos del Diagnóstico: cambian poco (Secure Boot, TPM,
+// discos, driver) y cada vuelta tarda unos segundos.
+const slowDiagTTL = 10 * time.Minute
+
+// diagChecks arma el Diagnóstico: los chequeos rápidos se hacen siempre y los lentos se reutilizan unos
+// minutos (fresh los repite). Así la pestaña abre al instante.
+func (s *Server) diagChecks(hw scan.Hardware, hz int, fresh bool) []diag.Check {
+	cs := append(diag.Fast(s.Sys, hw, hz), s.slowDiag(hw, fresh)...)
+	return append(cs, diag.BIOSGuide(hw))
+}
+
+// slowDiag devuelve los chequeos lentos. Si ya se están calculando (por ejemplo, el precálculo que arranca
+// al abrir el programa), espera ese resultado en vez de lanzar otro.
+func (s *Server) slowDiag(hw scan.Hardware, fresh bool) []diag.Check {
+	s.slowMu.Lock()
+	defer s.slowMu.Unlock()
+	if !fresh && !s.slowAt.IsZero() && time.Since(s.slowAt) < slowDiagTTL {
+		return s.slowDg
+	}
+	s.slowDg, s.slowAt = diag.Slow(s.Sys, hw), time.Now()
+	return s.slowDg
+}
+
 func (s *Server) handleDiag(w http.ResponseWriter, r *http.Request) {
-	hw := s.hardware(r.URL.Query().Get("fresh") == "1")
+	fresh := r.URL.Query().Get("fresh") == "1"
+	var hw scan.Hardware
+	if fresh { // «Volver a revisar»: el escaneo del equipo y los chequeos lentos corren a la vez
+		prev, _ := s.hardwareIfReady()
+		done := make(chan struct{})
+		go func() { s.slowDiag(prev, true); close(done) }()
+		hw = s.hardware(true)
+		<-done
+	} else {
+		hw = s.hardware(false)
+	}
 	st := s.loadSettings()
 	hz := st.targetHz(hw)
-	cs := diag.Run(s.Sys, hw, hz)
+	cs := s.diagChecks(hw, hz, false) // con fresh, los lentos ya se acaban de calcular
 	bad, warn := diag.Summary(cs)
 	writeJSON(w, map[string]any{"checks": cs, "bad": bad, "warn": warn, "targetHz": hz, "detectedHz": hw.MaxHz, "manual": st.HzManual})
 }

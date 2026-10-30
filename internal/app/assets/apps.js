@@ -9,7 +9,7 @@ async function renderApps(m) {
   try {
     if (!APPS || APPS_LANG !== window.UILANG || !APPS.hwReady) { APPS = await api("apps?lang=" + (window.UILANG || "es")); APPS_LANG = window.UILANG; APPS_HAVE = null; }
   } catch (e) { m.innerHTML = head + `<div class="banner bad">${esc(e.message)}</div>`; return; }
-  if (view !== "apps") return;
+  if (view !== "install") return;
   const wg = APPS.winget;
   const rows = c => APPS.items.filter(x => x.cat === c.id).map(x => x.url
     ? `<tr data-id="${esc(x.id)}"><td style="width:34px"></td><td><b>${esc(x.name)}</b>
@@ -54,7 +54,7 @@ async function appsLoadInstalled(m, fresh) {
   try {
     APPS_HAVE = await api("apps/installed" + (fresh ? "?fresh=1" : ""));
   } catch (e) { if (note) note.textContent = "No se pudo consultar qué está instalado."; return; }
-  if (view !== "apps") return;
+  if (view !== "install") return;
   let n = 0;
   m.querySelectorAll("[data-st]").forEach(t => { const on = !!APPS_HAVE[t.dataset.st]; t.hidden = !on; if (on) n++; });
   m.querySelectorAll(".ck").forEach(c => { if (APPS_HAVE[c.dataset.id]) { c.checked = false; c.disabled = true; } });

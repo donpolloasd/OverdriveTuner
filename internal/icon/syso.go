@@ -54,6 +54,7 @@ func Syso(admin bool, name string) []byte {
 	}
 	res = append(res, resource{14, 1, grp.Bytes()})
 	res = append(res, resource{24, 1, Manifest(admin, name)})
+	res = append(res, resource{16, 1, versionInfo(name)}) // RT_VERSION: nombre y versión del programa
 	sort.SliceStable(res, func(i, j int) bool {
 		if res[i].typ != res[j].typ {
 			return res[i].typ < res[j].typ

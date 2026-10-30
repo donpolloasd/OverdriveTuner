@@ -202,7 +202,7 @@ func Run(sys system.System, dataDir, id string) (string, error) {
 	case "cleanup":
 		var ids []string
 		for _, t := range extras.Targets() {
-			if t.Safe && !t.Deep { // solo lo seguro: temporales, shaders, volcados y miniaturas
+			if t.Safe && !t.Deep && t.Confirm == "" { // solo lo seguro: temporales, volcados y miniaturas (nunca shaders)
 				ids = append(ids, t.ID)
 			}
 		}

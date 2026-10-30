@@ -71,7 +71,7 @@ function tourSteps(id) {
     startup: [
       { sel: ".table, .list", t: "Programas de inicio", x: "Lo que arranca con Windows. Desactivá lo que no necesites para que el PC inicie más rápido y use menos memoria." },
     ],
-    apps: [
+    install: [
       { sel: ".table", t: "Programas por categoría", x: "Cada fila es un programa. «Instalado» te dice que ya lo tenés. Los que dependen de tu hardware (AMD, NVIDIA, Intel) solo aparecen si tu PC los usa." },
       { sel: ".ck", t: "Marcar lo que querés", x: "Tildá los programas que querés instalar. Hace falta abrir OverdriveTuner como administrador." },
       { sel: "#appsInstall", t: "Instalar seleccionados", x: "Los instala uno por uno con winget, el administrador de paquetes de Windows 11, y muestra el resultado de cada uno." },
@@ -106,7 +106,7 @@ function tourSteps(id) {
 }
 
 function tourIdFor(v) {
-  if (v === "home" || v === "apps" || v === "gamemode" || v === "overlay" || v === "bench" || v === "fluidez" || v === "clean" || v === "startup" || v === "history" || v === "settings") return v;
+  if (v === "home" || v === "install" || v === "gamemode" || v === "overlay" || v === "bench" || v === "fluidez" || v === "clean" || v === "startup" || v === "history" || v === "settings") return v;
   return "category";
 }
 
@@ -190,7 +190,8 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sin al
     const o = document.createElement("div");
     o.id = "tourOffer";
     o.innerHTML = '<b>¿Primera vez?</b><p>Te muestro en 1 minuto para qué sirve cada botón. Después lo encontrás siempre en «Cómo funciona».</p><div class="tbtn"><button class="btn" id="tOffNo">Ahora no</button><span></span><button class="btn primary" id="tOffYes">Empezar recorrido</button></div>';
-    setTimeout(() => document.body.appendChild(o), 1800);
+    const offer = () => setTimeout(() => document.body.appendChild(o), 1800);
+    if (window.BOOT && window.BOOT.termsOk) offer(); else document.addEventListener("ot-terms", offer, { once: true }); // primero el aviso de responsabilidad
     o.addEventListener("click", e => {
       if (e.target.id === "tOffYes") { tourSeen(); o.remove(); view = "home"; render(); setTimeout(() => startTour("home"), 150); }
       if (e.target.id === "tOffNo") { tourSeen(); o.remove(); }

@@ -38,6 +38,13 @@ p.hint{margin:-4px 0 12px 28px;font-size:12.5px;line-height:1.45}
 #chg{max-height:46vh;overflow:auto;padding-right:4px}
 @media (max-width:760px){body{grid-template-columns:1fr}.left{display:none}.right{padding:24px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+body{-webkit-user-select:none;user-select:none;cursor:default}
+input,textarea{-webkit-user-select:text;user-select:text}
+.ctx{position:fixed;z-index:99;min-width:200px;background:#101010;border:1px solid #4a4a4a;border-radius:10px;box-shadow:0 14px 44px #000;padding:5px}
+.ctx button{display:flex;justify-content:space-between;gap:24px;width:100%;background:none;border:0;border-radius:6px;padding:6px 10px;color:#f2f2f2;font:inherit;font-size:13px;text-align:left;cursor:pointer}
+.ctx button:hover:not([disabled]){background:#ffffff14}
+.ctx button[disabled]{color:#5a5a5a;cursor:default}
+.ctx small{color:#8c8c8c;font-size:11.5px}
 </style>
 </head>
 <body>
@@ -88,6 +95,27 @@ p.hint{margin:-4px 0 12px 28px;font-size:12.5px;line-height:1.45}
 </section>
 <script>
 const T = "__TOKEN__", $ = s => document.querySelector(s);
+// Que se sienta un programa: sin menú ni atajos del navegador y sin soltar archivos encima.
+document.addEventListener("contextmenu", e => { e.preventDefault(); const el = e.target.closest("input[type=text]"); if (el) ctxMenu(el, e.clientX, e.clientY); });
+// Menú propio de clic derecho para la carpeta de instalación (el del navegador está apagado).
+function ctxMenu(el, x, y) {
+  document.querySelectorAll(".ctx").forEach(n => n.remove());
+  let sel = ""; try { sel = el.value.substring(el.selectionStart, el.selectionEnd); } catch (e) {}
+  const run = (c, t) => { el.focus(); document.execCommand(c, false, t); };
+  const it = [["Cortar", "Ctrl+X", !sel, async () => { await navigator.clipboard.writeText(sel); run("delete"); }], ["Copiar", "Ctrl+C", !sel, () => navigator.clipboard.writeText(sel)],
+    ["Pegar", "Ctrl+V", false, async () => { const t = await navigator.clipboard.readText(); if (t) run("insertText", t); }], ["Seleccionar todo", "Ctrl+A", !el.value, () => { el.focus(); el.select(); }]];
+  const m = document.createElement("div"); m.className = "ctx";
+  m.innerHTML = it.map((a, i) => `<button type="button" data-i="${i}" ${a[2] ? "disabled" : ""}><span>${a[0]}</span><small>${a[1]}</small></button>`).join("");
+  m.style.left = Math.min(x, innerWidth - 220) + "px"; m.style.top = Math.min(y, innerHeight - 160) + "px";
+  document.body.appendChild(m);
+  m.addEventListener("mousedown", e => e.preventDefault());
+  m.addEventListener("click", async e => { const b = e.target.closest("button[data-i]"); if (!b) return; m.remove(); try { await it[+b.dataset.i][3](); } catch (err) {} });
+  setTimeout(() => document.addEventListener("mousedown", function away(e) { if (!m.contains(e.target)) { m.remove(); document.removeEventListener("mousedown", away, true); } }, true));
+}
+document.addEventListener("keydown", e => { const k = e.key.toLowerCase(), c = e.ctrlKey || e.metaKey; if (["f3", "f5", "f7", "f12", "browserback", "browserrefresh"].includes(k) || (e.altKey && k === "arrowleft") || (c && ["r", "p", "s", "u", "o", "g", "h", "j", "f", "+", "=", "-", "0"].includes(k)) || (c && e.shiftKey && ["i", "j", "c"].includes(k))) e.preventDefault(); }, true);
+document.addEventListener("wheel", e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => e.preventDefault());
 async function api(p, b) {
   const o = { headers: { "X-Token": T } };
   if (b !== undefined) { o.method = "POST"; o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(b); }

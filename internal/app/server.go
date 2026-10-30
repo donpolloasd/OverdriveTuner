@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fpsforge/internal/bench"
+	"fpsforge/internal/diag"
 	"fpsforge/internal/history"
 	"io/fs"
 	"net"
@@ -26,7 +27,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "2.8.1"
+const Version = "2.8.2"
 
 // Server es el backend de la interfaz.
 type Server struct {
@@ -52,6 +53,9 @@ type Server struct {
 	mu       sync.Mutex
 	scanMu   sync.Mutex // un solo escaneo a la vez
 	hw       *scan.Hardware
+	slowMu   sync.Mutex // chequeos lentos del Diagnóstico (PowerShell): uno a la vez, guardados un rato
+	slowDg   []diag.Check
+	slowAt   time.Time
 	lastBeat time.Time
 	beaten   bool
 	srv      *http.Server
@@ -74,7 +78,13 @@ func New(sys system.System, dataDir string) (*Server, error) {
 	}
 	srv := &Server{Sys: sys, Eng: eng, Bench: bs, History: history.Open(dataDir), Dir: dataDir, Token: hex.EncodeToString(b), Closed: make(chan struct{})}
 	srv.SpawnOverlay = srv.spawnOverlay
-	srv.ScanFn = scan.Run
+	srv.ScanFn = func(sys system.System) (scan.Hardware, error) {
+		var known map[string]int
+		if prev, ok := srv.hardwareIfReady(); ok { // la VRAM ya conocida evita volver a correr dxdiag
+			known = prev.KnownVRAM()
+		}
+		return scan.RunKnown(sys, known)
+	}
 	srv.Up = NewUpdates(sys, dataDir)
 	if _, demo := sys.(*system.Fake); demo {
 		srv.Up.Upd = demoUpdater{} // en demostración y en las pruebas no se usa la red
@@ -201,6 +211,9 @@ func (s *Server) Start() (string, error) {
 		go s.hardware(true)
 	} else {
 		go s.hardware(false) // el escaneo arranca ya, mientras se abre la ventana
+	}
+	if _, demo := s.Sys.(*system.Fake); !demo {
+		go func() { s.slowDiag(s.hardware(false), false) }() // así el Diagnóstico abre al instante
 	}
 	s.srv = &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	go func() { _ = s.srv.Serve(ln) }()
