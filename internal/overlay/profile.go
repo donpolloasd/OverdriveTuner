@@ -1,7 +1,6 @@
 package overlay
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -48,7 +47,7 @@ func (e *Engine) applyProfile(g Game) {
 	}
 	if g.Priority {
 		name := strings.TrimSuffix(g.Exe, ".exe")
-		_, _ = sys.PowerShell(fmt.Sprintf(`Get-Process -Name '%s' -ErrorAction SilentlyContinue | ForEach-Object { $_.PriorityClass='High' }`, name), 15*time.Second)
+		_, _ = sys.PowerShell("Get-Process -Name '"+strings.ReplaceAll(name, "'", "''")+"' -ErrorAction SilentlyContinue | ForEach-Object { $_.PriorityClass='High' }", 15*time.Second)
 	}
 	e.mu.Lock()
 	e.profile = ps

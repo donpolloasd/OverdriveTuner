@@ -232,10 +232,14 @@ func Uninstall(sys system.System, dir string) error {
 	return nil
 }
 
-// ScheduleDelete borra la carpeta de instalación unos segundos después de salir:
+// ScheduleDelete borra los archivos de la instalación (y la carpeta si queda vacía) unos segundos después de salir:
 // el ejecutable en uso no puede borrarse a sí mismo.
 func ScheduleDelete(sys system.System, dir string) error {
-	inner := "Start-Sleep -Seconds 3; Remove-Item -LiteralPath " + psq(dir) + " -Recurse -Force -ErrorAction SilentlyContinue"
+	// Solo se borran los archivos que instala OverdriveTuner y, si la carpeta queda vacía, la carpeta.
+	// Nunca se borra de forma recursiva: si el usuario instaló dentro de una carpeta que ya tenía
+	// otras cosas (Documentos, un disco de juegos), esas cosas no se tocan.
+	inner := "Start-Sleep -Seconds 3; foreach ($n in 'OverdriveTuner.exe','OverdriveTuner.exe.nuevo','overdrivetuner.ico','FPSForge.exe','fpsforge.ico','LEEME.txt') { Remove-Item -LiteralPath (Join-Path " + psq(dir) + " $n) -Force -ErrorAction SilentlyContinue }; " +
+		"if (-not (Get-ChildItem -LiteralPath " + psq(dir) + " -Force -ErrorAction SilentlyContinue)) { Remove-Item -LiteralPath " + psq(dir) + " -Force -ErrorAction SilentlyContinue }"
 	script := "Start-Process -WindowStyle Hidden -FilePath powershell.exe -ArgumentList @('-NoProfile','-Command'," + psq(inner) + ")"
 	_, err := sys.PowerShell(script, 30*time.Second)
 	return err

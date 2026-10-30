@@ -119,3 +119,13 @@ func TestPatchMigratesLegacyFPSForge(t *testing.T) {
 		t.Fatal("deben borrarse los accesos directos viejos")
 	}
 }
+
+func TestScheduleDeleteNoEsRecursivo(t *testing.T) {
+	f := system.NewFake()
+	if err := ScheduleDelete(f, `D:\Juegos`); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(f.PSLog[0], "-Recurse") {
+		t.Fatalf("el desinstalador no debe borrar carpetas de forma recursiva: %s", f.PSLog[0])
+	}
+}

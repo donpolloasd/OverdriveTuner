@@ -20,6 +20,10 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.7.3", "Más seguro", []Change{
+		{"El desinstalador solo borra lo suyo", "Antes borraba la carpeta de instalación completa. Si habías instalado dentro de una carpeta que ya tenía otras cosas, también se borraban. Ahora quita solo los archivos de OverdriveTuner y la carpeta únicamente si queda vacía."},
+		{"Nombres de programa más estrictos", "Los nombres de .exe (juegos, lista del Modo juego, configuración importada) ya no pueden llevar comillas simples, $ ni acentos graves, que PowerShell interpreta dentro de los comandos."},
+	}},
 	{"2.7.2", "FPS estables", []Change{
 		{"Se corrigió el contador de FPS que se rompía", "Al abrir o reabrir un juego, el overlay podía detener su lector de RTSS por un error interno («close of closed channel») y quedarse sin FPS. Ya no pasa."},
 	}},

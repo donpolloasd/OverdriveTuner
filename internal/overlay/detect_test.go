@@ -143,3 +143,16 @@ func TestRtssFeedStopTwice(t *testing.T) {
 	stop()
 	stop() // antes provocaba «close of closed channel»
 }
+
+func TestValidExeRechazaCaracteresDePowerShell(t *testing.T) {
+	for _, bad := range []string{"a'b.exe", "a$b.exe", "a`b.exe", "a b.exe", `a\b.exe`, "a;b.exe", "x.dll"} {
+		if ValidExe(bad) {
+			t.Errorf("%q no debería ser válido", bad)
+		}
+	}
+	for _, ok := range []string{"cs2.exe", "javaw.exe", "FC26.exe", "my-game_v2.exe"} {
+		if !ValidExe(ok) {
+			t.Errorf("%q debería ser válido", ok)
+		}
+	}
+}

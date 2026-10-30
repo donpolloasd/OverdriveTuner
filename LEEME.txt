@@ -283,3 +283,7 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 
 == Versión 2.7.2 ==
 - Corregido el contador de FPS que se rompía: al abrir o reabrir un juego, el lector de RTSS podía detenerse por un error interno («close of closed channel») y el overlay quedaba sin FPS.
+
+== Versión 2.7.3 ==
+- El desinstalador ya no borra la carpeta de instalación de forma recursiva: quita solo los archivos de OverdriveTuner y la carpeta si queda vacía (antes, si habías instalado dentro de una carpeta con otras cosas, también se borraban).
+- Los nombres de programa (.exe) ya no pueden llevar comillas simples, $ ni acentos graves.

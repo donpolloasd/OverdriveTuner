@@ -69,12 +69,13 @@ func Default() Config {
 
 var corners = map[string]bool{"tl": true, "tr": true, "bl": true, "br": true}
 
-// ValidExe dice si es un nombre de ejecutable aceptable (sin rutas ni comodines).
+// ValidExe acepta solo nombres de programa simples: sin rutas, espacios, comillas ni caracteres que
+// PowerShell interprete (el nombre se usa dentro de comandos).
 func ValidExe(s string) bool {
 	if len(s) < 5 || len(s) > 64 || !strings.HasSuffix(strings.ToLower(s), ".exe") {
 		return false
 	}
-	return !strings.ContainsAny(s, `\/:*?"<>| ,;&`)
+	return !strings.ContainsAny(s, `\/:*?"<>| ,;&'`+"`$")
 }
 
 // Normalize corrige valores fuera de rango y rechaza lo no válido.
