@@ -600,6 +600,44 @@ window.alert = m => _alert(trDialog(m));
   ["Anterior", "Previous"], ["Siguiente", "Next"], ["Entendido", "Got it"],
 ].forEach(([a, b]) => T(a, b));
 
+/* v2.8: tareas programadas, ping a servidores de juegos y chequeos de hardware */
+[
+  ["Tareas programadas", "Scheduled tasks"], ["Limpieza semanal", "Weekly cleanup"], ["Punto de restauración semanal", "Weekly restore point"],
+  ["Borra los archivos temporales, la caché de shaders, los volcados de errores y las miniaturas (solo lo seguro, igual que la selección por defecto de «Limpieza»). Corre sin ventana. Si la PC estaba apagada a esa hora, corre al encenderla.", "Deletes temp files, the shader cache, crash dumps and thumbnails (only the safe items, like the default selection in «Cleanup»). It runs without a window. If the PC was off at that time, it runs when you turn it on."],
+  ["Crea un punto de restauración de Windows para poder volver atrás si algo sale mal. Requiere la Protección del sistema activada en Windows.", "Creates a Windows restore point so you can go back if something goes wrong. It needs System Protection turned on in Windows."],
+  ["Domingo", "Sunday"], ["Lunes", "Monday"], ["Martes", "Tuesday"], ["Miércoles", "Wednesday"], ["Jueves", "Thursday"], ["Viernes", "Friday"], ["Sábado", "Saturday"],
+  ["Ejecutar ahora", "Run now"], ["Tarea programada.", "Task scheduled."], ["Tarea quitada.", "Task removed."],
+  ["No está programada.", "Not scheduled."],
+  ["Programada. Próxima vez: {}", "Scheduled. Next run: {1}"], ["Programada", "Scheduled"],
+  [". Todavía no corrió", ". Has not run yet"],
+  ["Se está ejecutando. El resultado aparece acá en unos segundos.", "Running now. The result shows up here in a few seconds."],
+  ["Elegí el día y la hora y OverdriveTuner hace solo la limpieza de temporales o crea un punto de restauración, sin abrir ventana. Se quitan con el interruptor.", "Pick the day and time and OverdriveTuner cleans temp files or creates a restore point by itself, without opening a window. Turn the switch off to remove them."],
+  ["Ping a servidores de juegos", "Ping to game servers"],
+  ["Midiendo servidores de juegos (unos 5 segundos)…", "Measuring game servers (about 5 seconds)…"],
+  ["Mide la latencia, la variación y la pérdida hacia Steam, FACEIT, EA y las regiones donde suelen estar los servidores. Sirve para saber si tu internet o la distancia es el problema.", "Measures latency, variation and loss to Steam, FACEIT, EA and the regions where servers usually are. It helps tell whether your internet or the distance is the problem."],
+  ["Mide el tiempo de conexión hacia cada destino. No es el ping exacto de una partida: los servicios de juegos usan redes de distribución y miden el punto de entrada más cercano; las regiones (centros de datos de AWS) muestran mejor la distancia a los servidores. Una pérdida mayor a 0 % o una variación alta suelen notarse como saltos en el juego.", "Measures connection time to each destination. It is not the exact ping of a match: game services use content networks and measure the nearest entry point; the regions (AWS data centers) show the distance to servers better. Loss above 0% or high variation usually shows up as lag spikes in game."],
+  ["Regiones (distancia a los servidores)", "Regions (distance to servers)"], ["Servicios de juegos", "Game services"],
+  ["No respondió.", "No response."],
+  ["Ping {} ms · mínimo {} · máximo {} · variación {} ms · pérdida {}%", "Ping {1} ms · min {2} · max {3} · variation {4} ms · loss {5}%"],
+  ["Sudamérica (São Paulo)", "South America (São Paulo)"], ["EE. UU. Este (Virginia)", "US East (Virginia)"], ["EE. UU. Este (Ohio)", "US East (Ohio)"], ["EE. UU. Oeste (Oregón)", "US West (Oregon)"],
+  ["Europa (Fráncfort)", "Europe (Frankfurt)"], ["Europa (Irlanda)", "Europe (Ireland)"], ["Europa (España)", "Europe (Spain)"], ["Asia (Singapur)", "Asia (Singapore)"], ["Asia (Tokio)", "Asia (Tokyo)"],
+  ["Abrir página de drivers", "Open drivers page"],
+  ["Resizable BAR", "Resizable BAR"], ["Resizable BAR (Smart Access Memory)", "Resizable BAR (Smart Access Memory)"],
+  ["Activo: la GPU puede acceder a toda su memoria de video a la vez (ventana de {} MiB).", "On: the GPU can access all its video memory at once ({1} MiB window)."],
+  ["Está desactivado (la GPU accede a su memoria de a 256 MiB). Activalo en la BIOS: «Above 4G Decoding» y «Resizable BAR» (en AMD a veces se llama «Smart Access Memory»). Suele dar unos FPS extra en varios juegos. Antes actualizá la BIOS y el driver de la GPU.", "It is off (the GPU accesses its memory 256 MiB at a time). Turn it on in the BIOS: «Above 4G Decoding» and «Resizable BAR» (on AMD it is sometimes called «Smart Access Memory»). It often gives a few extra FPS in several games. Update the BIOS and the GPU driver first."],
+  ["Windows no permite saber si está activo en una Radeon. Se ve en el software AMD Adrenalin (Rendimiento > Ajuste) y se activa en la BIOS con «Above 4G Decoding» y «Resizable BAR».", "Windows cannot tell whether it is on for a Radeon. You can see it in the AMD Adrenalin software (Performance > Tuning) and it is turned on in the BIOS with «Above 4G Decoding» and «Resizable BAR»."],
+  ["Driver de {}", "Driver for {1}"],
+  ["Versión {} del {} (hace {} meses). Un driver viejo puede perder rendimiento y correcciones en juegos nuevos. Bajá el más reciente de la web oficial.", "Version {1} from {2} ({3} months ago). An old driver can lose performance and fixes in new games. Download the latest one from the official website."],
+  ["Versión {} del {}: es reciente.", "Version {1} from {2}: it is recent."],
+  ["Estado del disco {}", "Disk health: {1}"], ["Saludable.", "Healthy."],
+  ["Saludable. Desgaste: {}%.", "Healthy. Wear: {1}%."],
+  ["Espacio libre en el disco de Windows", "Free space on the Windows drive"],
+  ["Quedan {} GB libres ({}%). Con menos del 10% Windows y los juegos se vuelven más lentos. Usá «Limpieza» para liberar espacio.", "{1} GB free ({2}%). Below 10% Windows and games get slower. Use «Cleanup» to free space."],
+  ["Quedan {} GB libres ({}%). Conviene dejar al menos un 20%, sobre todo si es un SSD.", "{1} GB free ({2}%). It is best to keep at least 20% free, especially on an SSD."],
+  ["{} GB libres ({}%).", "{1} GB free ({2}%)."],
+  ["Guía de ajustes de la BIOS", "BIOS settings guide"],
+].forEach(([a, b]) => T(a, b));
+
 /* actualizaciones */
 [
   ["Actualizaciones", "Updates"],

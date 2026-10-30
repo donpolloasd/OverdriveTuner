@@ -3,6 +3,7 @@ package diag
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"fpsforge/internal/scan"
 	"fpsforge/internal/system"
@@ -127,5 +128,44 @@ func TestAntiCheatIOMMUAndReboot(t *testing.T) {
 	c := find(Run(f, hw(), 240), "anticheat")
 	if c == nil || c.Status != Warn || !strings.Contains(c.Detail, "IOMMU") || !strings.Contains(c.Detail, "pendientes") {
 		t.Fatalf("%+v", c)
+	}
+}
+
+func TestParseHealth(t *testing.T) {
+	now := time.Date(2026, 10, 30, 12, 0, 0, 0, time.UTC)
+	raw := `{"bar1MiB":256,"gpus":[{"name":"NVIDIA GeForce RTX 3060","version":"31.0.15.3623","date":"2025-01-10"}],
+	"disks":[{"name":"Samsung SSD","health":"Healthy","wear":85,"temp":40},{"name":"WD HDD","health":"Warning","wear":null,"temp":null}],
+	"sysFreeGB":30.2,"sysFreePct":8}`
+	cs := ParseHealth(raw, scan.Hardware{}, now)
+	by := map[string][]Check{}
+	for _, c := range cs {
+		by[c.ID] = append(by[c.ID], c)
+	}
+	if by["rebar"][0].Status != Warn {
+		t.Errorf("BAR1 de 256 MiB = ReBAR desactivado: %+v", by["rebar"])
+	}
+	if d := by["driver_nvidia"]; len(d) != 1 || d[0].Status != Warn || d[0].Action != "open_driver_nvidia" {
+		t.Errorf("driver de hace 21 meses debe avisar: %+v", d)
+	}
+	if ds := by["disk_health"]; len(ds) != 2 || ds[0].Status != Warn || ds[1].Status != Bad {
+		t.Errorf("discos: %+v", ds)
+	}
+	if by["disk_space"][0].Status != Bad {
+		t.Errorf("8%% libre es problema: %+v", by["disk_space"])
+	}
+	ok := ParseHealth(`{"bar1MiB":16384,"gpus":[{"name":"AMD Radeon RX 7600","version":"32.0","date":"2026-08-01"}],"disks":[],"sysFreePct":50,"sysFreeGB":200}`, scan.Hardware{}, now)
+	for _, c := range ok {
+		if c.Status != OK {
+			t.Errorf("todo debía estar bien: %+v", c)
+		}
+	}
+	if ParseHealth("basura", scan.Hardware{}, now) != nil {
+		t.Error("salida inválida no debe dar chequeos")
+	}
+	if monthsSince("1999-01-01", now) != -1 || monthsSince("2026-09-30", now) != 1 {
+		t.Error("monthsSince")
+	}
+	if c := BIOSGuide(scan.Hardware{CPUVendor: "amd"}); !strings.Contains(c.Detail, "EXPO") || !strings.Contains(c.Detail, "SVM") {
+		t.Errorf("guía BIOS AMD: %s", c.Detail)
 	}
 }

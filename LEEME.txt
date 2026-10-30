@@ -300,3 +300,9 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - El desinstalador también borra los restos del actualizador (copias «.old», carpeta «update»).
 - Se quitó PresentMon por completo (ya no se incluye en el programa).
 - Sin probar aún en Windows real: la descarga y el reemplazo se probaron con tests automáticos y un servidor falso.
+
+== Versión 2.8.0 ==
+- Diagnóstico: chequeos nuevos. Resizable BAR (solo se puede medir en NVIDIA con nvidia-smi; en Radeon se explica cómo verlo), antigüedad del driver de la gráfica (aviso desde 9 meses, con botón a la página oficial de NVIDIA/AMD/Intel), salud/desgaste/temperatura de cada disco (Windows lo expone solo en algunos discos), espacio libre del disco de Windows y una guía de ajustes de BIOS.
+- Herramientas > «Ping a servidores de juegos»: mide el tiempo de conexión TCP (puerto 443) hacia servicios de juegos y regiones de AWS. No es el ping exacto de una partida (los servicios usan CDN); las regiones dan mejor idea de la distancia. La pérdida se estima por conexiones fallidas.
+- Configuración > Tareas programadas: limpieza semanal (solo objetivos seguros) y punto de restauración semanal, con día y hora a elección. Usan el Programador de tareas de Windows (OverdriveTuner.exe --task cleanup|restore), con permisos de administrador y solo con la sesión iniciada; si la PC estaba apagada, corren al encenderla. El desinstalador las quita.
+- Sin probar aún en Windows real: los scripts de PowerShell nuevos y las tareas programadas se probaron solo con tests y en modo demostración.

@@ -26,7 +26,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "2.7.5"
+const Version = "2.8.0"
 
 // Server es el backend de la interfaz.
 type Server struct {
@@ -165,6 +165,8 @@ func (s *Server) Start() (string, error) {
 	mux.HandleFunc("/api/sessions/import", s.guard(s.handleSessionImport))
 	mux.HandleFunc("/api/sessions/delete", s.guard(s.handleSessionDelete))
 	mux.HandleFunc("/api/net", s.guard(s.handleNetTest))
+	mux.HandleFunc("/api/schedule", s.guard(s.handleSchedule))
+	mux.HandleFunc("/api/gameping", s.guard(s.handleGamePing))
 	mux.HandleFunc("/api/disks", s.guard(s.handleDisks))
 	mux.HandleFunc("/api/cs2video", s.guard(s.handleVideo))
 	mux.HandleFunc("/api/bisect", s.guard(s.handleBisect))

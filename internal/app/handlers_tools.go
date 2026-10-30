@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"html"
 	"net/http"
@@ -11,12 +12,26 @@ import (
 	"fpsforge/internal/bench"
 	"fpsforge/internal/bisect"
 	"fpsforge/internal/diag"
+	"fpsforge/internal/system"
 	"fpsforge/internal/tools"
 	"fpsforge/internal/tweaks"
 )
 
 func (s *Server) handleNetTest(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, tools.NetTest(s.Sys))
+}
+
+// handleGamePing mide la latencia y la pérdida hacia servicios y regiones de juegos (unos 5 segundos).
+// En demostración devuelve datos de ejemplo, sin tocar la red.
+func (s *Server) handleGamePing(w http.ResponseWriter, r *http.Request) {
+	if _, demo := s.Sys.(*system.Fake); demo {
+		writeJSON(w, tools.GamePingTest(func(ctx context.Context, addr string) error {
+			time.Sleep(time.Duration(10+len(addr)%40) * time.Millisecond)
+			return nil
+		}, nil, 4, 10*time.Millisecond, time.Second))
+		return
+	}
+	writeJSON(w, tools.GamePingTest(nil, nil, 12, 120*time.Millisecond, 2*time.Second))
 }
 
 func (s *Server) handleDisks(w http.ResponseWriter, r *http.Request) {

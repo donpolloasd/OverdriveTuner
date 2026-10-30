@@ -240,3 +240,37 @@ func TestImportDoesNotEnableAutoUpdate(t *testing.T) {
 		t.Error("un archivo importado no debe activar las actualizaciones automáticas")
 	}
 }
+
+func TestScheduleAndToolsEndpoints(t *testing.T) {
+	s, base, _ := newTestServer(t)
+	code, body := call(t, s, base, "/api/schedule", "", nil)
+	var l []map[string]any
+	if code != 200 || json.Unmarshal([]byte(body), &l) != nil || len(l) != 2 || l[0]["registered"] == true {
+		t.Fatalf("estado inicial: %d %s", code, body)
+	}
+	code, body = call(t, s, base, "/api/schedule", `{"id":"cleanup","enabled":true,"day":3,"time":"19:30"}`, nil)
+	json.Unmarshal([]byte(body), &l)
+	if code != 200 || l[0]["registered"] != true || l[0]["time"] != "19:30" || l[0]["day"] != float64(3) {
+		t.Fatalf("programar: %d %s", code, body)
+	}
+	call(t, s, base, "/api/schedule", `{"id":"cleanup","enabled":false}`, nil)
+	_, body = call(t, s, base, "/api/schedule", "", nil)
+	json.Unmarshal([]byte(body), &l)
+	if l[0]["registered"] == true {
+		t.Error("debía quitarse")
+	}
+	if code, _ := call(t, s, base, "/api/schedule", `{"id":"nada","enabled":true}`, nil); code != 404 {
+		t.Errorf("tarea desconocida: %d", code)
+	}
+	if code, _ := call(t, s, base, "/api/diag/action", `{"action":"open_driver_nvidia"}`, nil); code != 200 {
+		t.Errorf("abrir página de drivers: %d", code)
+	}
+	if code, _ := call(t, s, base, "/api/diag/action", `{"action":"open_driver_evil"}`, nil); code == 200 {
+		t.Error("un fabricante desconocido no debe abrir nada")
+	}
+	code, body = call(t, s, base, "/api/gameping", "", nil)
+	var gp []map[string]any
+	if code != 200 || json.Unmarshal([]byte(body), &gp) != nil || len(gp) < 10 || gp[0]["status"] == nil {
+		t.Fatalf("gameping: %d %.200s", code, body)
+	}
+}

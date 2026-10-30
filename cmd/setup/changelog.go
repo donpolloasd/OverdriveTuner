@@ -20,6 +20,11 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.8.0", "Más chequeos, ping a servidores y tareas programadas", []Change{
+		{"Chequeos de hardware nuevos", "En Diagnóstico ahora ves si Resizable BAR está activo (placas NVIDIA), qué antigüedad tiene el driver de tu gráfica (con botón a la web oficial), el estado, desgaste y temperatura de tus discos, el espacio libre de Windows y una guía de los ajustes de la BIOS que conviene revisar."},
+		{"Ping a servidores de juegos", "Un botón mide la latencia, la variación y la pérdida hacia Steam, FACEIT, EA, Epic, Riot y regiones como São Paulo, Virginia o Fráncfort, para saber si el problema es tu internet o la distancia."},
+		{"Tareas programadas", "En Configuración podés programar una limpieza semanal de temporales y un punto de restauración semanal. Corren sin ventana y el desinstalador las quita."},
+	}},
 	{"2.7.5", "Actualizaciones automáticas", []Change{
 		{"Se actualiza solo desde GitHub", "Si lo dejás activado, cuando sale una versión nueva en GitHub el programa la descarga, comprueba su SHA-256 y la instala sin que hagas nada (también desde el overlay que arranca con Windows). Solo consulta GitHub, sin enviar datos tuyos."},
 		{"Vos decidís en el instalador", "El Setup tiene una casilla para activarlas. Si la desactivás, el programa se queda en esa versión y solo cambia si aplicás el Parche. Se puede cambiar después en Configuración, donde también hay «Buscar actualizaciones»."},

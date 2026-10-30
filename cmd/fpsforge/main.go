@@ -14,6 +14,7 @@ import (
 	"fpsforge/internal/app"
 	"fpsforge/internal/installer"
 	"fpsforge/internal/overlay"
+	"fpsforge/internal/schedule"
 	"fpsforge/internal/system"
 	"fpsforge/internal/uninst"
 	"fpsforge/internal/winhost"
@@ -32,10 +33,15 @@ func main() {
 	noWindow := flag.Bool("no-window", false, "no abrir ventana; solo imprimir la URL")
 	uninstall := flag.Bool("uninstall", false, "desinstalar OverdriveTuner")
 	ovl := flag.Bool("overlay", false, "abrir solo el overlay de rendimiento")
+	task := flag.String("task", "", "tarea de mantenimiento sin ventana: cleanup o restore (la usa el Programador de tareas)")
 	boot := flag.Bool("boot", false, "con --overlay: arrancó con Windows (muestra un ícono en la bandeja)")
 	flag.Parse()
 	if *uninstall {
 		runUninstall(*demo, *noWindow)
+		return
+	}
+	if *task != "" {
+		runTask(*task)
 		return
 	}
 
@@ -175,6 +181,22 @@ func main() {
 	// Cierre total: overlay y la ventana, para poder volver a abrir sin conflictos.
 	winhost.Cleanup("all", dir)
 	os.Exit(0)
+}
+
+// runTask hace una tarea de mantenimiento programada, sin ventana, y termina.
+func runTask(id string) {
+	dir := dataDirPath()
+	_ = os.MkdirAll(dir, 0o755)
+	if f, err := os.OpenFile(filepath.Join(dir, "overdrivetuner.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
+		log.SetOutput(f)
+		defer f.Close()
+	}
+	msg, err := schedule.Run(system.New(), dir, id)
+	if err != nil {
+		log.Printf("tarea %s: %v", id, err)
+		os.Exit(1)
+	}
+	log.Printf("tarea %s: %s", id, msg)
 }
 
 // runUninstall abre el desinstalador (una ventana que explica qué se quita y qué se conserva).

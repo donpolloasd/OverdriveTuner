@@ -59,6 +59,7 @@ function tourSteps(id) {
       { sel: "#hz", t: "Hz de tu monitor", x: "Ponelos para que el diagnóstico compare con la frecuencia que Windows está usando." },
       { sel: "#procGo", t: "Qué usa el procesador", x: "Mide 2 segundos y lista los programas que más consumen. Podés cerrar los que no necesites." },
       { sel: "#tNet", t: "Red y ping", x: "Mide ping, variación y pérdida de paquetes." },
+      { sel: "#tGame", t: "Ping a servidores de juegos", x: "Mide la latencia, la variación y la pérdida hacia Steam, FACEIT, EA y las regiones donde suelen estar los servidores. Sirve para saber si tu internet o la distancia es el problema." },
       { sel: "#tDns", t: "Probar DNS", x: "Compara Cloudflare, Google, Quad9 y OpenDNS desde tu conexión y te deja aplicar el más rápido." },
       { sel: "#tNetMon", t: "Quién usa la red", x: "Lista los programas con conexiones abiertas. Sirve para encontrar descargas en segundo plano mientras jugás." },
       { sel: "#tDisk", t: "Discos", x: "Salud, temperatura, desgaste y espacio libre de tus discos, con consejos." },
@@ -90,6 +91,7 @@ function tourSteps(id) {
       { sel: "#stHk", t: "Atajos globales", x: "Hacé clic en un recuadro y apretá la combinación nueva. Funcionan aunque estés dentro del juego. Si otro programa ya usa una, te avisamos." },
       { sel: "#stCfg", t: "Exportar e importar", x: "Guarda tu configuración en un archivo y la restaura en otra PC. Antes de importar ves exactamente qué se va a hacer." },
       { sel: "#stBoot", t: "Inicio con Windows", x: "El overlay arranca solo al encender la PC y aparece cuando abrís un juego. Acá ves si quedó activo y podés probarlo sin reiniciar." },
+      { sel: "#stSch", t: "Tareas programadas", x: "Elegí el día y la hora y OverdriveTuner hace solo la limpieza de temporales o crea un punto de restauración, sin abrir ventana. Se quitan con el interruptor." },
       { sel: "#stUpd", t: "Actualizaciones", x: "Con la casilla activada, las versiones nuevas de GitHub se descargan, se verifican y se instalan solas. Desactivada, el programa se queda como está hasta que apliques el Parche. «Buscar actualizaciones» consulta a mano." },
       { sel: "#stWin", t: "La X y la bandeja", x: "Al cerrar la ventana el programa sigue en la bandeja. Desde acá (o con clic derecho en el ícono) lo cerrás por completo." },
       { sel: "#stIntro", t: "Animación de apertura", x: "Activala o desactivala, ajustá el volumen y probala. Se puede saltar con cualquier tecla." },
@@ -275,6 +277,15 @@ async function dnsClick(e) {
     S = await api("state");
     const out = $("#tOut"); if (out) out.innerHTML = dnsHtml(await api("dnsbench"));
   } catch (err) { toast(err.message, 6000); b.disabled = false; }
+}
+
+/* Ping a servicios y regiones de juegos: promedio, variación (jitter) y pérdida. */
+function gamePingHtml(rs, st) {
+  const row = r => `<div class="row"><div><h4>${esc(r.name)} ${st(r.status)}</h4><p>${r.status === "error" ? "No respondió." : `Ping ${r.avg} ms · mínimo ${r.min} · máximo ${r.max} · variación ${r.jitter} ms · pérdida ${r.lossPct}%`}</p></div></div>`;
+  const g = k => rs.filter(r => r.group === k);
+  return `<p class="note">Mide el tiempo de conexión hacia cada destino. No es el ping exacto de una partida: los servicios de juegos usan redes de distribución y miden el punto de entrada más cercano; las regiones (centros de datos de AWS) muestran mejor la distancia a los servidores. Una pérdida mayor a 0 % o una variación alta suelen notarse como saltos en el juego.</p>
+  <h3>Regiones (distancia a los servidores)</h3><div class="list">${g("regions").map(row).join("")}</div>
+  <h3 style="margin-top:18px">Servicios de juegos</h3><div class="list">${g("games").map(row).join("")}</div>`;
 }
 
 function netMonHtml(ps) {

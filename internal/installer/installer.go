@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"fpsforge/internal/autostart"
+	"fpsforge/internal/schedule"
 	"fpsforge/internal/system"
 	"fpsforge/internal/winhost"
 )
@@ -226,6 +227,9 @@ func Uninstall(sys system.System, dir string) error {
 		return fmt.Errorf("no se pudieron quitar los accesos directos: %w", err)
 	}
 	_ = autostart.Disable(sys) // la tarea de inicio con Windows también se quita
+	for _, j := range schedule.Jobs {
+		_ = schedule.Disable(sys, j.ID) // y las tareas de mantenimiento programadas
+	}
 	if sys.RegKeyExists(uninstKey) {
 		if err := sys.RegDeleteKey(uninstKey); err != nil {
 			return err

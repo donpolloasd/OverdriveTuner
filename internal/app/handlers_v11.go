@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"fpsforge/internal/bench"
 	"fpsforge/internal/diag"
@@ -174,11 +175,21 @@ func (s *Server) handleDiagAction(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Action string `json:"action"`
 	}
-	if r.Method != http.MethodPost || readJSON(r, &req) != nil || req.Action != "open_display" {
+	if r.Method != http.MethodPost || readJSON(r, &req) != nil {
 		fail(w, 400, "acción no válida")
 		return
 	}
-	if err := diag.OpenDisplay(s.Sys); err != nil {
+	var err error
+	switch {
+	case req.Action == "open_display":
+		err = diag.OpenDisplay(s.Sys)
+	case strings.HasPrefix(req.Action, "open_driver_"):
+		err = diag.OpenDriverPage(s.Sys, strings.TrimPrefix(req.Action, "open_driver_"))
+	default:
+		fail(w, 400, "acción no válida")
+		return
+	}
+	if err != nil {
 		fail(w, 500, err.Error())
 		return
 	}

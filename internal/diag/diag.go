@@ -153,6 +153,8 @@ func Run(sys system.System, hw scan.Hardware, targetHz int) []Check {
 			Detail: fmt.Sprintf("Está %s. En algunos juegos mejora la fluidez y en otros la empeora: si la cambiás, medilo con el benchmark.", state)})
 	}
 	out = append(out, antiCheat(sys)...)
+	out = append(out, Health(sys, hw)...)
+	out = append(out, BIOSGuide(hw))
 	return out
 }
 

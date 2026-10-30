@@ -21,6 +21,8 @@ hardware, applies reversible tweaks, shows an FPS overlay and helps you install 
 - **Free RAM**, temp-file cleanup, startup program manager.
 - **Install programs** with winget (launchers, utilities, monitoring, peripherals...), with a link to
   the official website when winget cannot install something.
+- **Health checks**: Resizable BAR, GPU driver age, disk health/wear, free space, BIOS settings guide.
+- **Ping to game servers** (latency, jitter, loss) and **scheduled maintenance** (weekly cleanup, weekly restore point).
 - **Benchmark** before/after, history, export/import of the configuration.
 
 ## How the overlay works (and why it does not touch the game)

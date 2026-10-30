@@ -19,6 +19,8 @@ hardware, aplica ajustes reversibles, muestra un overlay de FPS y ayuda a instal
 - **Modo juego**: lista de programas que se cierran al abrir un juego.
 - **Liberar RAM**, limpieza de temporales, administrador de programas de inicio.
 - **Instalar programas** con winget (launchers, utilidades, monitoreo, periféricos…).
+- **Chequeos de hardware**: Resizable BAR, antigüedad del driver, salud y desgaste de discos, espacio libre, guía de BIOS.
+- **Ping a servidores de juegos** (latencia, variación, pérdida) y **mantenimiento programado** (limpieza y punto de restauración semanales).
 - **Benchmark** antes/después, historial, exportar/importar la configuración.
 - Interfaz en español e inglés.
 
