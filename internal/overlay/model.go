@@ -3,6 +3,7 @@ package overlay
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"fpsforge/internal/telemetry"
 )
@@ -80,32 +81,57 @@ func BuildModel(sn Snapshot) Model {
 	if c.ShowGrph {
 		m.Spark = sn.Spark
 	}
-	if c.ShowCPU {
-		r := Row{Label: "CPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.CPU), p.Value}}}
-		if c.ShowTemp {
-			r.Parts = append(r.Parts, tempPart(p, s.CPUTemp, sn.limit(c.AlertCPU)))
+	// Filas de datos, en el orden elegido (RowKeys es el original).
+	build := map[string]func() (Row, bool){
+		"cpu": func() (Row, bool) {
+			r := Row{Label: "CPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.CPU), p.Value}}}
+			if c.ShowTemp {
+				r.Parts = append(r.Parts, tempPart(p, s.CPUTemp, sn.limit(c.AlertCPU)))
+			}
+			return r, c.ShowCPU
+		},
+		"gpu": func() (Row, bool) {
+			r := Row{Label: "GPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.GPU), p.Value}}}
+			if c.ShowTemp {
+				r.Parts = append(r.Parts, tempPart(p, s.GPUTemp, sn.limit(c.AlertGPU)))
+			}
+			return r, c.ShowGPU
+		},
+		"vram": func() (Row, bool) {
+			return Row{Label: "VRAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.GPUVRAMMB/1024), p.Value}}}, c.ShowVRAM
+		},
+		"ram": func() (Row, bool) {
+			return Row{Label: "RAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.RAMUsedMB/1024), p.Value}}}, c.ShowRAM
+		},
+		"frame": func() (Row, bool) { // tiempo de cuadro promedio: 1000 / FPS
+			v := Part{"—", p.Label}
+			if sn.FPS > 0 {
+				v = Part{fmt.Sprintf("%.1f ms", 1000/sn.FPS), p.Value}
+			}
+			return Row{Label: sn.tr("Cuadro"), Parts: []Part{v}}, c.ShowFrame
+		},
+		"clock": func() (Row, bool) {
+			return Row{Label: sn.tr("Hora"), Parts: []Part{{sn.Now.Format("15:04"), p.Value}}}, c.ShowClock && !sn.Now.IsZero()
+		},
+		"game": func() (Row, bool) {
+			g := []rune(strings.TrimSuffix(strings.TrimSuffix(sn.Game, ".exe"), ".EXE"))
+			if len(g) > 16 {
+				g = append(g[:15], '…')
+			}
+			return Row{Label: sn.tr("Juego"), Parts: []Part{{string(g), p.Value}}}, c.ShowGame && len(g) > 0
+		},
+	}
+	for _, k := range normalizeOrder(c.Order) {
+		if r, ok := build[k](); ok {
+			m.Rows = append(m.Rows, r)
 		}
-		m.Rows = append(m.Rows, r)
-	}
-	if c.ShowGPU {
-		r := Row{Label: "GPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.GPU), p.Value}}}
-		if c.ShowTemp {
-			r.Parts = append(r.Parts, tempPart(p, s.GPUTemp, sn.limit(c.AlertGPU)))
-		}
-		m.Rows = append(m.Rows, r)
-	}
-	if c.ShowVRAM {
-		m.Rows = append(m.Rows, Row{Label: "VRAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.GPUVRAMMB/1024), p.Value}}})
-	}
-	if c.ShowRAM {
-		m.Rows = append(m.Rows, Row{Label: "RAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.RAMUsedMB/1024), p.Value}}})
 	}
 	if c.AlertOn {
 		if sn.AlertCPU {
-			m.Rows = append(m.Rows, Row{Label: "Aviso", Parts: []Part{{"CPU caliente", p.Bad}}})
+			m.Rows = append(m.Rows, Row{Label: sn.tr("Aviso"), Parts: []Part{{sn.tr("CPU caliente"), p.Bad}}})
 		}
 		if sn.AlertGPU {
-			m.Rows = append(m.Rows, Row{Label: "Aviso", Parts: []Part{{"GPU caliente", p.Bad}}})
+			m.Rows = append(m.Rows, Row{Label: sn.tr("Aviso"), Parts: []Part{{sn.tr("GPU caliente"), p.Bad}}})
 		}
 	}
 	// Diseño de una línea: «238 FPS · CPU 41% 62° · GPU 70% 54° · RAM 11.2 GB»

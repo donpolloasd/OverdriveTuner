@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"fpsforge/internal/system"
@@ -79,11 +80,12 @@ $r = [ordered]@{}
 $cs = Get-CimInstance Win32_ComputerSystem
 $r.computer = [string]$cs.Name
 $r.ramGB = [int][math]::Round($cs.TotalPhysicalMemory / 1GB)
-$cpu = @(Get-CimInstance Win32_Processor)[0]
+$cpus = @(Get-CimInstance Win32_Processor)
+$cpu = $cpus[0]
 $r.cpu = ([string]$cpu.Name).Trim()
 $r.cpuVendor = $(if ($cpu.Name -match 'AMD|Ryzen|EPYC|Athlon') { 'amd' } elseif ($cpu.Name -match 'Intel') { 'intel' } else { 'otro' })
-$r.cores = [int]((Get-CimInstance Win32_Processor | Measure-Object NumberOfCores -Sum).Sum)
-$r.threads = [int]((Get-CimInstance Win32_Processor | Measure-Object NumberOfLogicalProcessors -Sum).Sum)
+$r.cores = [int]($cpus | Measure-Object NumberOfCores -Sum).Sum
+$r.threads = [int]($cpus | Measure-Object NumberOfLogicalProcessors -Sum).Sum
 $r.maxMHz = [int]$cpu.MaxClockSpeed
 $mem = @(Get-CimInstance Win32_PhysicalMemory)
 $r.ramSticks = $mem.Count
@@ -160,24 +162,7 @@ if (@($gpus | Where-Object { $_.vramMB -le 0 }).Count -gt 0) {
     Remove-Item -LiteralPath $f -ErrorAction SilentlyContinue
   } catch {}
 }
-# Frecuencia máxima que Windows ofrece al monitor principal con su resolución actual.
-$r.maxHz = 0
-try {
-  Add-Type -Namespace OT -Name Dm -MemberDefinition '
-  [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Ansi)] public struct DEVMODE { [MarshalAs(UnmanagedType.ByValTStr, SizeConst=32)] public string dmDeviceName; public short dmSpecVersion; public short dmDriverVersion; public short dmSize; public short dmDriverExtra; public int dmFields; public int dmPositionX; public int dmPositionY; public int dmDisplayOrientation; public int dmDisplayFixedOutput; public short dmColor; public short dmDuplex; public short dmYResolution; public short dmTTOption; public short dmCollate; [MarshalAs(UnmanagedType.ByValTStr, SizeConst=32)] public string dmFormName; public short dmLogPixels; public int dmBitsPerPel; public int dmPelsWidth; public int dmPelsHeight; public int dmDisplayFlags; public int dmDisplayFrequency; public int dmICMMethod; public int dmICMIntent; public int dmMediaType; public int dmDitherType; public int dmReserved1; public int dmReserved2; public int dmPanningWidth; public int dmPanningHeight; }
-  [DllImport("user32.dll", CharSet=CharSet.Ansi)] public static extern bool EnumDisplaySettings(string dev, int mode, ref DEVMODE dm);'
-  $act = @($gpus | Where-Object { $_.active }) | Select-Object -First 1
-  $w = 0; $h = 0
-  if ($act) { $w = [int]$act.width; $h = [int]$act.height }
-  $dm = New-Object OT.Dm+DEVMODE
-  $dm.dmSize = [int16][Runtime.InteropServices.Marshal]::SizeOf($dm)
-  $mx = 0; $i = 0
-  while ([OT.Dm]::EnumDisplaySettings($null, $i, [ref]$dm) -and $i -lt 4000) {
-    if (($w -le 0 -or ($dm.dmPelsWidth -eq $w -and $dm.dmPelsHeight -eq $h)) -and $dm.dmDisplayFrequency -gt $mx) { $mx = $dm.dmDisplayFrequency }
-    $i++
-  }
-  $r.maxHz = [int]$mx
-} catch {}
+# La frecuencia máxima del monitor la calcula el programa (EnumDisplaySettings) después del escaneo.
 $r.gpus = @($gpus)
 $sysDisk = -1
 try { $sysDisk = (Get-Partition -DriveLetter ($env:SystemDrive.Substring(0,1)) -ErrorAction Stop | Get-Disk).Number } catch {}
@@ -202,16 +187,56 @@ func RunKnown(sys system.System, knownVRAM map[string]int) (Hardware, error) {
 		h.Admin = sys.IsAdmin()
 		return h, nil
 	}
-	out, err := sys.PowerShell(knownVRAMScript(knownVRAM)+psScan, 90*time.Second)
-	if err != nil {
-		return Hardware{}, fmt.Errorf("no se pudo escanear el hardware: %w", err)
+	// Las dos mitades corren a la vez: cada PowerShell tarda en arrancar y WMI contesta de a una consulta.
+	scripts := []string{psScanSystem, knownVRAMScript(knownVRAM) + psScanDevices}
+	outs, errs := make([]string, 2), make([]error, 2)
+	var wg sync.WaitGroup
+	for i, s := range scripts {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			outs[i], errs[i] = sys.PowerShell(s, 90*time.Second)
+		}()
 	}
-	h, err := Parse(out)
+	wg.Wait()
+	merged := map[string]json.RawMessage{}
+	for i, out := range outs {
+		if errs[i] != nil {
+			return Hardware{}, fmt.Errorf("no se pudo escanear el hardware: %w", errs[i])
+		}
+		var part map[string]json.RawMessage
+		if err := json.Unmarshal([]byte(lastJSONLine(out, '{')), &part); err != nil {
+			return Hardware{}, fmt.Errorf("respuesta del escáner no válida: %w", err)
+		}
+		for k, v := range part {
+			merged[k] = v
+		}
+	}
+	b, _ := json.Marshal(merged)
+	h, err := Parse(string(b))
 	if err != nil {
 		return Hardware{}, err
 	}
+	w, ht := 0, 0
+	for _, g := range h.GPUs {
+		if g.Active {
+			w, ht = g.Width, g.Height
+			break
+		}
+	}
+	h.MaxHz = maxRefresh(w, ht)
 	h.Admin = sys.IsAdmin()
 	return h, nil
+}
+
+// psScanSystem y psScanDevices son las dos mitades del escaneo: sistema (equipo, procesador, RAM, placa,
+// monitores) y dispositivos (gráficas, VRAM, Hz y discos). Las dos usan la función Vendor del principio.
+var psScanSystem, psScanDevices = splitScan(psScan)
+
+func splitScan(s string) (string, string) {
+	cut := strings.Index(s, "$gpus = New-Object")
+	head := s[:strings.Index(s, "$r = [ordered]@{}")]
+	return s[:cut] + "ConvertTo-Json -InputObject $r -Compress -Depth 5\n", head + "$r = [ordered]@{}\n" + s[cut:]
 }
 
 // KnownVRAM devuelve la memoria de video ya detectada de cada gráfica (por nombre), para RunKnown.

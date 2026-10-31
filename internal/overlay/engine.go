@@ -67,8 +67,9 @@ type Engine struct {
 	hkErrs      []string
 	alertCPU    bool
 	alertGPU    bool
-	exclusive   bool  // el juego está en pantalla completa exclusiva (el overlay no puede verse)
-	exclSince   int64 // desde cuándo (Unix ms): identifica cada vez que pasa, para avisar una sola vez
+	exclusive   bool   // el juego está en pantalla completa exclusiva (el overlay no puede verse)
+	exclSince   int64  // desde cuándo (Unix ms): identifica cada vez que pasa, para avisar una sola vez
+	lang        string // idioma de la interfaz (se relee cada segundo por si lo cambian en Configuración)
 }
 
 // NewEngine crea el motor.
@@ -76,7 +77,7 @@ func NewEngine(d Deps) *Engine {
 	if d.Now == nil {
 		d.Now = time.Now
 	}
-	e := &Engine{d: d, cfg: LoadConfig(d.Dir), visible: true}
+	e := &Engine{d: d, cfg: LoadConfig(d.Dir), visible: true, lang: UILang(d.Dir)}
 	// Ignora una orden vieja que haya quedado en disco.
 	if c, ok := loadCmd(d.Dir); ok {
 		e.lastSeq = c.Seq
@@ -145,8 +146,11 @@ type Snapshot struct {
 	GameRunning bool
 	Recording   bool
 	Visible     bool
-	AlertCPU    bool // el procesador pasó el límite de temperatura
-	AlertGPU    bool // la gráfica pasó el límite de temperatura
+	AlertCPU    bool      // el procesador pasó el límite de temperatura
+	AlertGPU    bool      // la gráfica pasó el límite de temperatura
+	Game        string    // juego que se está midiendo (para la fila «Juego»)
+	Lang        string    // idioma de los textos del panel: es o en
+	Now         time.Time // hora (para la fila «Hora»)
 }
 
 // liveFPS promedia los últimos windowMs milisegundos de cuadros.
@@ -190,7 +194,11 @@ func (e *Engine) Snapshot() Snapshot {
 }
 
 func (e *Engine) snapshotLocked() Snapshot {
-	s := Snapshot{Cfg: e.cfg, Sample: e.sample, GameRunning: e.gameRun, Recording: e.rec, Visible: e.visible, AlertCPU: e.alertCPU, AlertGPU: e.alertGPU}
+	s := Snapshot{Cfg: e.cfg, Sample: e.sample, GameRunning: e.gameRun, Recording: e.rec, Visible: e.visible, AlertCPU: e.alertCPU, AlertGPU: e.alertGPU,
+		Lang: e.lang, Now: e.d.Now()}
+	if e.gameRun {
+		s.Game = e.pmGame
+	}
 	if e.d.Now().Sub(e.lastFrame) < 2*time.Second && len(e.frames) > 0 {
 		s.FPS = liveFPS(e.frames, fpsWindowMs(e.cfg.UpdateMs))
 		tail := e.frames
@@ -232,6 +240,7 @@ func (e *Engine) Run(ctx context.Context, samples <-chan telemetry.Sample) {
 func (e *Engine) Tick() {
 	e.mu.Lock()
 	e.cfg = LoadConfig(e.d.Dir)
+	e.lang = UILang(e.d.Dir)
 	cfg := e.cfg
 	e.mu.Unlock()
 

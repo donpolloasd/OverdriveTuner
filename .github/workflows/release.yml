@@ -1,11 +1,11 @@
-# Compila OverdriveTuner desde el código, lo firma con SignPath y deja un Release en borrador.
+# Compila OverdriveTuner desde el código, lo firma con SignPath (si está configurado) y publica el Release.
 # Se lanza al subir un tag vX.Y.Z (git tag v2.8.2 && git push origin v2.8.2) o a mano desde la pestaña Actions.
 # Requiere el proyecto aprobado en SignPath Foundation y estos datos en Settings > Secrets and variables > Actions:
 #   secreto  SIGNPATH_API_TOKEN          (token de un usuario de SignPath con permiso de envío)
 #   variable SIGNPATH_ORGANIZATION_ID    (ID de la organización en SignPath)
 #   variable SIGNPATH_PROJECT_SLUG       (por ejemplo: OverdriveTuner)
 #   variable SIGNPATH_POLICY_SLUG        (release-signing; test-signing para probar)
-# Mientras no estén cargados, el flujo compila y publica el borrador SIN firmar (sirve para probarlo).
+# Mientras no estén cargados, el flujo compila y publica SIN firmar.
 name: Release
 
 on:
@@ -105,14 +105,16 @@ jobs:
           cp instaladores/OverdriveTuner-Setup.exe instaladores/OverdriveTuner-Patch.exe dist/
           cd dist && sha256sum OverdriveTuner-Setup.exe OverdriveTuner-Patch.exe OverdriveTuner-Portable.exe > SHA256.txt
 
-      # Queda en borrador: lo revisás y lo publicás a mano en la web de GitHub.
-      - name: Crear el Release en borrador
+      # Se publica con las notas de .github/notas/vX.Y.Z.md. Si no hay notas para esa versión, queda en borrador
+      # para completarlas a mano. Las actualizaciones automáticas solo ven Releases publicados (no borradores).
+      - name: Publicar el Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --draft --title "OverdriveTuner ${GITHUB_REF_NAME#v}" \
-            --notes "Borrador creado por GitHub Actions. Completá las notas antes de publicar." \
+          notas=".github/notas/$GITHUB_REF_NAME.md"
+          if [ -f "$notas" ]; then modo=(--notes-file "$notas" --latest); else modo=(--draft --notes "Completá las notas antes de publicar."); fi
+          gh release create "$GITHUB_REF_NAME" "${modo[@]}" --title "OverdriveTuner ${GITHUB_REF_NAME#v}" \
             dist/OverdriveTuner-Setup.exe dist/OverdriveTuner-Patch.exe dist/OverdriveTuner-Portable.exe dist/SHA256.txt
 
       - name: Guardar los archivos finales

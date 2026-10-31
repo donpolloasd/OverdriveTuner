@@ -49,6 +49,14 @@ type Config struct {
 	AlertCPU  int      `json:"alertCpu"`   // °C a partir de los que se avisa del procesador (60 a 110)
 	AlertGPU  int      `json:"alertGpu"`   // °C a partir de los que se avisa de la gráfica (60 a 110)
 	CloseList []string `json:"closeList"`  // Modo juego: programas que se cierran siempre al abrir un juego
+	OffsetX   int      `json:"offsetX"`    // separación horizontal desde la esquina, en píxeles (0 a 1000)
+	OffsetY   int      `json:"offsetY"`    // separación vertical desde la esquina, en píxeles (0 a 1000)
+	Monitor   int      `json:"monitor"`    // en qué monitor aparece: 0 = el principal; 1, 2… = los demás
+	Order     []string `json:"order"`      // orden de las filas de datos (ver RowKeys)
+	ShowFrame bool     `json:"showFrame"`  // tiempo de cuadro en milisegundos
+	ShowClock bool     `json:"showClock"`  // hora
+	ShowGame  bool     `json:"showGame"`   // nombre del juego detectado
+	Presets   []Preset `json:"presets"`    // estilos guardados con nombre
 	Games     []Game   `json:"games"`
 	Style              // aspecto del panel: colores, forma y letra (se guarda en el mismo nivel del JSON)
 }
@@ -63,7 +71,8 @@ func Default() Config {
 	return Config{Show: true, Corner: "tl", Layout: "card", Scale: 1, Opacity: 0.82,
 		ShowFPS: true, ShowLow: true, ShowGrph: true, ShowCPU: true, ShowGPU: true, ShowRAM: true,
 		ShowTemp: true, Hotkey: true, HkShow: "Ctrl+Alt+O", HkRecord: "Ctrl+Alt+R", HkCorner: "Ctrl+Alt+P", UpdateMs: 100, FpsSource: SrcRTSS, GameExe: "cs2.exe", AutoGame: true, OnlyGame: true, AutoOpen: true, AlertOn: true, AlertCPU: 90, AlertGPU: 85,
-		Games: []Game{{Exe: "cs2.exe", Priority: false}}, Style: DefaultStyle()}
+		Games: []Game{{Exe: "cs2.exe", Priority: false}}, Style: DefaultStyle(),
+		OffsetX: 14, OffsetY: 14, Order: append([]string(nil), RowKeys...)}
 }
 
 var corners = map[string]bool{"tl": true, "tr": true, "bl": true, "br": true}
@@ -156,6 +165,23 @@ func (c *Config) Normalize() {
 	}
 	c.Games = gs
 	c.Style.normalize()
+	if c.OffsetX < 0 || c.OffsetX > 1000 {
+		c.OffsetX = d.OffsetX
+	}
+	if c.OffsetY < 0 || c.OffsetY > 1000 {
+		c.OffsetY = d.OffsetY
+	}
+	if c.Monitor < 0 || c.Monitor > 8 {
+		c.Monitor = 0
+	}
+	c.Order = normalizeOrder(c.Order)
+	var ps []Preset
+	for _, p := range c.Presets {
+		if p.normalize() && len(ps) < 12 {
+			ps = append(ps, p)
+		}
+	}
+	c.Presets = ps
 }
 
 // LoadConfig lee overlay.json (o devuelve los valores por defecto).

@@ -721,7 +721,12 @@ async function renderBisect(m) {
 
 /* ---------- overlay ---------- */
 let ovTimer = null;
-const OVL_ITEMS = [["showFps", "FPS"], ["showLow", "1% low"], ["showGraph", "Gráfico de cuadros"], ["showCpu", "CPU"], ["showGpu", "GPU"], ["showRam", "RAM"], ["showVram", "VRAM"], ["showTemps", "Temperaturas"]];
+const OVL_ITEMS = [["showFps", "FPS"], ["showLow", "1% low"], ["showGraph", "Gráfico de cuadros"], ["showCpu", "CPU"], ["showGpu", "GPU"], ["showRam", "RAM"], ["showVram", "VRAM"], ["showTemps", "Temperaturas"], ["showFrame", "Tiempo de cuadro"], ["showClock", "Hora"], ["showGame", "Juego"]];
+// Nombres de las filas para ordenarlas.
+const OVL_ROWS = { cpu: "CPU", gpu: "GPU", vram: "VRAM", ram: "RAM", frame: "Tiempo de cuadro", clock: "Hora", game: "Juego" };
+const OVL_ROW_SHOW = { cpu: "showCpu", gpu: "showGpu", vram: "showVram", ram: "showRam", frame: "showFrame", clock: "showClock", game: "showGame" };
+// Lo que guarda un estilo: colores, forma y letra (más diseño, tamaño y transparencia).
+const OVL_STYLE_KEYS = ["theme", "colorBg", "colorValue", "colorLabel", "colorFps", "colorGood", "colorWarn", "colorBad", "colorGraph", "colorBorder", "fpsByValue", "fpsLow", "fpsMid", "transparent", "radius", "border", "font", "weight", "fpsSize"];
 
 // Colores del overlay que se eligen uno por uno (clave de la configuración y nombre en pantalla).
 const OVL_COLORS = [["colorBg", "Fondo"], ["colorFps", "Número de FPS"], ["colorValue", "Valores"], ["colorLabel", "Etiquetas"], ["colorGraph", "Gráfico"], ["colorGood", "Bien"], ["colorWarn", "Aviso"], ["colorBad", "Problema"], ["colorBorder", "Borde"]];
@@ -741,11 +746,18 @@ function ovPreview(cfg, st) {
   const look = `${cfg.transparent ? " tr" : ""}" style="${ovStyle(cfg, fps)}`;
   const t = v => v > 0 ? `<i class="${v >= 85 ? "bd" : v >= 70 ? "wn" : "gd"}">${Math.round(v)}°</i>` : `<i class="dm">—</i>`;
   const bars = Array.from({ length: 40 }, (_, i) => { const sp = i === 27 ? 26 : i === 11 ? 14 : 5 + (i * 7 % 3); return `<b class="${sp > 20 ? "bd" : sp > 10 ? "wn" : "gd"}" style="height:${sp / 26 * 100}%"></b>`; }).join("");
-  const rows = [];
-  if (cfg.showCpu) rows.push(`<div><span>CPU</span><em>${Math.round(sm.cpu)}%</em>${cfg.showTemps ? t(sm.cpuTemp) : ""}</div>`);
-  if (cfg.showGpu) rows.push(`<div><span>GPU</span><em>${Math.round(sm.gpu)}%</em>${cfg.showTemps ? t(sm.gpuTemp) : ""}</div>`);
-  if (cfg.showVram) rows.push(`<div><span>VRAM</span><em>${((sm.gpuVramMb || 0) / 1024).toFixed(1)} GB</em></div>`);
-  if (cfg.showRam) rows.push(`<div><span>RAM</span><em>${(sm.ramUsedMb / 1024).toFixed(1)} GB</em></div>`);
+  const now = new Date(), two = n => String(n).padStart(2, "0");
+  const game = ((st && st.game) || "cs2.exe").replace(/\.exe$/i, "");
+  const R = { // filas de datos, en el orden elegido (igual que el overlay real)
+    cpu: () => cfg.showCpu && `<div><span>CPU</span><em>${Math.round(sm.cpu)}%</em>${cfg.showTemps ? t(sm.cpuTemp) : ""}</div>`,
+    gpu: () => cfg.showGpu && `<div><span>GPU</span><em>${Math.round(sm.gpu)}%</em>${cfg.showTemps ? t(sm.gpuTemp) : ""}</div>`,
+    vram: () => cfg.showVram && `<div><span>VRAM</span><em>${((sm.gpuVramMb || 0) / 1024).toFixed(1)} GB</em></div>`,
+    ram: () => cfg.showRam && `<div><span>RAM</span><em>${(sm.ramUsedMb / 1024).toFixed(1)} GB</em></div>`,
+    frame: () => cfg.showFrame && `<div><span>Cuadro</span><em>${(1000 / fps).toFixed(1)} ms</em></div>`,
+    clock: () => cfg.showClock && `<div><span>Hora</span><em>${two(now.getHours())}:${two(now.getMinutes())}</em></div>`,
+    game: () => cfg.showGame && `<div><span>Juego</span><em>${esc(game)}</em></div>`,
+  };
+  const rows = (cfg.order || Object.keys(R)).map(k => R[k] && R[k]()).filter(Boolean);
   if (cfg.layout === "line") {
     const parts = []; if (cfg.showFps) parts.push(`<em class="fp">${fps} FPS</em>`);
     rows.forEach(r => parts.push(r.replace(/<\/?div>/g, "")));
@@ -780,6 +792,8 @@ async function renderOverlay(m) {
   <div class="ovgrid"><div><h3>Vista previa</h3><div class="ovstage" id="ovPrev">${ovPreview(cfg, d.running ? d.state : null)}</div><p class="note">Es una aproximación: el diseño real lo dibuja Windows y puede verse un poco distinto.</p></div>
   <div><h3>Apariencia</h3><div class="list">
    <div class="row"><div><h4>Esquina</h4></div><select id="cCorner">${[["tl", "Arriba izquierda"], ["tr", "Arriba derecha"], ["bl", "Abajo izquierda"], ["br", "Abajo derecha"]].map(([v, n]) => `<option value="${v}" ${cfg.corner === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+   <div class="row"><div><h4>Separación del borde</h4><p>En píxeles, desde la esquina elegida.</p></div><div class="bar"><label>Horizontal <input type="number" id="cOffX" min="0" max="1000" value="${cfg.offsetX}" style="width:76px"></label><label>Vertical <input type="number" id="cOffY" min="0" max="1000" value="${cfg.offsetY}" style="width:76px"></label></div></div>
+   <div class="row"><div><h4>Monitor</h4><p>En qué pantalla aparece el panel. Si ese monitor se desconecta, vuelve al principal.</p></div><select id="cMon">${(d.monitors || []).map(mo => `<option value="${mo.index}" ${cfg.monitor === mo.index ? "selected" : ""}>${esc(mo.name)}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Diseño</h4></div><select id="cLayout"><option value="card" ${cfg.layout === "card" ? "selected" : ""}>Tarjeta</option><option value="line" ${cfg.layout === "line" ? "selected" : ""}>Una línea</option></select></div>
    <div class="row"><div><h4>Frecuencia de actualización</h4><p>Cuántas veces por segundo se actualiza el número de FPS. Más rápido sigue mejor los cambios.</p></div><select id="cUpd">${[[50, "20 por segundo"], [100, "10 por segundo"], [250, "4 por segundo"], [500, "2 por segundo"]].map(([v, n]) => `<option value="${v}" ${cfg.updateMs === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Tamaño</h4></div><input type="range" id="cScale" min="0.8" max="1.8" step="0.1" value="${cfg.scale}"></div>
@@ -795,6 +809,9 @@ async function renderOverlay(m) {
    <div class="row"><div><h4>Letra</h4><p>Consolas tiene todos los números del mismo ancho: el valor no «baila» al cambiar.</p></div><div class="bar"><select id="cFont">${[["segoe", "Segoe UI"], ["bahnschrift", "Bahnschrift"], ["consolas", "Consolas"]].map(([v, n]) => `<option value="${v}" ${cfg.font === v ? "selected" : ""}>${n}</option>`).join("")}</select><select id="cWeight">${[["normal", "Normal"], ["semibold", "Seminegrita"], ["bold", "Negrita"]].map(([v, n]) => `<option value="${v}" ${cfg.weight === v ? "selected" : ""}>${n}</option>`).join("")}</select></div></div>
    <div class="row"><div><h4>Tamaño del número de FPS</h4></div><input type="range" id="cFpsSize" min="0.7" max="1.6" step="0.1" value="${cfg.fpsSize}"></div>
    <div class="row"><div><h4>Qué mostrar</h4><p style="display:flex;flex-wrap:wrap;gap:12px">${OVL_ITEMS.map(([k, n]) => `<label><input type="checkbox" data-k="${k}" ${cfg[k] ? "checked" : ""}> ${n}</label>`).join("")}</p></div></div>
+   <div class="row"><div style="flex:1"><h4>Orden de los datos</h4><p>Arrastrá una fila o usá Subir y Bajar. El número de FPS y el gráfico van siempre arriba.</p><ol class="ovorder" id="cOrder"></ol></div></div>
+   <div class="row"><div style="flex:1"><h4>Estilos guardados</h4><p>Guardá cómo se ve ahora (colores, forma, letra, diseño, tamaño y transparencia) para volver a ese aspecto con un clic.</p>
+     <div class="bar"><input type="text" id="cPresetName" maxlength="30" placeholder="Nombre, por ejemplo Competitivo" style="width:230px"><button class="btn" id="cPresetSave">Guardar estilo actual</button></div><div class="list" id="cPresets" style="margin-top:8px"></div></div></div>
    <div class="row"><div><h4>Avisar si la PC se calienta</h4><p>Cuando el procesador o la gráfica pasan el límite, el valor se pone en rojo y el overlay muestra un aviso de texto (sin sonido). La de la gráfica funciona siempre; la del procesador solo si Core Temp está instalado.</p></div><input type="checkbox" data-k="alertOn" aria-label="Avisar si la PC se calienta" ${cfg.alertOn ? "checked" : ""}></div>
    <div class="row"><div><h4>Temperatura del procesador</h4><p>Windows no la entrega en la mayoría de los procesadores. El overlay la lee de Core Temp, que se abre solo en segundo plano si lo tenés instalado. Solo lee: no se mete en el juego. Core Temp es gratis y está en «Instalar programas».</p></div></div>
    <div class="row"><div><h4>Límites de temperatura</h4><p>En grados Celsius, entre 60 y 110.</p></div><div class="bar"><label>CPU <input type="number" id="cAlC" min="60" max="110" value="${cfg.alertCpu}" style="width:70px"></label><label>GPU <input type="number" id="cAlG" min="60" max="110" value="${cfg.alertGpu}" style="width:70px"></label></div></div>
@@ -814,6 +831,50 @@ async function renderOverlay(m) {
   const toggle = $("#ovToggle");
   toggle.onclick = async () => { try { await api(d.running ? "overlay/stop" : "overlay/start", {}); toast(d.running ? "Cerrando overlay…" : "Abriendo overlay…"); setTimeout(() => renderOverlay(m), 1800); } catch (e) { toast(e.message, 6000); } };
   $("#cCorner").onchange = e => { cfg.corner = e.target.value; save(); };
+  $("#cOffX").onchange = e => { cfg.offsetX = +e.target.value; save().then(() => { e.target.value = cfg.offsetX; }); };
+  $("#cOffY").onchange = e => { cfg.offsetY = +e.target.value; save().then(() => { e.target.value = cfg.offsetY; }); };
+  $("#cMon").onchange = e => { cfg.monitor = +e.target.value; save(); };
+  // orden de los datos: arrastrar o Subir/Bajar
+  const renderOrder = () => {
+    const ol = $("#cOrder"), n = cfg.order.length;
+    ol.innerHTML = cfg.order.map((k, i) => `<li draggable="true" data-ord="${i}" class="${cfg[OVL_ROW_SHOW[k]] ? "" : "off"}"><span class="grip" aria-hidden="true"></span><span>${OVL_ROWS[k] || k}</span>${cfg[OVL_ROW_SHOW[k]] ? "" : '<small>oculto</small>'}
+      <button class="btn" data-mv="${i}" data-d="-1" ${i ? "" : "disabled"}>Subir</button><button class="btn" data-mv="${i}" data-d="1" ${i < n - 1 ? "" : "disabled"}>Bajar</button></li>`).join("");
+    const move = (from, to) => { if (to < 0 || to >= n || from === to) return; const [k] = cfg.order.splice(from, 1); cfg.order.splice(to, 0, k); renderOrder(); save(); };
+    ol.querySelectorAll("[data-mv]").forEach(b => b.onclick = () => { const i = +b.dataset.mv; move(i, i + +b.dataset.d); const nb = ol.querySelector(`[data-mv="${i + +b.dataset.d}"][data-d="${b.dataset.d}"]`); if (nb && !nb.disabled) nb.focus(); });
+    let from = -1;
+    ol.querySelectorAll("li").forEach(li => {
+      li.ondragstart = e => { from = +li.dataset.ord; e.dataTransfer.effectAllowed = "move"; li.classList.add("drag"); };
+      li.ondragend = () => li.classList.remove("drag");
+      li.ondragover = e => { e.preventDefault(); li.classList.add("over"); };
+      li.ondragleave = () => li.classList.remove("over");
+      li.ondrop = e => { e.preventDefault(); li.classList.remove("over"); move(from, +li.dataset.ord); };
+    });
+  };
+  renderOrder();
+  // estilos guardados
+  const renderPresets = () => {
+    $("#cPresets").innerHTML = (cfg.presets || []).map((p, i) => `<div class="row"><div><h4>${esc(p.name)}</h4><p>${esc(((d.themes || []).find(t => t.id === p.style.theme) || { name: "Personalizado" }).name)} · ${p.layout === "line" ? "Una línea" : "Tarjeta"}</p></div><div class="bar"><button class="btn" data-pu="${i}">Usar</button><button class="btn danger" data-px="${i}">Borrar</button></div></div>`).join("") || '<p class="note">Todavía no guardaste ninguno.</p>';
+    m.querySelectorAll("[data-pu]").forEach(b => b.onclick = async () => {
+      const p = cfg.presets[+b.dataset.pu];
+      Object.assign(cfg, p.style, { layout: p.layout, scale: p.scale, opacity: p.opacity });
+      await save(); toast("Estilo aplicado: " + p.name); renderOverlay(m);
+    });
+    m.querySelectorAll("[data-px]").forEach(b => b.onclick = async () => {
+      const p = cfg.presets[+b.dataset.px];
+      if (!await ask(`¿Borrar el estilo «${p.name}»?`, { title: "Estilos guardados", ok: "Borrar", danger: true })) return;
+      cfg.presets.splice(+b.dataset.px, 1); await save(); renderPresets();
+    });
+  };
+  renderPresets();
+  $("#cPresetSave").onclick = async () => {
+    const name = $("#cPresetName").value.trim();
+    if (!name) return toast("Escribí un nombre para el estilo.");
+    const style = {}; OVL_STYLE_KEYS.forEach(k => style[k] = cfg[k]);
+    const p = { name, layout: cfg.layout, scale: cfg.scale, opacity: cfg.opacity, style };
+    cfg.presets = (cfg.presets || []).filter(x => x.name.toLowerCase() !== name.toLowerCase());
+    if (cfg.presets.length >= 12) return toast("Hay 12 estilos guardados: borrá alguno primero.", 5000);
+    cfg.presets.push(p); await save(); $("#cPresetName").value = ""; renderPresets(); toast("Estilo guardado: " + name);
+  };
   $("#cUpd").onchange = e => { cfg.updateMs = +e.target.value; save(); };
   $("#cLayout").onchange = e => { cfg.layout = e.target.value; save(); };
   $("#cScale").oninput = e => { cfg.scale = +e.target.value; $("#ovPrev").innerHTML = ovPreview(cfg, d.running ? d.state : null); };
@@ -848,7 +909,7 @@ async function renderOverlay(m) {
   $("#cAlG").onchange = e => { cfg.alertGpu = +e.target.value; save(); };
   $("#cDirs").onchange = e => { cfg.gameDirs = e.target.value.split("\n").map(x => x.trim()).filter(Boolean); save(); };
   $("#cGame").onchange = e => { cfg.gameExe = e.target.value.trim(); save(); };
-  m.querySelectorAll("[data-k]").forEach(c => c.onchange = () => { cfg[c.dataset.k] = c.checked; save(); });
+  m.querySelectorAll("[data-k]").forEach(c => c.onchange = () => { cfg[c.dataset.k] = c.checked; save(); renderOrder(); });
   $("#recStart").onclick = async () => { try { await api("overlay/record", { action: "start", label: $("#recLbl").value }); toast("Grabando…"); } catch (e) { toast(e.message, 5000); } };
   $("#recStop").onclick = async () => { try { await api("overlay/record", { action: "stop" }); toast("Guardando sesión… mirala en Benchmark."); } catch (e) { toast(e.message, 5000); } };
   // perfiles por juego

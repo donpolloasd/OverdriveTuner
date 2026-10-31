@@ -341,3 +341,11 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - La vista previa de la pestaña usa los mismos colores, letra y forma que el overlay.
 - Los textos que dibuja el overlay encima del juego («Aviso», «CPU caliente») siguen en español.
 - Probado en Windows 11 (modo demo): la pantalla de estilo, el cambio de tema y el overlay real dibujado con Verde neón, con fondo transparente (Bahnschrift, FPS grande y color propio) y con Cian, esquinas rectas, borde y Consolas. Arreglado de paso: al cambiar una opción con el overlay cerrado, la vista previa mostraba CPU, GPU y RAM en 0.
+
+== Versión 2.10.0 ==
+- Overlay: separación del borde en píxeles (horizontal y vertical) y elección del monitor donde aparece (si se desconecta, vuelve al principal).
+- Overlay: orden de las filas de datos (arrastrando o con Subir/Bajar) y datos nuevos opcionales: tiempo de cuadro (ms), hora y nombre del juego.
+- Overlay: estilos guardados con nombre (colores, forma, letra, diseño, tamaño y transparencia), hasta 12.
+- Overlay en inglés: los textos que se dibujan encima del juego («Aviso», «CPU caliente», «Cuadro», «Hora», «Juego») siguen el idioma elegido en Configuración o, si no se eligió ninguno, el de Windows.
+- Escaneo del equipo más rápido: unos 3 segundos en la PC de pruebas (antes, más de 6). Se consulta el procesador una sola vez y el escaneo corre en dos partes a la vez.
+- Arreglo: la frecuencia máxima del monitor (que usa Diagnóstico) salía siempre en 0. Ahora se lee directo de Windows.

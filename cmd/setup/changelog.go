@@ -20,6 +20,13 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.10.0", "Overlay donde quieras, en tu idioma, y escaneo más rápido", []Change{
+		{"Posición libre y monitor", "Elegí la separación del borde en píxeles y en qué monitor aparece el overlay (si ese monitor se desconecta, vuelve al principal)."},
+		{"Orden y datos nuevos", "Ordená las filas arrastrándolas o con Subir y Bajar, y sumá tiempo de cuadro (ms), hora y el nombre del juego."},
+		{"Estilos guardados", "Guardá con un nombre cómo se ve el overlay (colores, forma, letra, diseño, tamaño y transparencia) y volvé a ese aspecto con un clic."},
+		{"Overlay en inglés", "Los textos que el overlay dibuja encima del juego siguen el idioma del programa."},
+		{"Escaneo del equipo más rápido", "Ahora tarda unos 3 segundos (antes, más de 6). Además se arregló la frecuencia máxima del monitor, que salía en 0."},
+	}},
 	{"2.9.0", "Overlay a tu gusto: colores y estilo", []Change{
 		{"Cualquier color", "En la pestaña Overlay elegís el color del fondo, del número de FPS, de los valores, las etiquetas, el gráfico, los avisos y el borde: con una paleta o escribiendo el código (por ejemplo #00FF88)."},
 		{"Temas listos", "Clásico, Verde neón, Cian, Ámbar, Rojo gamer y Alto contraste, a un clic. Si cambiás un color, pasa a «Personalizado»."},

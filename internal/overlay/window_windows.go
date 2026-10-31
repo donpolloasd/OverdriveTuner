@@ -263,10 +263,16 @@ func (w *win) layout(hdc uintptr, sn Snapshot, draw bool) (int, int) {
 		}
 		y += px(20) + px(8)
 	}
+	labelW := px(40) // columna de etiquetas: se agranda si alguna es más larga («Cuadro», «Juego»…)
+	for _, r := range m.Rows {
+		if lw := w.extent(hdc, small, r.Label) + px(8); lw > labelW {
+			labelW = lw
+		}
+	}
 	for _, r := range m.Rows {
 		if draw {
 			w.text(hdc, small, pad, y+px(2), r.Label, m.Pal.Label)
-			vx := pad + px(40)
+			vx := pad + labelW
 			w.text(hdc, norm, vx, y-px(1), r.Parts[0].Text, r.Parts[0].Color)
 			if len(r.Parts) > 1 {
 				tw := w.extent(hdc, norm, r.Parts[1].Text)
@@ -338,17 +344,27 @@ func (w *win) refresh() {
 	W, H := w.layout(hdc, sn, false)
 	pDeleteDC.Call(hdc)
 
-	sw, _, _ := pGetSysMetrics.Call(0)
-	sh, _, _ := pGetSysMetrics.Call(1)
-	mg := int(14 * sn.Cfg.Scale)
-	x, y := mg, mg
+	// Monitor elegido (si ya no está conectado, el principal) y separación desde la esquina.
+	mon := Monitor{Width: 1920, Height: 1080}
+	if sw, _, _ := pGetSysMetrics.Call(0); sw > 0 {
+		sh, _, _ := pGetSysMetrics.Call(1)
+		mon.Width, mon.Height = int(sw), int(sh)
+	}
+	if ms := Monitors(); len(ms) > 0 {
+		mon = ms[0]
+		if sn.Cfg.Monitor < len(ms) {
+			mon = ms[sn.Cfg.Monitor]
+		}
+	}
+	mx, my := sn.Cfg.OffsetX, sn.Cfg.OffsetY
+	x, y := mon.L+mx, mon.T+my
 	switch sn.Cfg.Corner {
 	case "tr":
-		x = int(sw) - W - mg
+		x = mon.L + mon.Width - W - mx
 	case "bl":
-		y = int(sh) - H - mg
+		y = mon.T + mon.Height - H - my
 	case "br":
-		x, y = int(sw)-W-mg, int(sh)-H-mg
+		x, y = mon.L+mon.Width-W-mx, mon.T+mon.Height-H-my
 	}
 	st := sn.Cfg.Style
 	if k := fmt.Sprint(W, H, st.Radius, st.Transparent, sn.Cfg.Scale); k != w.rgnKey {
