@@ -1,79 +1,92 @@
+<div align="center">
+
 # OverdriveTuner
+
+**Un optimizador de PC para gaming en Windows 10/11: ajustes reversibles, un overlay de FPS que nunca toca tu juego y diagnósticos claros.**
+
+[![Última versión](https://img.shields.io/github/v/release/donpolloasd/OverdriveTuner?label=versi%C3%B3n&color=111111)](https://github.com/donpolloasd/OverdriveTuner/releases/latest)
+[![Licencia: MIT](https://img.shields.io/badge/licencia-MIT-111111)](LICENSE)
+![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-111111)
+![Go](https://img.shields.io/badge/Go-solo%20biblioteca%20est%C3%A1ndar-111111)
 
 [English](README.md) · **Español**
 
-Optimizador de PC para gaming en Windows 11, hecho en Go sin dependencias externas. Escanea el
-hardware, aplica ajustes reversibles, muestra un overlay de FPS y ayuda a instalar programas.
+[**Descargar**](https://github.com/donpolloasd/OverdriveTuner/releases/latest) · [Funciones](#funciones) · [Seguridad](#la-seguridad-primero) · [Instalación](#instalación) · [Compilar](#compilar-desde-el-código)
 
-> **Estado: beta (2.10.1).** Hecho y probado principalmente en una PC con Ryzen 5 5600G + RX 7600 (juegos de Steam, EA, Epic y Minecraft). Algunas funciones no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir.
+</div>
+
+> [!NOTE]
+> **Beta (2.10.1).** Hecho y probado principalmente en una PC (Ryzen 5 5600G + RX 7600; juegos de Steam, EA, Epic y Minecraft). Algunas funciones todavía no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir. La interfaz está en español con traducción al inglés (se cambia en Configuración).
 
 > Creado con **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), con la dirección y las pruebas de su autor (Donpolloasd).
 
-## Qué hace
+---
 
-- **Ajustes de rendimiento** (más de 80) con revertir uno por uno o todos. Los que pueden afectar a un
-  anti-cheat piden doble confirmación.
-- **Diagnóstico de fluidez**: Hz del monitor (se detecta el máximo), gráfica conectada, memoria, red, discos.
-- **Overlay de FPS** (proceso aparte, no se inyecta en el juego): FPS, 1 % low, CPU, GPU, RAM, temperaturas
-  y aviso de sobrecalentamiento. Detecta solo el juego abierto (Steam, Epic, EA, GOG, Ubisoft, Xbox…).
-- **Modo juego**: lista de programas que se cierran al abrir un juego.
-- **Liberar RAM**, limpieza de temporales, administrador de programas de inicio.
-- **Instalar programas** con winget (launchers, utilidades, monitoreo, periféricos…).
-- **Chequeos de hardware**: Resizable BAR, antigüedad del driver, salud y desgaste de discos, espacio libre, guía de BIOS.
-- **Ping a servidores de juegos** (latencia, variación, pérdida) y **mantenimiento programado** (limpieza y punto de restauración semanales).
-- **Benchmark** antes/después, historial, exportar/importar la configuración.
-- Interfaz en español e inglés.
+## Funciones
 
-## Cómo funciona el overlay (y por qué no toca el juego)
+### Optimizar
+- **Más de 80 ajustes de rendimiento** para FPS, latencia, gráficos, energía, memoria, red, servicios, privacidad y debloat de Windows 11. Cada uno muestra su nivel de riesgo y tiene un botón **«?»** que explica qué cambia.
+- **Perfiles de un clic** (Recomendado y Competitivo) que solo incluyen ajustes seguros para tu hardware.
+- **Buscá** cualquier ajuste o sección con **Ctrl+K**.
 
-Los FPS se leen de [RTSS](https://www.guru3d.com/page/rtss/) (solo lectura de su memoria compartida) y
-las temperaturas del procesador de [Core Temp](https://www.alcpu.com/CoreTemp/). El Setup puede
-instalar los dos y el overlay los abre en segundo plano. OverdriveTuner **no instala drivers de kernel
-ni inyecta código** en ningún juego; lo que se mete en el juego es RTSS, no OverdriveTuner.
+### Overlay en juego
+- FPS, 1% low, gráfico de tiempos de cuadro, CPU, GPU, VRAM, RAM, temperaturas y aviso de sobrecalentamiento.
+- **Detecta solo el juego que abriste** (Steam, Epic, EA, GOG, Ubisoft, Xbox, Riot…).
+- **Totalmente personalizable:** cualquier color, temas listos, fondo transparente, esquinas, borde, letra, posición, monitor, orden de los datos, tiempo de cuadro, hora y estilos guardados.
 
-## Descargar
+### Diagnosticar
+- Frecuencia del monitor, a qué gráfica está conectado, velocidad (XMP/EXPO) y canales de la RAM, plan de energía, Resizable BAR, antigüedad del driver de video, salud de los discos y una guía de BIOS para tu hardware.
+- **Ping a servidores de juegos**, prueba de DNS y uso de red por programa.
+- **Benchmark** antes/después con detector de microcortes.
 
-Bajá `OverdriveTuner-Setup.exe` (instalador) o `OverdriveTuner-Portable.exe` desde [Releases](../../releases) y comprobá el SHA-256 con `SHA256.txt`.
+### Herramientas
+- **Modo juego:** cierra los programas que elijas cuando abrís un juego.
+- **Instalar programas** con winget (launchers, runtimes, herramientas de monitoreo…).
+- **Liberar RAM**, limpieza de temporales, administrador de inicio y mantenimiento programado.
 
-## Actualizaciones automáticas
+## La seguridad primero
 
-El Setup tiene una opción (activada por defecto) para instalar solas las versiones nuevas. Si está activa, la
-app consulta el último Release estable de GitHub (solo `api.github.com` y las descargas de GitHub; no se envía
-nada tuyo), baja `OverdriveTuner-Portable.exe`, lo verifica con el SHA-256 de `SHA256.txt` del mismo Release y
-reemplaza el programa instalado; la versión nueva se usa al reiniciar. Si la desactivás (en el Setup o en
-Configuración), no se consulta nada y la app se queda en su versión hasta que apliques
-`OverdriveTuner-Patch.exe`. Los Releases deben tener el tag `vX.Y.Z` e incluir `OverdriveTuner-Portable.exe` y
-`SHA256.txt`. Los binarios no tienen firma digital: la confianza es esta cuenta de GitHub más el SHA-256.
+| | |
+|---|---|
+| **Todo es reversible** | Cada ajuste guarda el valor anterior y vuelve atrás con el mismo interruptor. «Restaurar todo» deshace todo, y antes de aplicar un perfil se crea un punto de restauración. |
+| **Sin drivers de kernel ni inyección** | El overlay es una ventana aparte. Los FPS se leen de [RTSS](https://www.guru3d.com/page/rtss/) y la temperatura del procesador de [Core Temp](https://www.alcpu.com/CoreTemp/), solo lectura. |
+| **Pensado para los anti-cheat** | Los ajustes que bajan protecciones que exigen los anti-cheat de kernel (HVCI, Secure Boot…) piden **doble confirmación** y nunca forman parte de un perfil. |
+| **Sin telemetría** | Sin cuentas ni publicidad. La única conexión automática es la búsqueda opcional de actualizaciones en GitHub. Ver [PRIVACIDAD.md](PRIVACIDAD.md). |
 
-## Compilar
+## Instalación
 
-Requisitos: Go 1.24 o superior y bash (en Windows, Git Bash o WSL).
+1. Descargá desde la [**última versión**](https://github.com/donpolloasd/OverdriveTuner/releases/latest):
+   - `OverdriveTuner-Setup.exe`: instalación nueva.
+   - `OverdriveTuner-Patch.exe`: actualiza una instalación existente y conserva tus ajustes y copias de seguridad.
+   - `OverdriveTuner-Portable.exe`: sin instalar.
+2. Si querés, comprobá el archivo con `SHA256.txt`.
+3. Ejecutalo y aceptá el aviso de administrador (cambia configuraciones del sistema).
+
+> [!IMPORTANT]
+> Los ejecutables **todavía no tienen firma digital**, así que Windows SmartScreen puede mostrar *«Windows protegió su PC»*: tocá **Más información → Ejecutar de todas formas**. Defender también puede dar un falso positivo genérico. Cada versión se compila desde este código con GitHub Actions, y también podés compilarla vos.
+
+### Actualizaciones automáticas
+Opcionales (activadas por defecto en el instalador, se cambian en Configuración). El programa consulta la última versión estable en GitHub, descarga `OverdriveTuner-Portable.exe`, comprueba su SHA-256 con el `SHA256.txt` de esa versión y la instala; la versión nueva se usa al reiniciar. Si están desactivadas, no se consulta nada.
+
+## Compilar desde el código
+
+Requisitos: **Go 1.24 o más nuevo** y bash (Git Bash o WSL en Windows). Sin dependencias externas.
 
 ```bash
-./build.sh
+./build.sh                         # vet + pruebas + Setup, Patch y Portable en dist/
+go run ./cmd/fpsforge --demo       # probar la interfaz con datos simulados
 ```
 
-Hace `go vet`, corre las pruebas y genera en `dist/` el instalador, el parche y la versión portable para
-Windows 64 bits. Para probar la interfaz fuera de Windows (datos simulados):
+<details>
+<summary><b>Estructura del proyecto</b></summary>
 
-```bash
-go run ./cmd/fpsforge --demo
-```
+- `cmd/fpsforge`: el programa. Servidor local + ventana propia con WebView2 (el motor web que trae Windows; Edge en modo aplicación como respaldo).
+- `cmd/setup`: instalador y parche (el mismo código; el parche se compila con `-X main.patchMode=1`).
+- `internal/`: ajustes, escaneo del hardware, overlay, lectores de RTSS y Core Temp, diagnóstico, actualizador…
+- `.github/workflows/release.yml`: compila, firma (opcional) y publica una versión cuando se sube un tag `vX.Y.Z`.
 
-## Estructura
-
-- `cmd/fpsforge`: el programa (servidor local + ventana propia con WebView2, el motor web que trae Windows; Edge en modo aplicación como respaldo).
-- `cmd/setup`: instalador y parche (la misma interfaz, con `-X main.patchMode=1` para el parche).
-- `internal/`: módulos (ajustes, escaneo, overlay, RTSS, apps, memoria, actualizaciones, etc.).
-
-## Avisos
-
-- Los ejecutables **no están firmados digitalmente**, así que Windows Defender puede marcarlos como
-  sospechosos (por ejemplo con una detección genérica por aprendizaje automático). Podés revisar el código
-  y compilarlos vos mismo.
-- Pide permisos de administrador porque cambia ajustes del sistema.
-- Usalo bajo tu responsabilidad; ver la licencia.
+</details>
 
 ## Licencia
 
-MIT. Ver [LICENSE](LICENSE) y [THIRD_PARTY.md](THIRD_PARTY.md).
+[MIT](LICENSE). Avisos de terceros en [THIRD_PARTY.md](THIRD_PARTY.md). Usalo bajo tu responsabilidad.
