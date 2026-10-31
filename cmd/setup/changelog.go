@@ -20,6 +20,9 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.10.1", "Primera versión publicada en GitHub", []Change{
+		{"Lo mismo que la 2.10.0, ahora publicado", "Esta es la primera versión que se publica en GitHub con su Release: desde acá la actualización automática ya encuentra las versiones nuevas."},
+	}},
 	{"2.10.0", "Overlay donde quieras, en tu idioma, y escaneo más rápido", []Change{
 		{"Posición libre y monitor", "Elegí la separación del borde en píxeles y en qué monitor aparece el overlay (si ese monitor se desconecta, vuelve al principal)."},
 		{"Orden y datos nuevos", "Ordená las filas arrastrándolas o con Subir y Bajar, y sumá tiempo de cuadro (ms), hora y el nombre del juego."},

@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"fpsforge/internal/extras"
 	"fpsforge/internal/system"
 )
 
@@ -64,8 +65,17 @@ func TestRunWritesLog(t *testing.T) {
 	if LastMessage(dir, "cleanup") != "" {
 		t.Error("sin ejecuciones no hay mensaje")
 	}
-	// limpieza: en Linux no hay objetivos, termina bien
+	// limpieza: con objetivos simulados (la real borraría los temporales del equipo que corre los tests)
+	var ran []string
+	cleanTargets = func() []extras.Target {
+		return []extras.Target{{ID: "usertemp", Safe: true}, {ID: "shaders", Confirm: "x"}, {ID: "edgecache", Deep: true}}
+	}
+	cleanRun = func(ids []string) []extras.CleanResult { ran = ids; return nil }
+	defer func() { cleanTargets, cleanRun = extras.Targets, extras.Run }()
 	if _, err := Run(f, dir, "cleanup"); err != nil {
 		t.Fatal(err)
+	}
+	if len(ran) != 1 || ran[0] != "usertemp" {
+		t.Fatalf("la limpieza semanal solo borra lo seguro (nunca shaders ni cachés de navegadores): %v", ran)
 	}
 }

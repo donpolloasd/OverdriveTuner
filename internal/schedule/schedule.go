@@ -194,6 +194,12 @@ func writeLog(dir, id, msg string) {
 	_ = os.WriteFile(filepath.Join(dir, logFile), b, 0o644)
 }
 
+// cleanTargets y cleanRun son la limpieza real (los tests las reemplazan para no borrar archivos del equipo).
+var (
+	cleanTargets = extras.Targets
+	cleanRun     = extras.Run
+)
+
 // Run hace el trabajo de una tarea (lo llama OverdriveTuner.exe --task <id>) y devuelve un resumen.
 func Run(sys system.System, dataDir, id string) (string, error) {
 	var msg string
@@ -201,13 +207,13 @@ func Run(sys system.System, dataDir, id string) (string, error) {
 	switch id {
 	case "cleanup":
 		var ids []string
-		for _, t := range extras.Targets() {
+		for _, t := range cleanTargets() {
 			if t.Safe && !t.Deep && t.Confirm == "" { // solo lo seguro: temporales, volcados y miniaturas (nunca shaders)
 				ids = append(ids, t.ID)
 			}
 		}
 		var freed int64
-		for _, r := range extras.Run(ids) {
+		for _, r := range cleanRun(ids) {
 			freed += r.Freed
 		}
 		msg = fmt.Sprintf("se liberaron %.1f MB de archivos temporales.", float64(freed)/(1<<20))

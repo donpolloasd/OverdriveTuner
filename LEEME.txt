@@ -349,3 +349,7 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - Overlay en inglés: los textos que se dibujan encima del juego («Aviso», «CPU caliente», «Cuadro», «Hora», «Juego») siguen el idioma elegido en Configuración o, si no se eligió ninguno, el de Windows.
 - Escaneo del equipo más rápido: unos 3 segundos en la PC de pruebas (antes, más de 6). Se consulta el procesador una sola vez y el escaneo corre en dos partes a la vez.
 - Arreglo: la frecuencia máxima del monitor (que usa Diagnóstico) salía siempre en 0. Ahora se lee directo de Windows.
+
+== Versión 2.10.1 ==
+- Primera versión publicada como Release en GitHub (compilada desde el código con GitHub Actions): a partir de acá la actualización automática encuentra las versiones nuevas. Mismo contenido que la 2.10.0.
+- Arreglo interno: un test de las tareas programadas ejecutaba la limpieza real de temporales en Windows; ahora usa una limpieza simulada.
