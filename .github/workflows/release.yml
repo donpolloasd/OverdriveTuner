@@ -11,6 +11,7 @@ name: Release
 on:
   push:
     tags: ["v*.*.*"]
+    branches: [main] # en cada subida a main: pruebas y compilación (el Release solo se publica con un tag)
   workflow_dispatch:
 
 permissions:
@@ -31,10 +32,14 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # Si algo falla, el error se publica como anotación (se ve en el resumen sin iniciar sesión).
       - name: Pruebas
         run: |
-          go vet ./...
-          go test ./internal/...
+          if ! go vet ./... > vet.txt 2>&1; then sed 's/^/::error::vet: /' vet.txt | head -40; exit 1; fi
+          if ! go test ./internal/... > pruebas.txt 2>&1; then
+            grep -E "^(--- FAIL|FAIL|panic|\s+.*_test\.go:[0-9]+:)" pruebas.txt | head -40 | sed 's/^\s*/::error::/'
+            exit 1
+          fi
 
       - name: Recursos de Windows (icono, manifiesto y ficha de versión)
         run: |
