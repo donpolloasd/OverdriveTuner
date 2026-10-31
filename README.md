@@ -7,7 +7,7 @@ hardware, applies reversible tweaks, shows an FPS overlay and helps you install 
 
 > **Status: beta (2.9.0).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings); the English text was written by the author and may have mistakes.
 
-> Created with **Claude Sonnet 5.5** (Anthropic), directed and tested by its author.
+> Created with **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), directed and tested by its author.
 
 ## What it does
 
