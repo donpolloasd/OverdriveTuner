@@ -37,7 +37,7 @@ jobs:
         run: |
           if ! go vet ./... > vet.txt 2>&1; then sed 's/^/::error::vet: /' vet.txt | head -40; exit 1; fi
           if ! go test ./internal/... > pruebas.txt 2>&1; then
-            grep -vE "^(ok |?  )" pruebas.txt | head -60 | sed "s/^s*/::error::/"
+            grep -vE '^(ok |[?] )' pruebas.txt | head -60 | sed 's/^[[:space:]]*/::error::/'
             exit 1
           fi
 
