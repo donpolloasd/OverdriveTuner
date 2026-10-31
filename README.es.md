@@ -7,7 +7,7 @@ hardware, aplica ajustes reversibles, muestra un overlay de FPS y ayuda a instal
 
 > **Estado: beta (2.10.0).** Hecho y probado principalmente en una PC con Ryzen 5 5600G + RX 7600 (juegos de Steam, EA, Epic y Minecraft). Algunas funciones no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir.
 
-> Creado con **Claude Sonnet 5.5** (Anthropic), con la dirección y las pruebas de su autor.
+> Creado con **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), con la dirección y las pruebas de su autor (Donpolloasd).
 
 ## Qué hace
 
