@@ -71,7 +71,7 @@
       const ps = Array.from({ length: N }, () => ({ x: Math.random(), y: Math.random(), r: 0.6 + Math.random() * 2.2, s: 0.02 + Math.random() * 0.06, ph: Math.random() * 6.28, a: 0.15 + Math.random() * 0.5 }));
       const aud = sound(vol);
       const start = performance.now();
-      let done = false, raf = 0;
+      let done = false, raf = 0, guard = 0;
       const ease = t => t < 0 ? 0 : t > 1 ? 1 : 1 - Math.pow(1 - t, 3);
       const frame = now => {
         const t = now - start, k = t / DUR;
@@ -102,7 +102,7 @@
         raf = requestAnimationFrame(frame);
       };
       const finish = () => {
-        if (done) return; done = true;
+        if (done) return; done = true; clearTimeout(guard);
         cancelAnimationFrame(raf); removeEventListener("keydown", skip, true); removeEventListener("pointerdown", skip, true); removeEventListener("resize", fit);
         if (aud) aud.stop();
         root.classList.add("out");
@@ -112,6 +112,9 @@
       addEventListener("keydown", skip, true); addEventListener("pointerdown", skip, true);
       if (aud) { const r = () => aud.resume(); addEventListener("pointerdown", r, { once: true }); }
       raf = requestAnimationFrame(frame);
+      // Reloj de seguridad: la animación avanza con requestAnimationFrame, que se pausa si la ventana todavía no
+      // se dibuja (abrió sin foco o tapada). Sin esto la capa negra podía quedar para siempre.
+      guard = setTimeout(finish, DUR + 1200);
     });
   }
 
@@ -123,6 +126,8 @@
     window.introActive = true;
     const vol = Number.isFinite(+B.introVol) && B.introVol !== undefined ? +B.introVol : (get("otIntroVol") == null ? 70 : +get("otIntroVol"));
     const run = () => play({ vol }).then(() => { window.introActive = false; if (window.introReady) window.introReady(); });
-    if (document.body) run(); else addEventListener("DOMContentLoaded", run);
+    // Si la ventana arranca escondida (por ejemplo desde la bandeja), no hay animación: se ve la interfaz directo.
+    const start = () => { if (document.visibilityState === "hidden") { window.introActive = false; if (window.introReady) window.introReady(); return; } run(); };
+    if (document.body) start(); else addEventListener("DOMContentLoaded", start);
   }
 })();

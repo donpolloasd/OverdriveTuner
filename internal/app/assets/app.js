@@ -954,4 +954,9 @@ const beat = () => api("heartbeat", {}).then(r => { if (r && r.update) offerRest
 setInterval(beat, 3000);
 beat();
 window.addEventListener("beforeunload", () => { /* el servidor se cierra solo al dejar de recibir latidos */ });
-load().catch(e => { $("#main").innerHTML = `<div class="banner bad">No se pudo cargar: ${esc(e.message)}</div>`; });
+// Si la carga falla, se saca la pantalla de carga (si no, el error quedaba tapado y se veía todo negro) y se ofrece reintentar.
+load().catch(e => {
+  hideBoot();
+  $("#main").innerHTML = `<div class="banner bad">No se pudo cargar: ${esc(e.message)}</div><button class="btn primary" id="retryLoad">Reintentar</button>`;
+  $("#retryLoad").onclick = () => location.reload();
+});

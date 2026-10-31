@@ -27,3 +27,5 @@ func OpenApp(url, dataDir string, o AppOptions) (*AppWindow, error) {
 func (w *AppWindow) Done() <-chan struct{} { return w.done }
 func (w *AppWindow) Show()                 {}
 func (w *AppWindow) Close()                {}
+func (w *AppWindow) Reload()               {}
+func (w *AppWindow) Visible() bool         { return false }

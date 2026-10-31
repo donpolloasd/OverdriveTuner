@@ -353,3 +353,10 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 == Versión 2.10.1 ==
 - Primera versión publicada como Release en GitHub (compilada desde el código con GitHub Actions): a partir de acá la actualización automática encuentra las versiones nuevas. Mismo contenido que la 2.10.0.
 - Arreglo interno: un test de las tareas programadas ejecutaba la limpieza real de temporales en Windows; ahora usa una limpieza simulada.
+
+== Versión 2.10.2 ==
+- Arreglo: al tocar Configuración, la pestaña tardaba unos 6 segundos en aparecer y parecía que el programa se había colgado. Consultaba de a una (con PowerShell) las tres tareas programadas de Windows: inicio con Windows, limpieza semanal y punto de restauración semanal. Ahora se consultan a la vez, se preparan en segundo plano al abrir el programa y se reutilizan un minuto (se renuevan al cambiar algo). En la PC de pruebas: instantáneo con el dato guardado y unos 2,8 s sin él, con un «Cargando…» visible.
+- Arreglo: la pantalla podía quedarse negra al abrir. La animación de apertura avanzaba solo mientras la ventana se dibujaba; si abría sin foco o tapada, la capa negra quedaba encima. Ahora se cierra sola a los pocos segundos pase lo que pase, y no se muestra si la ventana arranca escondida.
+- Arreglo: si la carga inicial fallaba, el mensaje de error quedaba debajo de la pantalla de carga (todo negro con el logo). Ahora se quita, se ve el error y hay un botón «Reintentar».
+- Licencia: el titular del copyright ahora es Donpolloasd, con el mail del proyecto. Sigue siendo MIT, sin condiciones nuevas.
+- Pantalla negra (otra causa posible): si el motor de la ventana (WebView2) deja de dibujar o se cae su proceso, la interfaz se vuelve a cargar sola. Un vigilante revisa que la página dé señales de vida mientras la ventana está a la vista y la recarga si dejó de responder 20 segundos.

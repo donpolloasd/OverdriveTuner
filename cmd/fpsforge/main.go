@@ -178,6 +178,7 @@ func main() {
 	win, err := winhost.OpenApp(url, dir, winhost.AppOptions{Title: "OverdriveTuner", Maximized: true, HideOnClose: true, OnClose: windowGone})
 	if err == nil {
 		openUI = win.Show
+		go watchWindow(win, srv)
 	} else {
 		log.Println("ventana propia no disponible, se usa Edge:", err)
 	}
@@ -200,6 +201,38 @@ func main() {
 	// Cierre total: overlay y la ventana, para poder volver a abrir sin conflictos.
 	winhost.Cleanup("all", dir)
 	os.Exit(0)
+}
+
+// watchWindow recarga la interfaz si está a la vista pero dejó de dar señales de vida: así la ventana no
+// queda en negro si el motor web dejó de dibujar (por ejemplo, después de horas escondida en la bandeja).
+func watchWindow(win *winhost.AppWindow, srv *app.Server) {
+	tk := time.NewTicker(5 * time.Second)
+	defer tk.Stop()
+	var shownAt, lastReload time.Time
+	for {
+		select {
+		case <-srv.Closed:
+			return
+		case <-win.Done():
+			return
+		case <-tk.C:
+		}
+		if !win.Visible() {
+			shownAt = time.Time{}
+			continue
+		}
+		if shownAt.IsZero() {
+			shownAt = time.Now()
+		}
+		if time.Since(shownAt) < 20*time.Second || time.Since(lastReload) < time.Minute {
+			continue
+		}
+		if time.Since(srv.LastBeat()) > 20*time.Second {
+			log.Println("la interfaz dejó de responder: se vuelve a cargar")
+			win.Reload()
+			lastReload = time.Now()
+		}
+	}
 }
 
 // watchExclusive avisa en la bandeja cuando el juego está en pantalla completa exclusiva: ahí Windows no

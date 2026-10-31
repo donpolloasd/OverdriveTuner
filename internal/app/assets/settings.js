@@ -55,17 +55,18 @@ async function saveSettings(patch) {
 }
 
 async function renderSettings(m) {
-  let d;
-  try { d = await api("overlay"); } catch (e) { m.innerHTML = `<div class="top"><div><h2>Configuración</h2></div></div><div class="banner bad">${esc(e.message)}</div>`; return; }
+  const st = S.settings || {}, ip = introPrefs();
+  m.innerHTML = `<div class="top"><div><h2>Configuración</h2></div></div><p class="note">Cargando…</p>`;
+  // Las cuatro consultas salen a la vez (antes iban de a una y la pestaña tardaba varios segundos en aparecer).
+  const opt = p => api(p).catch(() => null);
+  const [d, au0, sch0, up0] = await Promise.all([api("overlay").catch(e => ({ error: e })), opt("autostart"), opt("schedule"), opt("update")]);
   if (view !== "settings") return;
-  const cfg = d.config, st = S.settings || {}, ip = introPrefs();
+  if (d.error) { m.innerHTML = `<div class="top"><div><h2>Configuración</h2></div></div><div class="banner bad">${esc(d.error.message)}</div>`; return; }
+  const cfg = d.config;
   const lang = UILANG;
-  let au = { enabled: false };
-  try { au = await api("autostart"); } catch (e) { /* sin dato */ }
-  let sch = [];
-  try { sch = await api("schedule"); } catch (e) { /* sin dato */ }
-  let up = { auto: !!st.autoUpdate, installed: false, current: "", latest: "", available: false, busy: "", applied: "", error: "", checkedAt: 0, notes: "" };
-  try { up = await api("update"); } catch (e) { /* sin dato */ }
+  const au = au0 || { enabled: false };
+  let sch = sch0 || [];
+  let up = up0 || { auto: !!st.autoUpdate, installed: false, current: "", latest: "", available: false, busy: "", applied: "", error: "", checkedAt: 0, notes: "" };
   const errs = (d.state && d.state.hotkeyErrors) || [];
   m.innerHTML = `<div class="top"><div><h2>Configuración</h2><p>Idioma, atajos de teclado, copia de tu configuración y animación de apertura.</p></div></div>${banners()}
   <h3 id="stLangH">Idioma</h3>

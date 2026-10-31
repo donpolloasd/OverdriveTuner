@@ -39,14 +39,17 @@ type AppOptions struct {
 type AppWindow struct {
 	hwnd     uintptr
 	ctrl     uintptr // ICoreWebView2Controller
+	wv       uintptr // ICoreWebView2 (para recargar la página)
+	reload   string  // dirección que se carga al recargar (sin animación de apertura)
 	opts     AppOptions
 	done     chan struct{}
 	quitting bool
 }
 
 const (
-	wmAppShow = 0x8000 + 41 // WM_APP: mostrar y traer al frente
-	wmAppQuit = 0x8000 + 42 // WM_APP: cerrar de verdad
+	wmAppShow   = 0x8000 + 41 // WM_APP: mostrar y traer al frente
+	wmAppQuit   = 0x8000 + 42 // WM_APP: cerrar de verdad
+	wmAppReload = 0x8000 + 43 // WM_APP: volver a cargar la interfaz
 )
 
 var (
@@ -182,6 +185,24 @@ func (w *AppWindow) Show() { user32.NewProc("PostMessageW").Call(w.hwnd, wmAppSh
 // Close cierra la ventana de verdad (aunque HideOnClose esté activo).
 func (w *AppWindow) Close() { user32.NewProc("PostMessageW").Call(w.hwnd, wmAppQuit, 0, 0) }
 
+// Reload vuelve a cargar la interfaz (si dejó de dibujarse o se cayó su proceso).
+func (w *AppWindow) Reload() { user32.NewProc("PostMessageW").Call(w.hwnd, wmAppReload, 0, 0) }
+
+// reloadURL es la dirección de la interfaz sin la animación de apertura (al recargar no tiene sentido repetirla).
+func reloadURL(u string) string {
+	if strings.Contains(u, "?") {
+		return u + "&nointro=1"
+	}
+	return u + "?nointro=1"
+}
+
+// Visible dice si la ventana está a la vista (ni escondida en la bandeja ni minimizada).
+func (w *AppWindow) Visible() bool {
+	v, _, _ := user32.NewProc("IsWindowVisible").Call(w.hwnd)
+	ic, _, _ := user32.NewProc("IsIconic").Call(w.hwnd)
+	return v != 0 && ic == 0
+}
+
 type wndClassEx struct {
 	Size, Style                        uint32
 	WndProc                            uintptr
@@ -294,8 +315,11 @@ func (w *AppWindow) run(dll, url, userData string, ready chan<- error) {
 			comCall(args, 7, state) // put_State
 		}), uintptr(unsafe.Pointer(&token)))
 		w.resize()
-		comCall(wv, 5, uintptr(unsafe.Pointer(utf16(url)))) // Navigate
-		comCall(wv, 2)
+		// Si se cae el proceso que dibuja la página, se recarga sola (si no, la ventana queda en negro).
+		comCall(wv, 25, newHandler(func(_, _ uintptr) { w.Reload() }), uintptr(unsafe.Pointer(&token))) // add_ProcessFailed
+		comCall(wv, 5, uintptr(unsafe.Pointer(utf16(url))))                                             // Navigate
+		w.wv = wv                                                                                       // se guarda (sin Release) para poder recargar
+		w.reload = reloadURL(url)
 		comCall(ctrl, 12, 0) // MoveFocus: el teclado va a la interfaz
 		answer(nil)
 	})
@@ -388,11 +412,20 @@ func appWndProc(hwnd, msg, wp, lp uintptr) uintptr {
 				comCall(w.ctrl, 12, 0)
 			}
 			return 0
+		case wmAppReload:
+			if w.wv != 0 && w.reload != "" {
+				comCall(w.wv, 5, uintptr(unsafe.Pointer(utf16(w.reload)))) // Navigate
+			}
+			return 0
 		case wmAppQuit:
 			w.quitting = true
 			user32.NewProc("DestroyWindow").Call(hwnd)
 			return 0
 		case 0x0002: // WM_DESTROY
+			if w.wv != 0 {
+				comCall(w.wv, 2) // Release
+				w.wv = 0
+			}
 			if w.ctrl != 0 {
 				comCall(w.ctrl, 24) // Close
 				comCall(w.ctrl, 2)  // Release

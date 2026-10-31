@@ -527,3 +527,26 @@ func TestDiagReusesSlowChecks(t *testing.T) {
 		t.Fatalf("«Volver a revisar» los repite: %d", slow())
 	}
 }
+
+func TestTaskStatusIsCached(t *testing.T) {
+	s, _, f := newTestServer(t)
+	count := func() int {
+		n := 0
+		for _, p := range f.PSLog {
+			if strings.Contains(p, "Get-ScheduledTask") {
+				n++
+			}
+		}
+		return n
+	}
+	s.taskStatus(false)
+	first := count()
+	s.taskStatus(false)
+	if first == 0 || count() != first {
+		t.Fatalf("el estado de las tareas se reutiliza: %d consultas y después %d", first, count())
+	}
+	s.taskStatus(true)
+	if count() != 2*first {
+		t.Fatal("después de un cambio se vuelve a consultar")
+	}
+}

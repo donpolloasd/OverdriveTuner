@@ -303,8 +303,10 @@ func (s *Server) handleAutostart(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	info := autostart.Status(s.Sys)
-	if demo {
+	var info autostart.Info
+	if !demo {
+		info, _ = s.taskStatus(r.Method == http.MethodPost) // tras un cambio se vuelve a consultar
+	} else {
 		info = autostart.Info{Registered: s.autostartDemo, State: "Ready", LastResult: 267011}
 	}
 	_, running := s.overlayRunning()

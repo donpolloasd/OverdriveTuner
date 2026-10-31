@@ -22,8 +22,12 @@ func (s *Server) scheduleExe() string {
 	return exe
 }
 
-func (s *Server) scheduleInfos() []schedule.Info {
+func (s *Server) scheduleInfos(fresh bool) []schedule.Info {
 	_, demo := s.Sys.(*system.Fake)
+	var live map[string]schedule.Info
+	if !demo {
+		_, live = s.taskStatus(fresh)
+	}
 	out := make([]schedule.Info, 0, len(schedule.Jobs))
 	for _, j := range schedule.Jobs {
 		var i schedule.Info
@@ -36,7 +40,7 @@ func (s *Server) scheduleInfos() []schedule.Info {
 				i.Time = "20:00"
 			}
 		} else {
-			i = schedule.Status(s.Sys, j.ID)
+			i = live[j.ID]
 		}
 		i.Last = schedule.LastMessage(s.Dir, j.ID)
 		out = append(out, i)
@@ -91,5 +95,5 @@ func (s *Server) handleSchedule(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	writeJSON(w, s.scheduleInfos())
+	writeJSON(w, s.scheduleInfos(r.Method == http.MethodPost)) // tras un cambio se vuelve a consultar
 }

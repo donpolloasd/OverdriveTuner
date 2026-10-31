@@ -27,7 +27,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "2.10.1"
+const Version = "2.10.2"
 
 // Server es el backend de la interfaz.
 type Server struct {
@@ -56,6 +56,7 @@ type Server struct {
 	slowMu   sync.Mutex // chequeos lentos del Diagnóstico (PowerShell): uno a la vez, guardados un rato
 	slowDg   []diag.Check
 	slowAt   time.Time
+	tasks    taskCache // estado de las tareas programadas de Windows (Configuración)
 	lastBeat time.Time
 	beaten   bool
 	srv      *http.Server
@@ -214,6 +215,7 @@ func (s *Server) Start() (string, error) {
 	}
 	if _, demo := s.Sys.(*system.Fake); !demo {
 		go func() { s.slowDiag(s.hardware(false), false) }() // así el Diagnóstico abre al instante
+		go s.taskStatus(false)                               // y Configuración también
 	}
 	s.srv = &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}
 	go func() { _ = s.srv.Serve(ln) }()
@@ -273,6 +275,13 @@ func (s *Server) WatchWindow(grace time.Duration, onGone func()) {
 			}
 		}
 	}()
+}
+
+// LastBeat devuelve cuándo dio señales de vida la interfaz por última vez (manda un latido cada 3 segundos).
+func (s *Server) LastBeat() time.Time {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.lastBeat
 }
 
 // Close detiene el servidor.

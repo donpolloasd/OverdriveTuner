@@ -11,7 +11,7 @@
 
 [English](README.md) · **Español**
 
-[**Descargar**](https://github.com/donpolloasd/OverdriveTuner/releases/latest) · [Funciones](#funciones) · [Seguridad](#la-seguridad-primero) · [Instalación](#instalación) · [Compilar](#compilar-desde-el-código)
+[**Descargar**](https://github.com/donpolloasd/OverdriveTuner/releases/latest) · [Funciones](#funciones) · [Seguridad](#la-seguridad-primero) · [Instalación](#instalación) · [Compilar](#compilar-desde-el-código) · [Contacto](#contacto)
 
 </div>
 
@@ -86,6 +86,10 @@ go run ./cmd/fpsforge --demo       # probar la interfaz con datos simulados
 - `.github/workflows/release.yml`: compila, firma (opcional) y publica una versión cuando se sube un tag `vX.Y.Z`.
 
 </details>
+
+## Contacto
+
+¿Querés colaborar, o hacer tu propia versión, un plugin o un mod? Escribí a **[overdrivetuner.dev@protonmail.com](mailto:overdrivetuner.dev@protonmail.com)**. Para errores e ideas también podés abrir un [issue](https://github.com/donpolloasd/OverdriveTuner/issues).
 
 ## Licencia
 
