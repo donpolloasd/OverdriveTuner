@@ -16,7 +16,7 @@
 </div>
 
 > [!NOTE]
-> **Beta (2.10.1).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups yet (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings).
+> **Beta (2.10.3).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups yet (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings).
 
 > Created with **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), directed and tested by its author (Donpolloasd).
 
@@ -32,7 +32,7 @@
 ### In-game overlay
 - FPS, 1% low, frame-time graph, CPU, GPU, VRAM, RAM, temperatures and an overheating alert.
 - **Detects the running game on its own** (Steam, Epic, EA, GOG, Ubisoft, Xbox, Riot…).
-- **Fully customizable:** any color, ready-made themes, transparent background, corners, border, font, position, monitor, row order, frame time, clock and saved styles.
+- **Fully customizable:** any color, ready-made themes, transparent background, corners, border, font, position, monitor, row order, frame time, clock, saved styles and overlay language (English or Spanish).
 
 ### Diagnose
 - Monitor refresh rate, which GPU the monitor is plugged into, RAM speed (XMP/EXPO) and channels, power plan, Resizable BAR, GPU driver age, disk health and a BIOS guide for your hardware.
