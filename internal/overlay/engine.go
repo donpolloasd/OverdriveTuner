@@ -77,7 +77,8 @@ func NewEngine(d Deps) *Engine {
 	if d.Now == nil {
 		d.Now = time.Now
 	}
-	e := &Engine{d: d, cfg: LoadConfig(d.Dir), visible: true, lang: UILang(d.Dir)}
+	e := &Engine{d: d, cfg: LoadConfig(d.Dir), visible: true}
+	e.lang = overlayLang(e.cfg, d.Dir)
 	// Ignora una orden vieja que haya quedado en disco.
 	if c, ok := loadCmd(d.Dir); ok {
 		e.lastSeq = c.Seq
@@ -240,7 +241,7 @@ func (e *Engine) Run(ctx context.Context, samples <-chan telemetry.Sample) {
 func (e *Engine) Tick() {
 	e.mu.Lock()
 	e.cfg = LoadConfig(e.d.Dir)
-	e.lang = UILang(e.d.Dir)
+	e.lang = overlayLang(e.cfg, e.d.Dir)
 	cfg := e.cfg
 	e.mu.Unlock()
 

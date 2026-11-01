@@ -360,3 +360,6 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - Arreglo: si la carga inicial fallaba, el mensaje de error quedaba debajo de la pantalla de carga (todo negro con el logo). Ahora se quita, se ve el error y hay un botón «Reintentar».
 - Licencia: el titular del copyright ahora es Donpolloasd, con el mail del proyecto. Sigue siendo MIT, sin condiciones nuevas.
 - Pantalla negra (otra causa posible): si el motor de la ventana (WebView2) deja de dibujar o se cae su proceso, la interfaz se vuelve a cargar sola. Un vigilante revisa que la página dé señales de vida mientras la ventana está a la vista y la recarga si dejó de responder 20 segundos.
+
+== Versión 2.10.3 ==
+- Nuevo: «Idioma del overlay» en la sección Overlay. Los textos que se dibujan sobre el juego (Cuadro/Frame, Hora/Time, Juego/Game, Aviso/Alert, CPU/GPU caliente) pueden ir en español o en inglés, o seguir el idioma del programa (lo de antes). La vista previa usa el mismo idioma que el panel.

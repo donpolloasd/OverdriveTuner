@@ -75,6 +75,14 @@ func UILang(dir string) string {
 	return systemLang()
 }
 
+// overlayLang es el idioma del panel: el elegido en la sección Overlay o, si no se eligió, el de la interfaz.
+func overlayLang(c Config, dir string) string {
+	if c.Lang == "es" || c.Lang == "en" {
+		return c.Lang
+	}
+	return UILang(dir)
+}
+
 // overlayEN son los textos del panel en inglés (las etiquetas CPU, GPU, RAM, VRAM y FPS son iguales).
 var overlayEN = map[string]string{"Aviso": "Alert", "CPU caliente": "CPU hot", "GPU caliente": "GPU hot", "Cuadro": "Frame", "Hora": "Time", "Juego": "Game"}
 

@@ -357,6 +357,7 @@ function cachedLang() { try { return (window.BOOT && window.BOOT.lang) || localS
 function effectiveLang(settingsLang) { return settingsLang || cachedLang() || browserLang(); }
 
 function trNode(n) {
+  if (n.parentElement && n.parentElement.closest(".notr")) return; // texto que elige su propio idioma (vista previa del overlay)
   const rec = origText.get(n);
   if (rec && n.data === rec.en) return;
   const es = n.data, en = UILANG === "en" ? trText(es) : es;
@@ -754,6 +755,7 @@ window.alert = m => _alert(trDialog(m));
   ["Deshacer", "Undo"], ["Cortar", "Cut"], ["Copiar", "Copy"], ["Pegar", "Paste"], ["Eliminar", "Delete"], ["Supr", "Del"], ["Seleccionar todo", "Select all"],
   ["No se pudo usar el portapapeles.", "Could not use the clipboard."],
   ["Separación del borde", "Distance from the edge"], ["En píxeles, desde la esquina elegida.", "In pixels, from the chosen corner."], ["Horizontal", "Horizontal"], ["Vertical", "Vertical"],
+  ["Idioma del overlay", "Overlay language"], ["En qué idioma aparecen los textos del panel (Cuadro, Hora, Juego, avisos).", "Which language the panel texts use (Frame, Time, Game, alerts)."], ["Igual que el programa", "Same as the app"],
   ["Monitor", "Monitor"], ["En qué pantalla aparece el panel. Si ese monitor se desconecta, vuelve al principal.", "Which screen the panel appears on. If that monitor is disconnected, it goes back to the main one."],
   ["Monitor {n} · {} (principal)", "Monitor {1} · {2} (main)"], ["Monitor {n} · {}", "Monitor {1} · {2}"],
   ["Tiempo de cuadro", "Frame time"], ["Hora", "Time"], ["Juego", "Game"], ["Cuadro", "Frame"], ["oculto", "hidden"], ["Subir", "Up"], ["Bajar", "Down"],

@@ -748,22 +748,23 @@ function ovPreview(cfg, st) {
   const bars = Array.from({ length: 40 }, (_, i) => { const sp = i === 27 ? 26 : i === 11 ? 14 : 5 + (i * 7 % 3); return `<b class="${sp > 20 ? "bd" : sp > 10 ? "wn" : "gd"}" style="height:${sp / 26 * 100}%"></b>`; }).join("");
   const now = new Date(), two = n => String(n).padStart(2, "0");
   const game = ((st && st.game) || "cs2.exe").replace(/\.exe$/i, "");
+  const L = (es, en) => ((cfg.lang || window.UILANG) === "en" ? en : es); // idioma del panel, no el de la interfaz
   const R = { // filas de datos, en el orden elegido (igual que el overlay real)
     cpu: () => cfg.showCpu && `<div><span>CPU</span><em>${Math.round(sm.cpu)}%</em>${cfg.showTemps ? t(sm.cpuTemp) : ""}</div>`,
     gpu: () => cfg.showGpu && `<div><span>GPU</span><em>${Math.round(sm.gpu)}%</em>${cfg.showTemps ? t(sm.gpuTemp) : ""}</div>`,
     vram: () => cfg.showVram && `<div><span>VRAM</span><em>${((sm.gpuVramMb || 0) / 1024).toFixed(1)} GB</em></div>`,
     ram: () => cfg.showRam && `<div><span>RAM</span><em>${(sm.ramUsedMb / 1024).toFixed(1)} GB</em></div>`,
-    frame: () => cfg.showFrame && `<div><span>Cuadro</span><em>${(1000 / fps).toFixed(1)} ms</em></div>`,
-    clock: () => cfg.showClock && `<div><span>Hora</span><em>${two(now.getHours())}:${two(now.getMinutes())}</em></div>`,
-    game: () => cfg.showGame && `<div><span>Juego</span><em>${esc(game)}</em></div>`,
+    frame: () => cfg.showFrame && `<div><span>${L("Cuadro", "Frame")}</span><em>${(1000 / fps).toFixed(1)} ms</em></div>`,
+    clock: () => cfg.showClock && `<div><span>${L("Hora", "Time")}</span><em>${two(now.getHours())}:${two(now.getMinutes())}</em></div>`,
+    game: () => cfg.showGame && `<div><span>${L("Juego", "Game")}</span><em>${esc(game)}</em></div>`,
   };
   const rows = (cfg.order || Object.keys(R)).map(k => R[k] && R[k]()).filter(Boolean);
   if (cfg.layout === "line") {
     const parts = []; if (cfg.showFps) parts.push(`<em class="fp">${fps} FPS</em>`);
     rows.forEach(r => parts.push(r.replace(/<\/?div>/g, "")));
-    return `<div class="ovp line${look}">${parts.join(" ")}</div>`;
+    return `<div class="ovp line notr${look}">${parts.join(" ")}</div>`;
   }
-  return `<div class="ovp card${look}">
+  return `<div class="ovp card notr${look}">
     ${cfg.showFps ? `<div class="top2"><strong>${fps}</strong><small>FPS</small>${cfg.showLow ? `<small class="r">1% ${low}</small>` : ""}</div>` : ""}
     ${cfg.showGraph ? `<div class="spk">${bars}</div>` : ""}${rows.join("")}</div>`;
 }
@@ -794,6 +795,7 @@ async function renderOverlay(m) {
    <div class="row"><div><h4>Esquina</h4></div><select id="cCorner">${[["tl", "Arriba izquierda"], ["tr", "Arriba derecha"], ["bl", "Abajo izquierda"], ["br", "Abajo derecha"]].map(([v, n]) => `<option value="${v}" ${cfg.corner === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Separación del borde</h4><p>En píxeles, desde la esquina elegida.</p></div><div class="bar"><label>Horizontal <input type="number" id="cOffX" min="0" max="1000" value="${cfg.offsetX}" style="width:76px"></label><label>Vertical <input type="number" id="cOffY" min="0" max="1000" value="${cfg.offsetY}" style="width:76px"></label></div></div>
    <div class="row"><div><h4>Monitor</h4><p>En qué pantalla aparece el panel. Si ese monitor se desconecta, vuelve al principal.</p></div><select id="cMon">${(d.monitors || []).map(mo => `<option value="${mo.index}" ${cfg.monitor === mo.index ? "selected" : ""}>${esc(mo.name)}</option>`).join("")}</select></div>
+   <div class="row"><div><h4>Idioma del overlay</h4><p>En qué idioma aparecen los textos del panel (Cuadro, Hora, Juego, avisos).</p></div><select id="cLang">${[["", "Igual que el programa"], ["es", "Español"], ["en", "English"]].map(([v, n]) => `<option value="${v}" ${(cfg.lang || "") === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Diseño</h4></div><select id="cLayout"><option value="card" ${cfg.layout === "card" ? "selected" : ""}>Tarjeta</option><option value="line" ${cfg.layout === "line" ? "selected" : ""}>Una línea</option></select></div>
    <div class="row"><div><h4>Frecuencia de actualización</h4><p>Cuántas veces por segundo se actualiza el número de FPS. Más rápido sigue mejor los cambios.</p></div><select id="cUpd">${[[50, "20 por segundo"], [100, "10 por segundo"], [250, "4 por segundo"], [500, "2 por segundo"]].map(([v, n]) => `<option value="${v}" ${cfg.updateMs === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Tamaño</h4></div><input type="range" id="cScale" min="0.8" max="1.8" step="0.1" value="${cfg.scale}"></div>
@@ -834,6 +836,7 @@ async function renderOverlay(m) {
   $("#cOffX").onchange = e => { cfg.offsetX = +e.target.value; save().then(() => { e.target.value = cfg.offsetX; }); };
   $("#cOffY").onchange = e => { cfg.offsetY = +e.target.value; save().then(() => { e.target.value = cfg.offsetY; }); };
   $("#cMon").onchange = e => { cfg.monitor = +e.target.value; save(); };
+  $("#cLang").onchange = e => { cfg.lang = e.target.value; save(); };
   // orden de los datos: arrastrar o Subir/Bajar
   const renderOrder = () => {
     const ol = $("#cOrder"), n = cfg.order.length;

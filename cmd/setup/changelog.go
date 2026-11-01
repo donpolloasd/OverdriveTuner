@@ -20,6 +20,9 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"2.10.3", "Overlay en inglés", []Change{
+		{"Idioma del overlay", "En la sección Overlay elegí en qué idioma aparecen los textos del panel (Cuadro/Frame, Hora/Time, Juego/Game y los avisos): igual que el programa, español o inglés. La vista previa también lo respeta."},
+	}},
 	{"2.10.2", "Configuración ya no se traba y no más pantalla negra", []Change{
 		{"No más pantalla negra al abrir", "La animación de apertura podía quedarse en negro si la ventana abría sin foco o tapada; ahora se cierra sola a los pocos segundos pase lo que pase. Y si la carga inicial fallaba, el error quedaba tapado por la pantalla de carga: ahora se ve, con un botón para reintentar. Si el motor de la ventana deja de dibujar, la interfaz se recarga sola."},
 		{"Configuración abre al instante", "Antes tardaba unos 6 segundos en aparecer (parecía que el programa se colgaba) porque consultaba de a una las tareas programadas de Windows. Ahora se consultan a la vez, se preparan al abrir el programa y se guardan un minuto."},

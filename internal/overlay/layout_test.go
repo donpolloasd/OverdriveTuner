@@ -45,6 +45,19 @@ func TestOverlayEnglish(t *testing.T) {
 	if UILang(dir) != "en" {
 		t.Fatal("el overlay sigue el idioma elegido en Configuración")
 	}
+	c := Default()
+	if overlayLang(c, dir) != "en" {
+		t.Fatal("sin idioma propio, el panel usa el de la interfaz")
+	}
+	c.Lang = "es"
+	if overlayLang(c, dir) != "es" {
+		t.Fatal("el idioma elegido en la sección Overlay tiene prioridad")
+	}
+	c.Lang = "fr"
+	c.Normalize()
+	if c.Lang != "" {
+		t.Fatalf("idioma desconocido: %q", c.Lang)
+	}
 }
 
 func TestPresetsAndPosition(t *testing.T) {

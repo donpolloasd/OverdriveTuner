@@ -56,6 +56,7 @@ type Config struct {
 	ShowFrame bool     `json:"showFrame"`  // tiempo de cuadro en milisegundos
 	ShowClock bool     `json:"showClock"`  // hora
 	ShowGame  bool     `json:"showGame"`   // nombre del juego detectado
+	Lang      string   `json:"lang"`       // idioma de los textos del panel: «es», «en» o vacío (el de la interfaz)
 	Presets   []Preset `json:"presets"`    // estilos guardados con nombre
 	Games     []Game   `json:"games"`
 	Style              // aspecto del panel: colores, forma y letra (se guarda en el mismo nivel del JSON)
@@ -173,6 +174,9 @@ func (c *Config) Normalize() {
 	}
 	if c.Monitor < 0 || c.Monitor > 8 {
 		c.Monitor = 0
+	}
+	if c.Lang != "es" && c.Lang != "en" {
+		c.Lang = ""
 	}
 	c.Order = normalizeOrder(c.Order)
 	var ps []Preset
