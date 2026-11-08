@@ -20,6 +20,9 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"3.0.1", "Limpieza en inglés", []Change{
+		{"Limpieza traducida", "Con la interfaz en inglés, los objetivos de Limpieza (temporales, cachés de shaders, navegadores, Discord, Steam, Spotify…), sus descripciones y el aviso antes de borrar la caché de shaders ahora aparecen en inglés. También el nombre de RTSS en Instalar programas."},
+	}},
 	{"3.0.0", "Versión 3.0: todo lo de la 2.8 a la 2.10, revisado", []Change{
 		{"Revisión completa", "Se probaron todas las secciones y acciones del programa (ajustes, perfiles, anti-cheat, limpieza, diagnóstico, red, benchmark, overlay, programas, actualizaciones). Reúne lo de las 2.8, 2.9 y 2.10: ventana propia sin Edge, buscador Ctrl+K, ayuda «?», overlay personalizable y en inglés, Configuración al instante y sin pantalla negra."},
 		{"Modo demostración seguro", "En el modo demostración, Limpieza y Liberar RAM ahora simulan el resultado: antes borraban temporales y vaciaban memoria de verdad aunque la pantalla decía que todo era simulado. La prueba de red también muestra datos de ejemplo en vez de un error."},

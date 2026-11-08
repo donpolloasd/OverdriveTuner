@@ -339,6 +339,25 @@ function trText(s) {
   ["«{}» es un proceso del sistema o del juego y no se cierra desde acá", "«{1}» is a system or game process and cannot be closed from here"], ["«{}» no se puede cerrar desde acá", "«{1}» cannot be closed from here"],
   ["proceso no permitido", "process not allowed"], ["el PID cambió de programa; actualizá la lista", "the PID now belongs to another program; refresh the list"], ["es un proceso de Windows y no se cierra desde acá", "it is a Windows process and cannot be closed from here"],
   ["{} — monitor conectado acá", "{1} — monitor connected here"],
+  /* Limpieza: objetivos (vienen de internal/extras/cleaner.go) */
+  ["Temporales del usuario", "User temporary files"], ["Archivos en %TEMP%", "Files in %TEMP%"],
+  ["Temporales de Windows", "Windows temporary files"],
+  ["Caché de shaders (DirectX, NVIDIA, AMD)", "Shader cache (DirectX, NVIDIA, AMD)"],
+  ["Se regenera al abrir los juegos; las primeras partidas después pueden tener tirones. Pide confirmación.", "Rebuilt when you open your games; the first matches afterwards may stutter. Asks for confirmation."],
+  ["Vas a borrar la caché de shaders de DirectX, NVIDIA y AMD.", "You are about to delete the DirectX, NVIDIA and AMD shader cache."],
+  ["Los juegos la vuelven a crear solos, pero las primeras partidas después pueden tardar más en cargar y tener tirones (microcortes) mientras se compilan de nuevo. Conviene hacerlo solo si un juego tiene errores gráficos o después de cambiar el driver de la placa de video, y no justo antes de una partida competitiva.", "Games rebuild it on their own, but the first matches afterwards may take longer to load and stutter (micro-stutters) while shaders compile again. Only do it if a game has graphical glitches or after changing your graphics driver, and not right before a competitive match."],
+  ["Lo hacés bajo tu responsabilidad: los archivos borrados no se pueden recuperar.", "You do this at your own risk: deleted files cannot be recovered."],
+  ["Volcados y reportes de errores", "Crash dumps and error reports"], ["Minidumps y reportes de WER", "Minidumps and WER reports"],
+  ["Miniaturas e iconos en caché", "Cached thumbnails and icons"], ["Se vuelven a generar solos", "They are rebuilt automatically"],
+  ["Descargas de Windows Update", "Windows Update downloads"],
+  ["Registros de Windows", "Windows logs"], ["Logs antiguos de CBS y Panther", "Old CBS and Panther logs"],
+  ["Caché de Microsoft Edge", "Microsoft Edge cache"], ["Caché de Google Chrome", "Google Chrome cache"], ["Caché de Brave", "Brave cache"],
+  ["Páginas e imágenes guardadas. No borra contraseñas, cookies ni historial.", "Saved pages and images. Does not delete passwords, cookies or history."],
+  ["Caché de Discord", "Discord cache"], ["Imágenes y archivos temporales. No cierra tu sesión.", "Images and temporary files. Does not sign you out."],
+  ["Caché web de Steam", "Steam web cache"], ["Tienda y comunidad dentro de Steam. Se vuelve a descargar.", "Store and community pages inside Steam. Downloaded again when needed."],
+  ["Caché de Spotify", "Spotify cache"], ["Canciones guardadas para escuchar sin conexión rápida. Se vuelve a llenar.", "Songs cached for quick playback. It fills up again."],
+  ["Caché de Delivery Optimization", "Delivery Optimization cache"], ["Archivos de actualizaciones compartidas entre equipos.", "Update files shared between PCs."],
+  ["RTSS (solo medición de FPS)", "RTSS (FPS measurement only)"],
 ].forEach(([a, b]) => T(a, b));
 
 /* ---------------- motor: aplica el idioma al DOM ---------------- */

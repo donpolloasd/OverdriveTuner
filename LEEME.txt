@@ -369,3 +369,7 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - Arreglo: en el modo demostración (--demo), Limpieza borraba de verdad los archivos temporales y Liberar RAM vaciaba la memoria real, aunque la pantalla decía que los cambios eran simulados. Ahora los dos simulan el resultado sin tocar nada.
 - Arreglo: en el modo demostración, la prueba de red (ping a DNS) daba error en los tres servidores; ahora muestra datos de ejemplo. En Windows real no cambia (se comprobó la lectura del ping en un Windows en español).
 - Pendiente conocido: con la interfaz en inglés, los nombres y descripciones de los ajustes, la limpieza y las apps siguen en español.
+
+== Versión 3.0.1 ==
+- Con la interfaz en inglés, Limpieza ahora sale en inglés: nombres y descripciones de cada objetivo y el aviso antes de borrar la caché de shaders. También el nombre de RTSS en Instalar programas.
+- Corrección de la nota de la 3.0.0: los nombres y descripciones de los ajustes ya estaban traducidos al inglés (se ven así al elegir English en Configuración). Lo único que faltaba era Limpieza.

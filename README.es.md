@@ -16,7 +16,7 @@
 </div>
 
 > [!NOTE]
-> **Beta (3.0.0).** Hecho y probado principalmente en una PC (Ryzen 5 5600G + RX 7600; juegos de Steam, EA, Epic y Minecraft). Algunas funciones todavía no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir. La interfaz está en español con traducción al inglés (se cambia en Configuración); los nombres y descripciones de los ajustes todavía están solo en español.
+> **Beta (3.0.1).** Hecho y probado principalmente en una PC (Ryzen 5 5600G + RX 7600; juegos de Steam, EA, Epic y Minecraft). Algunas funciones todavía no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir. La interfaz está en español con traducción al inglés (se cambia en Configuración).
 
 > Creado con **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), con la dirección y las pruebas de su autor (Donpolloasd).
 
