@@ -6,6 +6,7 @@ import (
 
 	"fpsforge/internal/extras"
 	"fpsforge/internal/scan"
+	"fpsforge/internal/system"
 	"fpsforge/internal/tweaks"
 )
 
@@ -209,6 +210,10 @@ func (s *Server) handleCleanRun(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(extras.NeedsConfirm(req.IDs)) > 0 && req.Confirm < 1 {
 		fail(w, 428, "Borrar la caché de shaders necesita la confirmación del usuario.")
+		return
+	}
+	if _, demo := s.Sys.(*system.Fake); demo {
+		writeJSON(w, extras.Simulate(req.IDs)) // modo demostración: no se borra nada
 		return
 	}
 	writeJSON(w, extras.Run(req.IDs))

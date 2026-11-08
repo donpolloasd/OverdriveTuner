@@ -16,7 +16,7 @@
 </div>
 
 > [!NOTE]
-> **Beta (2.10.3).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups yet (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings).
+> **Beta (3.0.0).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups yet (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings); tweak names and descriptions are still Spanish only.
 
 > Created with **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), directed and tested by its author (Donpolloasd).
 

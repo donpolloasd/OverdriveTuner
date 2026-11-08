@@ -363,3 +363,9 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 
 == Versión 2.10.3 ==
 - Nuevo: «Idioma del overlay» en la sección Overlay. Los textos que se dibujan sobre el juego (Cuadro/Frame, Hora/Time, Juego/Game, Aviso/Alert, CPU/GPU caliente) pueden ir en español o en inglés, o seguir el idioma del programa (lo de antes). La vista previa usa el mismo idioma que el panel.
+
+== Versión 3.0.0 ==
+- Versión 3.0: reúne lo de las 2.8, 2.9 y 2.10 (ventana propia sin Edge, buscador Ctrl+K, ayuda «?», overlay personalizable y en inglés, Configuración al instante, sin pantalla negra) después de una revisión de todas las secciones y acciones del programa.
+- Arreglo: en el modo demostración (--demo), Limpieza borraba de verdad los archivos temporales y Liberar RAM vaciaba la memoria real, aunque la pantalla decía que los cambios eran simulados. Ahora los dos simulan el resultado sin tocar nada.
+- Arreglo: en el modo demostración, la prueba de red (ping a DNS) daba error en los tres servidores; ahora muestra datos de ejemplo. En Windows real no cambia (se comprobó la lectura del ping en un Windows en español).
+- Pendiente conocido: con la interfaz en inglés, los nombres y descripciones de los ajustes, la limpieza y las apps siguen en español.

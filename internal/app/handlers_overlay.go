@@ -258,6 +258,10 @@ func (s *Server) handleMemoryFree(w http.ResponseWriter, r *http.Request) {
 	if !s.requireAdmin(w) {
 		return
 	}
+	if _, demo := s.Sys.(*system.Fake); demo {
+		writeJSON(w, memory.Result{TotalMB: 32768, BeforeMB: 14200, AfterMB: 17900, Trimmed: 41, Standby: true, Note: "Modo demostración: no se tocó la memoria de este equipo."})
+		return
+	}
 	game := overlay.FindGame(s.Sys, nil)
 	res, err := memory.Free(memory.Options{Game: game})
 	if err != nil {

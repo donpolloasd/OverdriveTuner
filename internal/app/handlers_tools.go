@@ -17,6 +17,14 @@ import (
 )
 
 func (s *Server) handleNetTest(w http.ResponseWriter, r *http.Request) {
+	if _, demo := s.Sys.(*system.Fake); demo { // en demostración, datos de ejemplo (el sistema simulado no hace ping)
+		writeJSON(w, []tools.PingResult{
+			{Name: "Google DNS", Host: "8.8.8.8", Sent: 15, Min: 11, Avg: 12, Max: 15, Jitter: 0.8, Status: "ok", Detail: "Estable."},
+			{Name: "Cloudflare", Host: "1.1.1.1", Sent: 15, Min: 3, Avg: 4, Max: 6, Jitter: 0.4, Status: "ok", Detail: "Estable."},
+			{Name: "Quad9", Host: "9.9.9.9", Sent: 15, Min: 24, Avg: 27, Max: 41, Jitter: 3.1, Status: "ok", Detail: "Estable."},
+		})
+		return
+	}
 	writeJSON(w, tools.NetTest(s.Sys))
 }
 

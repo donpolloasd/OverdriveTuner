@@ -20,6 +20,10 @@ type Release struct {
 
 // releases va de la más nueva a la más vieja.
 var releases = []Release{
+	{"3.0.0", "Versión 3.0: todo lo de la 2.8 a la 2.10, revisado", []Change{
+		{"Revisión completa", "Se probaron todas las secciones y acciones del programa (ajustes, perfiles, anti-cheat, limpieza, diagnóstico, red, benchmark, overlay, programas, actualizaciones). Reúne lo de las 2.8, 2.9 y 2.10: ventana propia sin Edge, buscador Ctrl+K, ayuda «?», overlay personalizable y en inglés, Configuración al instante y sin pantalla negra."},
+		{"Modo demostración seguro", "En el modo demostración, Limpieza y Liberar RAM ahora simulan el resultado: antes borraban temporales y vaciaban memoria de verdad aunque la pantalla decía que todo era simulado. La prueba de red también muestra datos de ejemplo en vez de un error."},
+	}},
 	{"2.10.3", "Overlay en inglés", []Change{
 		{"Idioma del overlay", "En la sección Overlay elegí en qué idioma aparecen los textos del panel (Cuadro/Frame, Hora/Time, Juego/Game y los avisos): igual que el programa, español o inglés. La vista previa también lo respeta."},
 	}},

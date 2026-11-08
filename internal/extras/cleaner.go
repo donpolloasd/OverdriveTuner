@@ -269,3 +269,18 @@ func Run(ids []string) []CleanResult {
 	}
 	return out
 }
+
+// Simulate devuelve lo que liberaría Run con esos objetivos, sin borrar nada (para el modo demostración).
+func Simulate(ids []string) []CleanResult {
+	want := map[string]bool{}
+	for _, id := range ids {
+		want[id] = true
+	}
+	out := []CleanResult{}
+	for _, ci := range Scan() {
+		if want[ci.ID] {
+			out = append(out, CleanResult{ID: ci.ID, Freed: ci.Bytes, Removed: ci.Files})
+		}
+	}
+	return out
+}
