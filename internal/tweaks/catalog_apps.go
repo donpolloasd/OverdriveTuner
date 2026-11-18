@@ -16,7 +16,7 @@ func psList(names []string) string {
 // volver a registrar paquetes. Se guarda una copia de las rutas en ProgramData.
 func appxOps(id string, names []string) []Op {
 	list := psList(names)
-	apply := `$dir = Join-Path $env:ProgramData 'FPSForge\appx'
+	apply := `$dir = Join-Path $env:ProgramData 'OverdriveTuner\appx'
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 $names = ` + list + `
 $saved = @()
@@ -28,7 +28,8 @@ foreach ($n in $names) {
 }
 if ($saved.Count -gt 0) { ConvertTo-Json -InputObject @($saved) | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $dir '` + id + `.json') }
 Write-Output ('Paquetes quitados: ' + $saved.Count)`
-	revert := `$f = Join-Path $env:ProgramData 'FPSForge\appx\` + id + `.json'
+	revert := `$f = Join-Path $env:ProgramData 'OverdriveTuner\appx\` + id + `.json'
+if (-not (Test-Path -LiteralPath $f)) { $f = Join-Path $env:ProgramData 'FPSForge\appx\` + id + `.json' }
 if (-not (Test-Path -LiteralPath $f)) { Write-Output 'No hay copia guardada: reinstala desde Microsoft Store si lo necesitas.'; exit 0 }
 $items = @(Get-Content -Raw -Encoding UTF8 -LiteralPath $f | ConvertFrom-Json)
 foreach ($i in $items) {

@@ -2,7 +2,9 @@
 
 OverdriveTuner no tiene cuentas, publicidad ni telemetría. No envía datos de tu equipo, de tus juegos ni de cómo usás el programa a nadie, tampoco a su autor.
 
-Todo lo que el programa sabe de tu PC (hardware, ajustes aplicados, copias de seguridad, benchmarks, historial) se guarda solo en tu equipo, en `C:\ProgramData\FPSForge`.
+Todo lo que el programa sabe de tu PC (hardware, ajustes aplicados, copias de seguridad, benchmarks, historial) se guarda solo en tu equipo, en `C:\ProgramData\OverdriveTuner` (hasta la versión 3.0 se llamaba `C:\ProgramData\FPSForge`; al actualizar se mueve sola).
+
+«Reportar un problema» no envía nada: abre GitHub en tu navegador con el texto que revisaste, y vos decidís si lo publicás.
 
 ## Conexiones a internet
 

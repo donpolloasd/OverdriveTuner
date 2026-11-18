@@ -334,3 +334,14 @@ main:focus,main:focus-visible{outline:none}
 .ovorder li .btn{height:26px;padding:0 9px;font-size:12px}
 .ovorder li.drag{opacity:.4}.ovorder li.over{border-color:var(--text)}
 .ovorder .grip{width:8px;height:14px;background:radial-gradient(circle,var(--line3) 1.2px,transparent 1.3px) 0 0/4px 4px}
+
+/* 3.1: asistente, novedades y reporte */
+.dlg.wide{width:min(640px,94vw);max-height:88vh;overflow:auto}
+.dlg.wide ul{margin:6px 0 0;padding-left:20px;color:#cfcfcf}
+.dlg.wide li{margin:4px 0}
+.wz-opts{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+.btn.wz.on{background:var(--paper);border-color:var(--paper);color:#000}
+.wz-list{max-height:34vh;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.fl{display:flex;flex-direction:column;gap:6px;margin:12px 0 0;color:var(--muted)}
+.fl input,.fl textarea{color:var(--text)}
+@media (max-width:640px){.wz-list{grid-template-columns:1fr}}

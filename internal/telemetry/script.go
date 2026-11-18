@@ -14,6 +14,7 @@ while($true){
  $t=$p|Where-Object{$_.Name -eq '_Total'}|Select-Object -First 1
  $o.cpu=[double]$t.PercentProcessorUtility
  $o.mhz=[double]$t.ProcessorFrequency
+ $o.lim=[double]$t.PercentPerformanceLimit
  $o.max=[double](($p|Where-Object{$_.Name -notmatch '_Total'}|ForEach-Object{[double]$_.PercentProcessorUtility}|Measure-Object -Maximum).Maximum)
  $o.freeKb=[double](Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory
  $o.totalKb=$total

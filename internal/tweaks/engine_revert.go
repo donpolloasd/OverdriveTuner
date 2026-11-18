@@ -174,6 +174,13 @@ func (e *Engine) revertLocked(id string) Result {
 // están aplicados (aunque no los haya puesto este programa). Hace una sola
 // lectura de registro para todo el catálogo.
 func (e *Engine) DetectAll(list []Tweak) map[string]bool {
+	det, _ := e.DetectAllInfo(list)
+	return det
+}
+
+// DetectAllInfo es DetectAll y además dice qué tweaks se pudieron comprobar (tienen al menos un valor de
+// registro o un servicio presente en este equipo). Los que solo corren comandos no se pueden comprobar.
+func (e *Engine) DetectAllInfo(list []Tweak) (map[string]bool, map[string]bool) {
 	type want struct {
 		tweak   int
 		typ     string
@@ -198,9 +205,10 @@ func (e *Engine) DetectAll(list []Tweak) map[string]bool {
 		}
 	}
 	res := make(map[string]bool, len(list))
+	check := make(map[string]bool, len(list))
 	vals, err := e.Sys.RegGetMany(refs)
 	if err != nil || len(vals) != len(refs) {
-		return res
+		return res, check
 	}
 	checked := make([]int, len(list))
 	failed := make([]bool, len(list))
@@ -216,8 +224,9 @@ func (e *Engine) DetectAll(list []Tweak) map[string]bool {
 	}
 	for ti, tw := range list {
 		res[tw.ID] = checked[ti] > 0 && !failed[ti]
+		check[tw.ID] = checked[ti] > 0
 	}
-	return res
+	return res, check
 }
 
 // Detect es DetectAll para un único tweak.
@@ -242,4 +251,33 @@ func (e *Engine) RevertAll() []Result {
 		out = append(out, e.Revert(x.id))
 	}
 	return out
+}
+
+// Reapply vuelve a escribir los valores de registro y servicios de un tweak que ya estaba aplicado (por
+// ejemplo, después de que una actualización de Windows los deshiciera). No toca las copias de seguridad:
+// revertir sigue devolviendo los valores que había antes de aplicarlo la primera vez.
+func (e *Engine) Reapply(id string) Result {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	res := Result{ID: id}
+	tw, ok := ByID(id)
+	if !ok {
+		res.Errors = []string{"tweak desconocido: " + id}
+		return res
+	}
+	if _, on := e.recs[id]; !on {
+		res.Errors = []string{"no está aplicado"}
+		return res
+	}
+	for i, op := range tw.Ops {
+		if op.Kind != OpReg && op.Kind != OpSvc {
+			continue // los comandos no se repiten: solo se restauran los valores que se pueden comprobar
+		}
+		if _, err := e.applyOp(i, op); err != nil && !op.Optional {
+			res.Errors = append(res.Errors, err.Error())
+		}
+	}
+	res.OK = len(res.Errors) == 0
+	res.Reboot = tw.Reboot
+	return res
 }

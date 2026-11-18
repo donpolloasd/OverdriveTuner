@@ -70,7 +70,7 @@ async function renderSettings(m) {
   const errs = (d.state && d.state.hotkeyErrors) || [];
   m.innerHTML = `<div class="top"><div><h2>Configuración</h2><p>Idioma, atajos de teclado, copia de tu configuración y animación de apertura.</p></div></div>${banners()}
   <h3 id="stLangH">Idioma</h3>
-  <div class="row" id="stLang"><div><h4>Idioma de la interfaz</h4><p>Cambia todos los textos de la aplicación. El panel que se dibuja encima del juego (overlay) mantiene sus textos en español.</p></div>
+  <div class="row" id="stLang"><div><h4>Idioma de la interfaz</h4><p>Cambia todos los textos de la aplicación. El idioma del panel que se dibuja encima del juego se elige en la sección Overlay.</p></div>
    <select id="sLang"><option value="es" ${lang === "es" ? "selected" : ""}>Español</option><option value="en" ${lang === "en" ? "selected" : ""}>English</option></select></div>
 
   <h3 id="stHkH" style="margin-top:22px">Atajos globales</h3>
@@ -247,6 +247,7 @@ async function renderSettings(m) {
     const mods = [...row.querySelectorAll("[data-mod]")].filter(c => c.checked).map(c => c.dataset.mod);
     return mods.concat(row.querySelector("[data-key]").value).join("+");
   };
+  v31Settings(m);
   m.querySelectorAll("[data-hkrow]").forEach(row => {
     const k = row.dataset.hkrow;
     row.querySelectorAll("[data-mod],[data-key]").forEach(el => el.onchange = () => { cfg[k] = hkRead(k); saveHk(); });

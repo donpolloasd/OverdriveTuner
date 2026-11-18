@@ -164,6 +164,7 @@ async function load() {
   render();
   hideBoot();
   termsGate();
+  if (window.BOOT && window.BOOT.termsOk) setTimeout(whatsNew, 1500);
   // El escaneo del equipo sigue en segundo plano: se completa solo cuando termina.
   while (S.scanning) {
     await new Promise(r => setTimeout(r, 700));
@@ -176,7 +177,7 @@ function tweaksOf(cat) { return S.tweaks.filter(t => t.cat === cat); }
 function activeCount(cat) { const l = tweaksOf(cat).filter(t => t.suitable); return [l.filter(t => t.active).length, l.length]; }
 
 /* ---------- navegación ---------- */
-const TOOLS = [["install", "Instalar programas"], ["overlay", "Overlay en juego"], ["gamemode", "Modo juego"], ["fluidez", "Diagnóstico"], ["bench", "Benchmark"], ["clean", "Limpieza"], ["startup", "Inicio de Windows"]];
+const TOOLS = [["install", "Instalar programas"], ["overlay", "Overlay en juego"], ["gamemode", "Modo juego"], ["fluidez", "Diagnóstico"], ["bench", "Benchmark"], ["clean", "Limpieza"], ["startup", "Inicio de Windows"], ["fresh", "Después de formatear"]];
 const PROGRAM = [["history", "Historial"], ["settings", "Configuración"]];
 let drvOpen = false;
 
@@ -268,6 +269,7 @@ function render() {
   if (view === "bench") return renderBench(m);
   if (view === "clean") return renderClean(m);
   if (view === "startup") return renderStartup(m);
+  if (view === "fresh") return renderFresh(m);
   if (view === "history") return renderHistory(m);
   if (view === "settings") return renderSettings(m);
   renderCategory(m, view);
@@ -302,7 +304,7 @@ function renderHome(m) {
   if (!S.scanning) cards += hwCard("Sistema", h.os || "Windows", h.build ? "compilación " + h.build : "");
   m.innerHTML = `
   <div class="top"><div><h2>Inicio</h2><p>Escaneamos tu equipo y solo te ofrecemos lo que le sirve. Todo se puede revertir.</p></div></div>
-  ${banners()}${S.scanning ? '<div class="banner">Escaneando tu equipo… ya podés ir mirando las secciones; los perfiles se habilitan cuando termina.</div>' : ""}
+  ${banners()}${driftBanner()}${S.scanning ? '<div class="banner">Escaneando tu equipo… ya podés ir mirando las secciones; los perfiles se habilitan cuando termina.</div>' : ""}
   <section class="hero">
     <div class="ring" role="img" aria-label="${pct}% de las optimizaciones recomendadas aplicadas">
       <div class="num"><b>${pct}<small>%</small></b><span>${on} de ${total} optimizaciones recomendadas aplicadas</span></div>
@@ -331,6 +333,7 @@ function renderHome(m) {
     modal.progress(1); modal.done();
   };
   $("#pUndo").onclick = undoAll;
+  wireDrift();
   $("#pScan").onclick = async () => { toast("Escaneando…"); S.hardware = await api("rescan", {}); render(); };
 }
 
@@ -515,7 +518,9 @@ async function renderClean(m) {
   <h3>Archivos temporales</h3>
   <table class="table"><tbody>${info.filter(x => !x.deep).map(cleanRow).join("")}</tbody></table>
   ${info.some(x => x.deep) ? `<h3 style="margin-top:22px">Limpieza profunda</h3><p class="note">Cachés de navegadores y apps. No borra contraseñas, cookies ni historial; la primera carga después puede ser un poco más lenta. Vienen desmarcadas.</p><table class="table"><tbody>${info.filter(x => x.deep).map(cleanRow).join("")}</tbody></table>` : ""}
-  <div class="bar" style="margin-top:16px"><button class="btn primary" id="doClean">Limpiar lo seleccionado</button><span class="sp">Se pueden liberar hasta ${fmtBytes(total)}</span></div>`;
+  <div class="bar" style="margin-top:16px"><button class="btn primary" id="doClean">Limpiar lo seleccionado</button><span class="sp">Se pueden liberar hasta ${fmtBytes(total)}</span></div>
+  <div id="v31clean"></div>`;
+  v31Clean($("#v31clean"));
   $("#ramBtn").onclick = async () => {
     const b = $("#ramBtn"); b.disabled = true; $("#ramRes").textContent = "Liberando…";
     try {
@@ -605,7 +610,7 @@ async function renderFluidez(m, fresh) {
     <div class="bar" style="margin:16px 0"><label>Frecuencia de tu monitor (Hz): <input id="hz" type="number" min="30" max="1000" value="${d.targetHz || ""}" style="width:80px"></label><button class="btn" id="hzSave">Guardar</button>${d.manual && d.detectedHz ? `<button class="btn" id="hzAuto">Usar el detectado (${d.detectedHz} Hz)</button>` : ""}<button class="btn" id="dgAgain">Volver a revisar</button></div>
     <h3>Qué está usando tu procesador</h3><div id="procs"><button class="btn" id="procGo">Medir ahora (2 segundos)</button></div>
     <h3 style="margin-top:22px">Herramientas</h3>
-    <div class="btns"><button class="btn" id="tNet">Probar red y ping (15 s)</button><button class="btn" id="tGame">Ping a servidores de juegos</button><button class="btn" id="tDns">Probar DNS</button><button class="btn" id="tNetMon">Quién usa la red</button><button class="btn" id="tDisk">Estado de los discos</button><button class="btn" id="tVid">Revisar video de CS2</button><button class="btn" id="tRep">Descargar informe</button></div>
+    <div class="btns"><button class="btn" id="tNet">Probar red y ping (15 s)</button><button class="btn" id="tGame">Ping a servidores de juegos</button><button class="btn" id="tDns">Probar DNS</button><button class="btn" id="tNetMon">Quién usa la red</button><button class="btn" id="tDisk">Estado de los discos</button><button class="btn" id="tVid">Revisar video de CS2</button><button class="btn" id="tRep">Descargar informe</button><button class="btn" id="tDpc">Latencia del sistema (DPC)</button><button class="btn" id="tIssue">Reportar un problema</button></div>
     <div id="tOut" style="margin-top:12px"></div>
     <h3 style="margin-top:22px">Guía de BIOS${(S.hardware && S.hardware.board) ? " · " + esc(S.hardware.board) : ""}</h3><p class="note">Armada según tu procesador y tu placa de video detectados; los nombres exactos de cada opción dependen del fabricante de tu placa madre.</p><div class="list">${biosGuide().map(g => `<div class="row"><div><h4>${esc(g[0])}</h4><p>${esc(g[1])}</p></div></div>`).join("")}</div>
     <h3 style="margin-top:22px">Guía para jugar fluido</h3><div class="list">${gameGuide().map(g => `<div class="row"><div><h4>${esc(g[0])}</h4><p>${esc(g[1])}</p></div></div>`).join("")}</div>`;
@@ -620,6 +625,8 @@ async function renderFluidez(m, fresh) {
   $("#tNet").onclick = e => runTool(e.target, "Midiendo (unos 15 segundos)…", async () => rowsOf(await api("net"), r => `<div class="row"><div><h4>${esc(r.name)} (${esc(r.host)}) ${st(r.status)}</h4><p>${r.sent ? `Promedio ${r.avg} ms · mín ${r.min} · máx ${r.max} · variación ${r.jitter} ms · pérdida ${r.lossPct}%. ` : ""}${esc(r.detail)}</p></div></div>`));
   $("#tDisk").onclick = e => runTool(e.target, "Leyendo discos…", async () => { const ds = await api("disks"); return ds.length ? rowsOf(ds, d => diskRow(d, st)) : '<p class="note">Windows no devolvió información de los discos.</p>'; });
   $("#tGame").onclick = e => runTool(e.target, "Midiendo servidores de juegos (unos 5 segundos)…", async () => gamePingHtml(await api("gameping"), st));
+  $("#tDpc").onclick = e => runTool(e.target, "Midiendo la latencia del sistema (10 segundos)…", async () => dpcHtml(await api("dpc")));
+  $("#tIssue").onclick = reportIssue;
   $("#tDns").onclick = e => runTool(e.target, "Midiendo servidores DNS (unos 10 segundos)…", async () => dnsHtml(await api("dnsbench")));
   $("#tNetMon").onclick = e => runTool(e.target, "Leyendo conexiones…", async () => netMonHtml(await api("netmon")));
   tout.addEventListener("click", dnsClick);
@@ -777,6 +784,7 @@ function ovStatus(d) {
     <p>${a ? `FPS ${Math.round(st.fps || 0)} · 1% low ${Math.round(st.low1 || 0)} · CPU ${Math.round(sm.cpu || 0)}% (hilo más cargado ${Math.round(sm.cpuThread || 0)}%) · GPU ${Math.round(sm.gpu || 0)}% ${tmp(sm.gpuTemp)} · RAM ${((sm.ramUsedMb || 0) / 1024).toFixed(1)} GB · temp. CPU ${tmp(sm.cpuTemp)}` : "Abrilo para ver FPS y uso mientras jugás."}</p>
     ${a && st.verdict && st.verdict.kind !== "none" ? `<p><b>Qué limita tus FPS:</b> ${esc(st.verdict.text)}</p>` : ""}
     ${a && st.exclusive ? `<div class="banner warn">El juego está en pantalla completa exclusiva: Windows no deja que ninguna ventana externa (tampoco este overlay) se dibuje encima. Ponelo en «ventana sin bordes» en sus opciones de video. Si aplicaste «Desactivar optimizaciones de pantalla completa», revertilo.</div>` : ""}
+    ${a ? throttleHtml(st) : ""}
     ${a && st.message ? `<p class="note">${esc(st.message)}</p>` : ""}</div>
     <button class="btn ${a ? "" : "primary"}" id="ovToggle" ${S.admin ? "" : "disabled"}>${a ? "Cerrar overlay" : "Abrir overlay"}</button></div>`;
 }
@@ -790,7 +798,7 @@ async function renderOverlay(m) {
   // save guarda y muestra lo que quedó (el programa corrige valores fuera de rango, por ejemplo límites de FPS al revés).
   const save = async () => { try { Object.assign(cfg, await api("overlay/config", cfg)); syncColors(); $("#cFpsLow").value = cfg.fpsLow; $("#cFpsMid").value = cfg.fpsMid; } catch (e) { toast(e.message, 5000); } $("#ovPrev").innerHTML = ovPreview(cfg, d.running ? d.state : null); };
   m.innerHTML = head + banners() + `<div id="ovStatus">${ovStatus(d)}</div>
-  <div class="ovgrid"><div><h3>Vista previa</h3><div class="ovstage" id="ovPrev">${ovPreview(cfg, d.running ? d.state : null)}</div><p class="note">Es una aproximación: el diseño real lo dibuja Windows y puede verse un poco distinto.</p></div>
+  <div class="ovgrid"><div><h3>Vista previa</h3><div class="ovstage" id="ovPrev">${ovPreview(cfg, d.running ? d.state : null)}</div><p class="note">Es una aproximación: el diseño real lo dibuja Windows y puede verse un poco distinto.</p><button class="btn" id="ovPng">Guardar como imagen</button></div>
   <div><h3>Apariencia</h3><div class="list">
    <div class="row"><div><h4>Esquina</h4></div><select id="cCorner">${[["tl", "Arriba izquierda"], ["tr", "Arriba derecha"], ["bl", "Abajo izquierda"], ["br", "Abajo derecha"]].map(([v, n]) => `<option value="${v}" ${cfg.corner === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Separación del borde</h4><p>En píxeles, desde la esquina elegida.</p></div><div class="bar"><label>Horizontal <input type="number" id="cOffX" min="0" max="1000" value="${cfg.offsetX}" style="width:76px"></label><label>Vertical <input type="number" id="cOffY" min="0" max="1000" value="${cfg.offsetY}" style="width:76px"></label></div></div>
@@ -835,6 +843,7 @@ async function renderOverlay(m) {
   $("#cCorner").onchange = e => { cfg.corner = e.target.value; save(); };
   $("#cOffX").onchange = e => { cfg.offsetX = +e.target.value; save().then(() => { e.target.value = cfg.offsetX; }); };
   $("#cOffY").onchange = e => { cfg.offsetY = +e.target.value; save().then(() => { e.target.value = cfg.offsetY; }); };
+  $("#ovPng").onclick = ovPng;
   $("#cMon").onchange = e => { cfg.monitor = +e.target.value; save(); };
   $("#cLang").onchange = e => { cfg.lang = e.target.value; save(); };
   // orden de los datos: arrastrar o Subir/Bajar

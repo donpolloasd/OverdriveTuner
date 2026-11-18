@@ -48,13 +48,15 @@ type Server struct {
 	srv         *http.Server
 }
 
-// SafeDataDir dice si path es exactamente «<ProgramData>\FPSForge», lo único que el desinstalador borra.
+// SafeDataDir dice si path es exactamente «<ProgramData>\OverdriveTuner» (o «<ProgramData>\FPSForge», el
+// nombre de antes de la 3.1), lo único que el desinstalador borra.
 func SafeDataDir(path string) bool {
 	pd := os.Getenv("ProgramData")
 	if pd == "" || path == "" {
 		return false
 	}
-	return strings.EqualFold(filepath.Clean(path), filepath.Join(pd, "FPSForge"))
+	p := filepath.Clean(path)
+	return strings.EqualFold(p, filepath.Join(pd, "OverdriveTuner")) || strings.EqualFold(p, filepath.Join(pd, "FPSForge"))
 }
 
 // AppliedCount cuenta los ajustes que OverdriveTuner tiene aplicados (state.json de la carpeta de datos).

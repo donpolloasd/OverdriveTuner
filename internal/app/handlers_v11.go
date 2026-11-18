@@ -25,6 +25,17 @@ type settings struct {
 	// AutoUpdate: instala solo las versiones nuevas que salen en GitHub. Lo elige el usuario en el Setup;
 	// si falta (instalaciones anteriores) queda desactivado: ahí solo se actualiza con el Parche.
 	AutoUpdate bool `json:"autoUpdate"`
+
+	SeenVersion string          `json:"seenVersion,omitempty"` // última versión cuyas novedades se mostraron
+	WizardDone  bool            `json:"wizardDone,omitempty"`  // ya hizo (o salteó) el asistente de primera vez
+	RemindOff   bool            `json:"remindOff,omitempty"`   // sin recordatorios de mantenimiento
+	LastClean   time.Time       `json:"lastClean,omitempty"`   // última limpieza de temporales
+	RemindClean time.Time       `json:"remindClean,omitempty"` // último recordatorio de limpieza
+	RemindDrv   time.Time       `json:"remindDrv,omitempty"`   // último recordatorio de driver viejo
+	LastBuild   int             `json:"lastBuild,omitempty"`   // compilación de Windows vista la última vez
+	PrevBuild   int             `json:"prevBuild,omitempty"`   // la anterior, si Windows se actualizó
+	BuildAt     time.Time       `json:"buildAt,omitempty"`     // cuándo se notó la actualización de Windows
+	Fresh       map[string]bool `json:"fresh,omitempty"`       // pasos marcados en «Después de formatear»
 }
 
 // targetHz devuelve los Hz que debería tener el monitor: el valor fijado a mano o, si no hay, el máximo
@@ -74,13 +85,83 @@ func (s *Server) loadSettings() settings { return readSettings(s.Dir) }
 
 func (s *Server) saveSettings(st settings) error { return writeSettings(s.Dir, st) }
 
-// DefaultDataDir es la carpeta de datos del programa (la misma que usa la aplicación).
-func DefaultDataDir() string {
+// dataDirs devuelve la carpeta de datos actual (C:\ProgramData\OverdriveTuner) y la de versiones
+// anteriores a la 3.1 (C:\ProgramData\FPSForge, del primer nombre del programa).
+func dataDirs() (cur, legacy string) {
 	if d := os.Getenv("ProgramData"); d != "" {
-		return filepath.Join(d, "FPSForge")
+		return filepath.Join(d, "OverdriveTuner"), filepath.Join(d, "FPSForge")
 	}
 	h, _ := os.UserHomeDir()
-	return filepath.Join(h, ".fpsforge")
+	return filepath.Join(h, ".overdrivetuner"), filepath.Join(h, ".fpsforge")
+}
+
+// DefaultDataDir es la carpeta de datos del programa. Mientras la carpeta vieja no se haya podido mover
+// (ver MigrateDataDir), se sigue usando esa para no separar los datos en dos lugares.
+func DefaultDataDir() string {
+	cur, legacy := dataDirs()
+	if !dirExists(cur) && dirExists(legacy) {
+		return legacy
+	}
+	return cur
+}
+
+// NeedsMigration dice si todavía hay datos en la carpeta vieja.
+func NeedsMigration() bool {
+	_, legacy := dataDirs()
+	return dirExists(legacy)
+}
+
+// MigrateDataDir mueve C:\ProgramData\FPSForge a C:\ProgramData\OverdriveTuner, con todo adentro (ajustes,
+// copias de seguridad, benchmarks, historial). Si las dos existen, pasa lo que falta sin pisar nada y
+// borra la vieja solo si quedó vacía. Necesita que ningún proceso tenga archivos abiertos ahí (el overlay
+// se cierra antes). Devuelve la carpeta que hay que usar.
+func MigrateDataDir() (string, error) {
+	cur, legacy := dataDirs()
+	if !dirExists(legacy) {
+		return cur, nil
+	}
+	if !dirExists(cur) {
+		if err := os.Rename(legacy, cur); err != nil {
+			return legacy, err
+		}
+		return cur, nil
+	}
+	if err := mergeDir(legacy, cur); err != nil {
+		return cur, err
+	}
+	_ = os.Remove(legacy) // solo si quedó vacía
+	return cur, nil
+}
+
+// mergeDir mueve a dst lo que hay en src y no existe en dst (recorre las subcarpetas).
+func mergeDir(src, dst string) error {
+	es, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+	var first error
+	for _, e := range es {
+		s, d := filepath.Join(src, e.Name()), filepath.Join(dst, e.Name())
+		if _, err := os.Stat(d); err != nil {
+			err = os.Rename(s, d)
+			if err != nil && first == nil {
+				first = err
+			}
+			continue
+		}
+		if e.IsDir() && dirExists(d) {
+			if err := mergeDir(s, d); err != nil && first == nil {
+				first = err
+			}
+			_ = os.Remove(s)
+		}
+	}
+	return first
+}
+
+func dirExists(p string) bool {
+	fi, err := os.Stat(p)
+	return err == nil && fi.IsDir()
 }
 
 // AutoUpdateOn dice si las actualizaciones automáticas están activadas en la carpeta de datos (lo usa el Setup).
@@ -104,7 +185,15 @@ type settingsPatch struct {
 	HzAuto   *bool   `json:"hzAuto"` // true: vuelve a usar la frecuencia máxima detectada
 	// AutoUpdate activa o desactiva las actualizaciones automáticas.
 	AutoUpdate *bool `json:"autoUpdate"`
+
+	SeenVersion *string         `json:"seenVersion"`
+	WizardDone  *bool           `json:"wizardDone"`
+	RemindOff   *bool           `json:"remindOff"`
+	Fresh       map[string]bool `json:"fresh"` // pasos de «Después de formatear» (solo los que vienen)
 }
+
+// freshSteps son los pasos de «Después de formatear» que se pueden marcar a mano.
+var freshSteps = map[string]bool{"winupdate": true, "chipset": true, "gpu": true, "runtimes": true, "launchers": true, "bios": true, "profile": true, "restore": true}
 
 func (p settingsPatch) apply(st *settings) string {
 	if p.TargetHz != nil {
@@ -134,6 +223,24 @@ func (p settingsPatch) apply(st *settings) string {
 	}
 	if p.AutoUpdate != nil {
 		st.AutoUpdate = *p.AutoUpdate
+	}
+	if p.SeenVersion != nil {
+		st.SeenVersion = *p.SeenVersion
+	}
+	if p.WizardDone != nil {
+		st.WizardDone = *p.WizardDone
+	}
+	if p.RemindOff != nil {
+		st.RemindOff = *p.RemindOff
+	}
+	for k, v := range p.Fresh {
+		if !freshSteps[k] {
+			return "paso no válido"
+		}
+		if st.Fresh == nil {
+			st.Fresh = map[string]bool{}
+		}
+		st.Fresh[k] = v
 	}
 	if p.IntroVol != nil {
 		if *p.IntroVol < 0 || *p.IntroVol > 100 {

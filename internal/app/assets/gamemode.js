@@ -18,12 +18,12 @@ async function renderGameMode(m) {
   if (view !== "gamemode") return;
   const cfg = d.config;
   cfg.closeList = cfg.closeList || [];
-  const save = async () => { try { Object.assign(cfg, await api("overlay/config", cfg)); } catch (e) { toast(e.message, 6000); const n = await api("overlay"); Object.assign(cfg, n.config); } paint(); };
+  const save = async () => { try { Object.assign(cfg, await api("overlay/config", cfg)); } catch (e) { toast(e.message, 6000); const n = await api("overlay"); Object.assign(cfg, n.config); } cfg.closeList = cfg.closeList || []; paint(); }; // el servidor manda null si la lista está vacía
   m.innerHTML = head + banners() +
     (d.running ? "" : `<div class="banner">El Modo juego funciona junto con el overlay, que es el que detecta el juego, y ahora no está abierto. <button class="btn" id="gmStart">Abrir overlay</button></div>`) +
     `<h3>Se cierran al abrir un juego</h3><div class="list" id="gmList"></div>
     <div class="gm-add"><input type="text" id="gmNew" placeholder="programa, ej. chrome.exe" style="width:240px" aria-label="Programa a cerrar"><button class="btn" id="gmAdd">Agregar</button><button class="btn" id="gmPick">Elegir de los programas abiertos</button></div>
-    <div id="gmPickOut"></div>`;
+    <div id="gmPickOut"></div><div id="gmQuiet"></div>`;
   const paint = () => {
     const l = cfg.closeList;
     $("#gmList").innerHTML = l.length
@@ -58,4 +58,5 @@ async function renderGameMode(m) {
     b.disabled = false;
   };
   paint();
+  gmQuiet($("#gmQuiet"), cfg, save);
 }

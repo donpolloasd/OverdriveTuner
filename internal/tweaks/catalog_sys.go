@@ -68,9 +68,11 @@ Get-ChildItem -LiteralPath $base | ForEach-Object {
   Remove-ItemProperty -LiteralPath $_.PSPath -Name TcpAckFrequency -ErrorAction SilentlyContinue
   Remove-ItemProperty -LiteralPath $_.PSPath -Name TCPNoDelay -ErrorAction SilentlyContinue
 }`
-	const dnsApply = `$dir = Join-Path $env:ProgramData 'FPSForge'
+	const dnsApply = `$dir = Join-Path $env:ProgramData 'OverdriveTuner'
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 $bk = Join-Path $dir 'dns-backup.json'
+$old = Join-Path $env:ProgramData 'FPSForge\dns-backup.json'
+if (-not (Test-Path -LiteralPath $bk) -and (Test-Path -LiteralPath $old)) { $bk = $old }
 $ads = @(Get-NetAdapter -Physical | Where-Object { $_.Status -eq 'Up' })
 if (-not (Test-Path -LiteralPath $bk)) {
   $saved = @()
@@ -84,7 +86,8 @@ if (-not (Test-Path -LiteralPath $bk)) {
 }
 foreach ($a in $ads) { Set-DnsClientServerAddress -InterfaceIndex $a.ifIndex -ServerAddresses ('1.1.1.1','1.0.0.1') }
 Clear-DnsClientCache`
-	const dnsRevert = `$bk = Join-Path $env:ProgramData 'FPSForge\dns-backup.json'
+	const dnsRevert = `$bk = Join-Path $env:ProgramData 'OverdriveTuner\dns-backup.json'
+if (-not (Test-Path -LiteralPath $bk)) { $bk = Join-Path $env:ProgramData 'FPSForge\dns-backup.json' }
 $items = @()
 if (Test-Path -LiteralPath $bk) { $items = @(Get-Content -Raw -Encoding UTF8 -LiteralPath $bk | ConvertFrom-Json) }
 foreach ($i in $items) {

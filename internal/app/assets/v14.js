@@ -191,7 +191,8 @@ function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* sin al
     o.id = "tourOffer";
     o.innerHTML = '<b>¿Primera vez?</b><p>Te muestro en 1 minuto para qué sirve cada botón. Después lo encontrás siempre en «Cómo funciona».</p><div class="tbtn"><button class="btn" id="tOffNo">Ahora no</button><span></span><button class="btn primary" id="tOffYes">Empezar recorrido</button></div>';
     const offer = () => setTimeout(() => document.body.appendChild(o), 1800);
-    if (window.BOOT && window.BOOT.termsOk) offer(); else document.addEventListener("ot-terms", offer, { once: true }); // primero el aviso de responsabilidad
+    // Primero el aviso de responsabilidad y, en una instalación nueva, el asistente de ajustes.
+    if (window.BOOT && window.BOOT.termsOk) offer(); else document.addEventListener(window.BOOT && window.BOOT.wizardDone ? "ot-terms" : "ot-wizard", offer, { once: true });
     o.addEventListener("click", e => {
       if (e.target.id === "tOffYes") { tourSeen(); o.remove(); view = "home"; render(); setTimeout(() => startTour("home"), 150); }
       if (e.target.id === "tOffNo") { tourSeen(); o.remove(); }
@@ -232,7 +233,7 @@ async function renderHistory(m) {
   const applied = new Set(S.tweaks.filter(t => t.applied).map(t => t.id));
   m.innerHTML = head + banners() + (list.length ? `<table class="table" id="hsList"><tbody>${list.map((h, i) => `<tr>
     <td class="num">${esc(h.at.slice(0, 16).replace("T", " "))}</td>
-    <td><span class="tag">${h.action === "apply" ? "Aplicado" : "Revertido"}</span> <b>${esc((S.tweaks.find(t => t.id === h.id) || {}).name || h.name)}</b>${h.ok ? "" : `<div class="cmd" style="color:var(--bad)">${esc(h.error || "falló")}</div>`}</td>
+    <td><span class="tag">${h.action === "apply" ? "Aplicado" : h.action === "reapply" ? "Vuelto a aplicar" : "Revertido"}</span> <b>${esc((S.tweaks.find(t => t.id === h.id) || {}).name || h.name)}</b>${h.ok ? "" : `<div class="cmd" style="color:var(--bad)">${esc(h.error || "falló")}</div>`}</td>
     <td style="text-align:right">${h.action === "apply" && h.ok && applied.has(h.id) && i === list.findIndex(x => x.id === h.id) ? `<button class="btn" data-u="${esc(h.id)}" ${S.admin ? "" : "disabled"}>Deshacer</button>` : ""}</td></tr>`).join("")}</tbody></table>` : '<div id="hsList"><p class="note">Todavía no hay cambios registrados.</p></div>');
   $("#hsUndo").onclick = undoAll;
   $("#hsClear").onclick = async () => { if (!await ask("¿Borrar el historial? Los ajustes aplicados no se modifican.", { title: "Borrar historial", ok: "Borrar", danger: true })) return; await api("history", {}); renderHistory(m); };

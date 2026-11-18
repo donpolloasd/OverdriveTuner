@@ -29,7 +29,7 @@ if (Test-Path -LiteralPath $p) {
 	return PS(apply, revert)
 }
 
-const updTasksApply = `$dir = Join-Path $env:ProgramData 'FPSForge'
+const updTasksApply = `$dir = Join-Path $env:ProgramData 'OverdriveTuner'
 New-Item -ItemType Directory -Force -Path $dir | Out-Null
 $saved = @()
 foreach ($path in @('\Microsoft\Windows\UpdateOrchestrator\','\Microsoft\Windows\WindowsUpdate\')) {
@@ -42,7 +42,8 @@ foreach ($path in @('\Microsoft\Windows\UpdateOrchestrator\','\Microsoft\Windows
 ConvertTo-Json -InputObject @($saved) | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $dir 'upd_tasks.json')
 Write-Output ('Tareas de actualización detenidas: ' + $saved.Count)`
 
-const updTasksRevert = `$f = Join-Path $env:ProgramData 'FPSForge\upd_tasks.json'
+const updTasksRevert = `$f = Join-Path $env:ProgramData 'OverdriveTuner\upd_tasks.json'
+if (-not (Test-Path -LiteralPath $f)) { $f = Join-Path $env:ProgramData 'FPSForge\upd_tasks.json' }
 if (-not (Test-Path -LiteralPath $f)) { exit 0 }
 foreach ($full in @(Get-Content -Raw -Encoding UTF8 -LiteralPath $f | ConvertFrom-Json)) {
   $i = $full.LastIndexOf('\')

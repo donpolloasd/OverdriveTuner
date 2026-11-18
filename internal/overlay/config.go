@@ -57,6 +57,7 @@ type Config struct {
 	ShowClock bool     `json:"showClock"`  // hora
 	ShowGame  bool     `json:"showGame"`   // nombre del juego detectado
 	Lang      string   `json:"lang"`       // idioma de los textos del panel: «es», «en» o vacío (el de la interfaz)
+	QuietGame bool     `json:"quietGame"`  // Modo juego: silenciar las notificaciones de Windows mientras hay un juego abierto
 	Presets   []Preset `json:"presets"`    // estilos guardados con nombre
 	Games     []Game   `json:"games"`
 	Style              // aspecto del panel: colores, forma y letra (se guarda en el mismo nivel del JSON)

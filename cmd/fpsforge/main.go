@@ -20,13 +20,7 @@ import (
 	"fpsforge/internal/winhost"
 )
 
-func dataDirPath() string {
-	if d := os.Getenv("ProgramData"); d != "" {
-		return filepath.Join(d, "FPSForge")
-	}
-	h, _ := os.UserHomeDir()
-	return filepath.Join(h, ".fpsforge")
-}
+func dataDirPath() string { return app.DefaultDataDir() }
 
 func main() {
 	demo := flag.Bool("demo", false, "modo demostración (sin tocar el sistema)")
@@ -48,6 +42,13 @@ func main() {
 	dir := dataDirPath()
 	if *demo {
 		dir = filepath.Join(os.TempDir(), "overdrivetuner-demo")
+	} else if !*ovl && app.NeedsMigration() && system.New().IsAdmin() && !winhost.ActivateExisting() {
+		// La carpeta de datos se llamaba FPSForge: se mueve a OverdriveTuner antes de abrir ningún archivo
+		// ahí. Un overlay de la versión anterior podría tenerla en uso, así que se cierra (se vuelve a abrir solo).
+		// Si ya hay otra copia del programa abierta, no se toca nada: esa copia sigue usando la carpeta vieja.
+		winhost.Cleanup("stale-overlay", "")
+		time.Sleep(700 * time.Millisecond)
+		dir, _ = app.MigrateDataDir()
 	}
 	_ = os.MkdirAll(dir, 0o755)
 	if f, err := os.OpenFile(filepath.Join(dir, "overdrivetuner.log"), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644); err == nil {
@@ -129,6 +130,7 @@ func main() {
 		}
 		srv.Up.Watch(srv.Closed, 25*time.Second, 6*time.Hour) // solo actúa si las actualizaciones automáticas están activadas
 		go watchExclusive(dir, srv.Closed)
+		go srv.WatchReminders(srv.Closed, winhost.TrayNotify)
 	}
 	if *noWindow {
 		fmt.Println(url)
@@ -246,9 +248,22 @@ func watchExclusive(dir string, stop <-chan struct{}) {
 			return
 		case <-tk.C:
 		}
-		if st, ok := overlay.LoadState(dir); ok && st.Alive(time.Now()) && overlay.ClaimExclusiveNotice(dir, st) {
-			winhost.TrayNotify("El overlay no puede verse en "+st.Game,
-				"El juego está en pantalla completa exclusiva. Ponelo en «ventana sin bordes» en sus opciones de video.")
+		st, ok := overlay.LoadState(dir)
+		if !ok || !st.Alive(time.Now()) {
+			continue
+		}
+		en := overlay.UILang(dir) == "en"
+		if overlay.ClaimExclusiveNotice(dir, st) {
+			if en {
+				winhost.TrayNotify("The overlay cannot be shown in "+st.Game,
+					"The game is in exclusive fullscreen. Set it to «borderless window» in its video options.")
+			} else {
+				winhost.TrayNotify("El overlay no puede verse en "+st.Game,
+					"El juego está en pantalla completa exclusiva. Ponelo en «ventana sin bordes» en sus opciones de video.")
+			}
+		}
+		if overlay.ClaimThrottleNotice(dir, st) {
+			winhost.TrayNotify(st.ThrottleTitle(en), st.ThrottleText(en))
 		}
 	}
 }
@@ -267,6 +282,9 @@ func runTask(id string) {
 		os.Exit(1)
 	}
 	log.Printf("tarea %s: %s", id, msg)
+	if id == "cleanup" {
+		app.MarkCleaned(dir) // así el recordatorio de limpieza no avisa si la limpieza semanal ya corre sola
+	}
 }
 
 // runUninstall abre el desinstalador (una ventana que explica qué se quita y qué se conserva).

@@ -35,7 +35,7 @@ type TweakView struct {
 func (s *Server) views(hw scan.Hardware, scanning bool, lang string) []TweakView {
 	all := tweaks.All()
 	out := make([]TweakView, 0, len(all))
-	detected := s.Eng.DetectAll(all)
+	detected, checkable := s.Eng.DetectAllInfo(all)
 	for _, t := range all {
 		applied := s.Eng.Applied(t.ID)
 		if t.Hidden && !applied && !detected[t.ID] {
@@ -50,7 +50,7 @@ func (s *Server) views(hw scan.Hardware, scanning bool, lang string) []TweakView
 			v.WhyNot = scan.CondText(t.Cond)
 		}
 		v.Active = applied || detected[t.ID]
-		v.Drift = t.Watch && applied && !detected[t.ID]
+		v.Drift = applied && checkable[t.ID] && !detected[t.ID]
 		for _, o := range t.Ops {
 			if !o.Aux {
 				if v.Ops == nil {
@@ -72,6 +72,9 @@ func (s *Server) views(hw scan.Hardware, scanning bool, lang string) []TweakView
 func (s *Server) handleState(w http.ResponseWriter, r *http.Request) {
 	// No espera al escaneo: la interfaz aparece ya y se completa cuando termina.
 	hw, ready := s.hardwareIfReady()
+	if ready {
+		s.noteBuild(hw.Build)
+	}
 	st := s.loadSettings()
 	lang := st.Lang
 	if q := r.URL.Query().Get("lang"); q == "es" || q == "en" {
@@ -95,6 +98,7 @@ func (s *Server) handleState(w http.ResponseWriter, r *http.Request) {
 		"platform":   s.Sys.Name(),
 		"settings":   st,
 		"lang":       lang,
+		"winUpdate":  winUpdateInfo(st, time.Now()),
 	})
 }
 
@@ -212,6 +216,7 @@ func (s *Server) handleCleanRun(w http.ResponseWriter, r *http.Request) {
 		fail(w, 428, "Borrar la caché de shaders necesita la confirmación del usuario.")
 		return
 	}
+	s.markCleaned(req.IDs)
 	if _, demo := s.Sys.(*system.Fake); demo {
 		writeJSON(w, extras.Simulate(req.IDs)) // modo demostración: no se borra nada
 		return

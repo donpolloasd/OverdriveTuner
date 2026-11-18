@@ -20,7 +20,8 @@ type Sample struct {
 	CPU       float64   `json:"cpu"`       // % total
 	CPUThread float64   `json:"cpuThread"` // % del hilo más cargado
 	CPUMHz    float64   `json:"cpuMhz"`
-	CPUTemp   float64   `json:"cpuTemp"` // Unknown si no hay
+	CPULimit  float64   `json:"cpuLimit,omitempty"` // % de la velocidad máxima permitida (0 = no se sabe)
+	CPUTemp   float64   `json:"cpuTemp"`            // Unknown si no hay
 	RAMUsedMB float64   `json:"ramUsedMb"`
 	RAMTotMB  float64   `json:"ramTotMb"`
 	GPU       float64   `json:"gpu"`
@@ -47,6 +48,7 @@ type rawLine struct {
 	CPU    float64  `json:"cpu"`
 	Max    float64  `json:"max"`
 	MHz    float64  `json:"mhz"`
+	Lim    float64  `json:"lim"` // % Performance Limit: menos de 100 = el firmware baja la velocidad (temperatura o energía)
 	Free   float64  `json:"freeKb"`
 	Total  float64  `json:"totalKb"`
 	GPU    []rawGPU `json:"gpu"`
@@ -69,7 +71,7 @@ func ParseLine(line string, gpuTemps map[string]float64) (Sample, error) {
 	if err := json.Unmarshal([]byte(strings.TrimSpace(line)), &r); err != nil {
 		return Sample{}, fmt.Errorf("línea no válida: %w", err)
 	}
-	s := Sample{At: time.Now(), CPU: clamp(r.CPU, 0, 100), CPUThread: clamp(r.Max, 0, 100), CPUMHz: r.MHz,
+	s := Sample{At: time.Now(), CPU: clamp(r.CPU, 0, 100), CPUThread: clamp(r.Max, 0, 100), CPUMHz: r.MHz, CPULimit: clamp(r.Lim, 0, 100),
 		CPUTemp: Unknown, GPUTemp: Unknown}
 	if r.Total > 0 {
 		s.RAMTotMB = r.Total / 1024

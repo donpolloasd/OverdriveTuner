@@ -31,6 +31,11 @@ type State struct {
 	// Exclusive: el juego está en pantalla completa exclusiva y el overlay no puede verse encima.
 	Exclusive      bool  `json:"exclusive,omitempty"`
 	ExclusiveSince int64 `json:"exclusiveSince,omitempty"` // Unix ms
+	// Throttle: en esta partida se detectó que el procesador («cpu») o la gráfica («gpu») bajan su velocidad.
+	Throttle      string  `json:"throttle,omitempty"`
+	ThrottleSince int64   `json:"throttleSince,omitempty"` // Unix ms
+	ThrottleLimit float64 `json:"throttleLimit,omitempty"` // % de la velocidad máxima permitida (procesador)
+	ThrottleTemp  float64 `json:"throttleTemp,omitempty"`
 }
 
 // ClaimExclusiveNotice dice si hay que avisar en la bandeja que el juego está en pantalla completa

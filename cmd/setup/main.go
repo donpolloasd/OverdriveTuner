@@ -233,6 +233,7 @@ func (s *setup) handleInstall(w http.ResponseWriter, r *http.Request) {
 		})
 		note := ""
 		if err == nil {
+			migrateData()
 			if serr := app.SetAutoUpdate(app.DefaultDataDir(), req.AutoUpdate); serr != nil {
 				log.Println("actualizaciones automáticas:", serr)
 				note = "No se pudo guardar la elección de actualizaciones automáticas; podés cambiarla en Configuración."
@@ -407,6 +408,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+		migrateData()
 		return
 	}
 
@@ -474,4 +476,17 @@ func main() {
 	}()
 	<-s.closed
 	time.Sleep(300 * time.Millisecond)
+}
+
+// migrateData mueve la carpeta de datos vieja (C:\ProgramData\FPSForge) a C:\ProgramData\OverdriveTuner.
+// Se hace después de instalar, cuando el programa y el overlay ya están cerrados.
+func migrateData() {
+	if !app.NeedsMigration() {
+		return
+	}
+	if dir, err := app.MigrateDataDir(); err != nil {
+		log.Println("no se pudo mover la carpeta de datos (se reintenta al abrir el programa):", err)
+	} else {
+		log.Println("carpeta de datos:", dir)
+	}
 }

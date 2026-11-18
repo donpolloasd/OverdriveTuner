@@ -27,7 +27,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "3.0.1"
+const Version = "3.1.0"
 
 // Server es el backend de la interfaz.
 type Server struct {
@@ -204,6 +204,15 @@ func (s *Server) Start() (string, error) {
 	mux.HandleFunc("/api/update/page", s.guard(s.handleUpdatePage))
 	mux.HandleFunc("/api/heartbeat", s.guard(s.handleHeartbeat))
 	mux.HandleFunc("/api/quit", s.guard(s.handleQuit))
+	mux.HandleFunc("/api/reapply", s.guard(s.handleReapply))
+	mux.HandleFunc("/api/whatsnew", s.guard(s.handleWhatsNew))
+	mux.HandleFunc("/api/issue", s.guard(s.handleIssue))
+	mux.HandleFunc("/api/oldapps", s.guard(s.handleOldApps))
+	mux.HandleFunc("/api/oldapps/uninstall", s.guard(s.handleOldAppsUninstall))
+	mux.HandleFunc("/api/drivers/old", s.guard(s.handleOldDrivers))
+	mux.HandleFunc("/api/drivers/delete", s.guard(s.handleDriversDelete))
+	mux.HandleFunc("/api/dpc", s.guard(s.handleDPC))
+	mux.HandleFunc("/api/opensettings", s.guard(s.handleOpenSettings))
 	if h, ok := s.loadHardwareCache(); ok {
 		// Con el último escaneo guardado la interfaz aparece completa al instante; se actualiza en segundo plano.
 		s.mu.Lock()

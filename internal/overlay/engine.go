@@ -70,6 +70,7 @@ type Engine struct {
 	exclusive   bool   // el juego está en pantalla completa exclusiva (el overlay no puede verse)
 	exclSince   int64  // desde cuándo (Unix ms): identifica cada vez que pasa, para avisar una sola vez
 	lang        string // idioma de la interfaz (se relee cada segundo por si lo cambian en Configuración)
+	thr         throttleState
 }
 
 // NewEngine crea el motor.
@@ -79,6 +80,7 @@ func NewEngine(d Deps) *Engine {
 	}
 	e := &Engine{d: d, cfg: LoadConfig(d.Dir), visible: true}
 	e.lang = overlayLang(e.cfg, d.Dir)
+	quietOff(d.Sys, d.Dir) // si el overlay se cerró de golpe durante un juego, las notificaciones vuelven
 	// Ignora una orden vieja que haya quedado en disco.
 	if c, ok := loadCmd(d.Dir); ok {
 		e.lastSeq = c.Seq
@@ -101,6 +103,9 @@ func (e *Engine) OnSample(s telemetry.Sample) {
 	e.mu.Lock()
 	e.alertCPU = heat(e.alertCPU, s.CPUTemp, e.cfg.AlertCPU)
 	e.alertGPU = heat(e.alertGPU, s.GPUTemp, e.cfg.AlertGPU)
+	if e.gameRun && e.thr.feed(s, e.d.Now().UnixMilli()) {
+		fpslog.Diag("throttling detectado (%s): límite %.0f%%, %.0f °C", e.thr.kind, e.thr.limit, e.thr.temp)
+	}
 	e.sample = s
 	e.recent = append(e.recent, s)
 	if len(e.recent) > 20 {
@@ -316,6 +321,9 @@ func (e *Engine) gameStarted(cfg Config, exe string) {
 	if _, ok := cfg.GameFor(exe); ok || len(g.Close) > 0 {
 		e.applyProfile(g)
 	}
+	if cfg.QuietGame {
+		quietOn(e.d.Sys, e.d.Dir)
+	}
 }
 
 // startPM lanza la medición de cuadros. Si la medición termina sola mientras el juego sigue abierto,
@@ -393,11 +401,13 @@ func (e *Engine) gameEnded() {
 	e.gameRun, e.pmStop, e.pmGame = false, nil, ""
 	e.frames, e.lastFrame = nil, time.Time{}
 	e.pmGen++
+	e.thr.reset()
 	e.mu.Unlock()
 	if stop != nil {
 		stop()
 	}
 	e.restoreProfile()
+	quietOff(e.d.Sys, e.d.Dir)
 }
 
 // Shutdown detiene la medición y devuelve el sistema a como estaba.
@@ -413,6 +423,7 @@ func (e *Engine) Shutdown() {
 		stop()
 	}
 	e.restoreProfile()
+	quietOff(e.d.Sys, e.d.Dir)
 }
 
 // IsRecording indica si hay una grabación en curso.
@@ -471,6 +482,9 @@ func (e *Engine) writeState() {
 		Sample: e.sample, Message: e.msg, LastSession: e.lastSession, HotkeyErrs: e.hkErrs}
 	if e.exclusive {
 		st.Exclusive, st.ExclusiveSince = true, e.exclSince
+	}
+	if e.thr.kind != "" {
+		st.Throttle, st.ThrottleSince, st.ThrottleLimit, st.ThrottleTemp = e.thr.kind, e.thr.since, e.thr.limit, e.thr.temp
 	}
 	if e.rec && len(e.recBuf) > 0 {
 		for _, v := range e.recBuf {
