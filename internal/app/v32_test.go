@@ -72,6 +72,7 @@ func TestUIScaleAndRestartReminder(t *testing.T) {
 	if c, b := call(t, s, base, "/api/settings", `{"uiScale":125}`, nil); c != 200 || !strings.Contains(b, `"uiScale":125`) {
 		t.Fatal(c, b)
 	}
+	_ = updateSettings(s.Dir, func(st *settings) { st.Lang = "es" }) // si no, sigue el idioma de Windows (en GitHub Actions, inglés)
 	now := time.Now()
 	if r := s.dueReminders(now, nil, 2*24*time.Hour); len(r) != 0 {
 		t.Fatal("dos días encendida no es para avisar")
