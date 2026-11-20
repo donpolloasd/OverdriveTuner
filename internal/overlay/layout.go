@@ -48,7 +48,7 @@ func (p *Preset) normalize() bool {
 		return false
 	}
 	d := Default()
-	if p.Layout != "card" && p.Layout != "line" {
+	if !validLayout(p.Layout) {
 		p.Layout = d.Layout
 	}
 	if p.Scale < 0.8 || p.Scale > 1.8 {
@@ -104,4 +104,23 @@ type Monitor struct {
 	Primary bool   `json:"primary"`
 	Name    string `json:"name"`
 	L, T    int    `json:"-"` // esquina superior izquierda (coordenadas del escritorio)
+	// Work es el área útil (sin la barra de tareas): la usa el widget de escritorio, que queda detrás de ella.
+	WL, WT, WW, WH int `json:"-"`
 }
+
+// validLayout dice si el diseño existe: tarjeta, una línea o mínimo (solo el número de FPS).
+func validLayout(l string) bool { return l == "card" || l == "line" || l == "mini" }
+
+// WidgetSnapshot adapta el estado del overlay al widget de escritorio: una tarjeta con CPU, GPU, RAM y
+// temperaturas (sin FPS ni gráfico, que solo tienen sentido en un juego), en la esquina elegida para él.
+func WidgetSnapshot(sn Snapshot) Snapshot {
+	c := sn.Cfg
+	c.Layout, c.Corner, c.Show = "card", c.WidgetPos, true
+	c.ShowFPS, c.ShowLow, c.ShowGrph, c.ShowFrame, c.ShowGame = false, false, false, false, false
+	c.ShowCPU, c.ShowGPU, c.ShowRAM, c.ShowTemp = true, true, true, true
+	sn.Cfg, sn.Visible = c, true
+	return sn
+}
+
+// WidgetVisible dice si el widget se ve: activado y sin un juego abierto (en el juego está el overlay).
+func WidgetVisible(sn Snapshot) bool { return sn.Cfg.Widget && !sn.GameRunning }

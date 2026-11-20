@@ -17,17 +17,20 @@ type Game struct {
 	Priority  bool     `json:"priority"`  // prioridad Alta al proceso del juego
 	PowerPlan string   `json:"powerPlan"` // GUID del plan de energía mientras se juega (vacío = no cambiar)
 	Close     []string `json:"close"`     // programas a cerrar al abrir el juego (los eligió el usuario)
+	Quiet     bool     `json:"quiet"`     // silenciar las notificaciones de Windows mientras se juega
+	FreeRAM   bool     `json:"freeRam"`   // liberar memoria RAM de los otros programas al abrir el juego
 }
 
 // Config es la configuración del overlay.
 type Config struct {
 	Show      bool     `json:"show"`
 	Corner    string   `json:"corner"`  // tl, tr, bl, br
-	Layout    string   `json:"layout"`  // card o line
+	Layout    string   `json:"layout"`  // card, line o mini (solo el número de FPS)
 	Scale     float64  `json:"scale"`   // 0.8 a 1.8
 	Opacity   float64  `json:"opacity"` // 0.3 a 1
 	ShowFPS   bool     `json:"showFps"`
 	ShowLow   bool     `json:"showLow"`
+	ShowLow01 bool     `json:"showLow01"` // 0.1% low: los tirones más raros (necesita varios segundos de juego)
 	ShowGrph  bool     `json:"showGraph"`
 	ShowCPU   bool     `json:"showCpu"`
 	ShowGPU   bool     `json:"showGpu"`
@@ -58,6 +61,8 @@ type Config struct {
 	ShowGame  bool     `json:"showGame"`   // nombre del juego detectado
 	Lang      string   `json:"lang"`       // idioma de los textos del panel: «es», «en» o vacío (el de la interfaz)
 	QuietGame bool     `json:"quietGame"`  // Modo juego: silenciar las notificaciones de Windows mientras hay un juego abierto
+	Widget    bool     `json:"widget"`     // widget de escritorio: CPU, GPU, RAM y temperaturas detrás de las ventanas
+	WidgetPos string   `json:"widgetPos"`  // esquina del widget: tl, tr, bl, br
 	Presets   []Preset `json:"presets"`    // estilos guardados con nombre
 	Games     []Game   `json:"games"`
 	Style              // aspecto del panel: colores, forma y letra (se guarda en el mismo nivel del JSON)
@@ -94,7 +99,7 @@ func (c *Config) Normalize() {
 	if !corners[c.Corner] {
 		c.Corner = d.Corner
 	}
-	if c.Layout != "card" && c.Layout != "line" {
+	if !validLayout(c.Layout) {
 		c.Layout = d.Layout
 	}
 	var dirs []string
@@ -175,6 +180,9 @@ func (c *Config) Normalize() {
 	}
 	if c.Monitor < 0 || c.Monitor > 8 {
 		c.Monitor = 0
+	}
+	if c.WidgetPos != "tl" && c.WidgetPos != "tr" && c.WidgetPos != "bl" && c.WidgetPos != "br" {
+		c.WidgetPos = "tr"
 	}
 	if c.Lang != "es" && c.Lang != "en" {
 		c.Lang = ""

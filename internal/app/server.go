@@ -27,7 +27,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "3.1.0"
+const Version = "3.2.0"
 
 // Server es el backend de la interfaz.
 type Server struct {
@@ -213,6 +213,19 @@ func (s *Server) Start() (string, error) {
 	mux.HandleFunc("/api/drivers/delete", s.guard(s.handleDriversDelete))
 	mux.HandleFunc("/api/dpc", s.guard(s.handleDPC))
 	mux.HandleFunc("/api/opensettings", s.guard(s.handleOpenSettings))
+	mux.HandleFunc("/api/snapshots", s.guard(s.handleSnapshots))
+	mux.HandleFunc("/api/snapshots/get", s.guard(s.handleSnapshotGet))
+	mux.HandleFunc("/api/snapshots/delete", s.guard(s.handleSnapshotDelete))
+	mux.HandleFunc("/api/snapshots/folder", s.guard(s.handleSnapshotFolder))
+	mux.HandleFunc("/api/space", s.guard(s.handleSpace))
+	mux.HandleFunc("/api/space/scan", s.guard(s.handleSpaceScan))
+	mux.HandleFunc("/api/space/dir", s.guard(s.handleSpaceDir))
+	mux.HandleFunc("/api/space/top", s.guard(s.handleSpaceTop))
+	mux.HandleFunc("/api/space/dups", s.guard(s.handleSpaceDups))
+	mux.HandleFunc("/api/space/recycle", s.guard(s.handleSpaceRecycle))
+	mux.HandleFunc("/api/space/open", s.guard(s.handleSpaceOpen))
+	mux.HandleFunc("/api/recyclebin", s.guard(s.handleRecycleBin))
+	mux.HandleFunc("/api/restorepoints", s.guard(s.handleRestorePoints))
 	if h, ok := s.loadHardwareCache(); ok {
 		// Con el último escaneo guardado la interfaz aparece completa al instante; se actualiza en segundo plano.
 		s.mu.Lock()

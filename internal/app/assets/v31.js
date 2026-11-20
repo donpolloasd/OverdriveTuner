@@ -107,6 +107,7 @@ function showWizard(onDone) {
       const go = el.querySelector("[data-go]");
       if (go) go.onclick = async () => {
         dlg.close(); done();
+        await autoSnapshot("Antes del asistente");
         modal.open("Aplicando la recomendación");
         modal.log("Creando punto de restauración…", "note");
         try { await api("restorepoint", {}); modal.log("Punto de restauración creado.", "ok"); } catch (e) { modal.log(e.message, "bad"); }
@@ -298,7 +299,7 @@ function gmQuiet(el, cfg, save) {
 function v31Settings(m) {
   const st = S.settings || {};
   m.insertAdjacentHTML("beforeend", `<h3 style="margin-top:22px">Ayuda y mantenimiento</h3><div class="list">
-    <div class="row"><div><h4>Recordatorios de mantenimiento</h4><p>Un aviso en la bandeja si hace más de un mes que no limpiás los temporales o si tu driver de video tiene más de 9 meses. Como mucho uno cada dos semanas.</p></div><button class="sw" id="rmOn" role="switch" aria-checked="${st.remindOff ? "false" : "true"}" aria-label="Recordatorios de mantenimiento"></button></div>
+    <div class="row"><div><h4>Recordatorios de mantenimiento</h4><p>Un aviso en la bandeja si hace más de un mes que no limpiás los temporales, si tu driver de video tiene más de 9 meses o si hace una semana que no reiniciás la PC. Cada uno se repite como mucho cada pocos días.</p></div><button class="sw" id="rmOn" role="switch" aria-checked="${st.remindOff ? "false" : "true"}" aria-label="Recordatorios de mantenimiento"></button></div>
     <div class="row"><div><h4>Asistente de ajustes</h4><p>Te pregunta qué tipo de juegos jugás y arma una recomendación de ajustes seguros.</p></div><button class="btn" id="wzAgain">Abrir el asistente</button></div>
     <div class="row"><div><h4>Reportar un problema</h4><p>Arma un reporte con tu hardware y el Diagnóstico para abrir un issue en GitHub. Lo revisás antes de enviarlo.</p></div><button class="btn" id="isGo">Reportar un problema</button></div>
   </div>`);

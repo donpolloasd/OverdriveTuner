@@ -96,19 +96,19 @@ func TestIssueURLAndDraft(t *testing.T) {
 func TestReminders(t *testing.T) {
 	s, _, _ := newTestServer(t)
 	now := time.Now()
-	if r := s.dueReminders(now, nil); len(r) != 0 {
+	if r := s.dueReminders(now, nil, 0); len(r) != 0 {
 		t.Fatal("el primer día no hay recordatorios")
 	}
 	_ = updateSettings(s.Dir, func(st *settings) { st.LastClean = now.Add(-40 * 24 * time.Hour) })
 	drv := []diag.Check{{ID: "driver_amd", Status: diag.Warn}}
-	if r := s.dueReminders(now, drv); len(r) != 2 {
+	if r := s.dueReminders(now, drv, 0); len(r) != 2 {
 		t.Fatalf("limpieza y driver: %+v", r)
 	}
-	if r := s.dueReminders(now.Add(time.Hour), drv); len(r) != 0 {
+	if r := s.dueReminders(now.Add(time.Hour), drv, 0); len(r) != 0 {
 		t.Fatal("no se repiten enseguida")
 	}
 	_ = updateSettings(s.Dir, func(st *settings) { st.RemindOff = true })
-	if r := s.dueReminders(now.Add(60*24*time.Hour), drv); len(r) != 0 {
+	if r := s.dueReminders(now.Add(60*24*time.Hour), drv, 30*24*time.Hour); len(r) != 0 {
 		t.Fatal("desactivados no avisan")
 	}
 }

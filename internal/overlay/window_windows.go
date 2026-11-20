@@ -122,9 +122,19 @@ type win struct {
 	visible  bool
 	lastLine string
 	timerMs  int
+	widget   bool // es el widget de escritorio (detrás de las ventanas) y no el overlay del juego
 }
 
-var cur *win // una sola ventana por proceso
+var cur *win  // el overlay
+var curW *win // el widget de escritorio (misma clase de ventana, mismo hilo)
+
+// snapshot es lo que dibuja esta ventana: el estado del overlay o, en el widget, su versión de escritorio.
+func (w *win) snapshot() Snapshot {
+	if w.widget {
+		return WidgetSnapshot(w.e.Snapshot())
+	}
+	return w.e.Snapshot()
+}
 
 func u16(s string) *uint16 { p, _ := syscall.UTF16PtrFromString(s); return p }
 
@@ -209,6 +219,16 @@ func (w *win) layout(hdc uintptr, sn Snapshot, draw bool) (int, int) {
 	px := func(v float64) int { return int(v*s + 0.5) }
 	pad := px(12)
 	big, norm, small := w.fonts[0], w.fonts[1], w.fonts[2]
+	if sn.Cfg.Layout == "mini" {
+		// Mínimo: solo el número de FPS, chico, para no tapar nada en competitivo.
+		tw := w.extent(hdc, norm, m.FPS)
+		W, H := tw+px(16), px(26)
+		if draw {
+			w.fill(hdc, 0, 0, W, H, bg(sn, m.Pal))
+			w.text(hdc, norm, px(8), px(4), m.FPS, m.FPSColor)
+		}
+		return W, H
+	}
 	if sn.Cfg.Layout == "line" {
 		wd := 0
 		for _, p := range m.LineCols {
@@ -333,9 +353,16 @@ func (w *win) syncHotkeys() {
 }
 
 func (w *win) refresh() {
-	w.syncHotkeys()
-	sn := w.e.Snapshot()
-	if ms := sn.Cfg.UpdateMs; ms >= 50 && ms != w.timerMs { // el usuario cambió la frecuencia de actualización
+	if !w.widget {
+		w.syncHotkeys()
+		defer func() {
+			if curW != nil {
+				curW.refresh()
+			}
+		}()
+	}
+	sn := w.snapshot()
+	if ms := sn.Cfg.UpdateMs; !w.widget && ms >= 50 && ms != w.timerMs { // el usuario cambió la frecuencia de actualización
 		w.timerMs = ms
 		pSetTimer.Call(w.hwnd, 1, uintptr(ms), 0)
 	}
@@ -355,6 +382,10 @@ func (w *win) refresh() {
 		if sn.Cfg.Monitor < len(ms) {
 			mon = ms[sn.Cfg.Monitor]
 		}
+	}
+	if w.widget && mon.WW > 0 && mon.WH > 0 {
+		// El widget queda detrás de la barra de tareas: se ubica dentro del área útil del monitor.
+		mon.L, mon.T, mon.Width, mon.Height = mon.WL, mon.WT, mon.WW, mon.WH
 	}
 	mx, my := sn.Cfg.OffsetX, sn.Cfg.OffsetY
 	x, y := mon.L+mx, mon.T+my
@@ -383,9 +414,12 @@ func (w *win) refresh() {
 	}
 	w.w, w.h, w.x, w.y = W, H, x, y
 	vis := sn.Cfg.Show && sn.Visible && (!sn.Cfg.OnlyGame || sn.GameRunning || sn.Recording)
+	after := ^uintptr(0) // HWND_TOPMOST: se vuelve a pedir para quedar por encima del juego
+	if w.widget {
+		vis, after = WidgetVisible(sn), 1 // HWND_BOTTOM: el widget queda detrás de las ventanas, sobre el escritorio
+	}
 	if vis {
-		// HWND_TOPMOST = -1: se vuelve a pedir para quedar por encima del juego.
-		pSetWindowPos.Call(w.hwnd, ^uintptr(0), uintptr(x), uintptr(y), uintptr(W), uintptr(H), swpNoActivate|swpShow)
+		pSetWindowPos.Call(w.hwnd, after, uintptr(x), uintptr(y), uintptr(W), uintptr(H), swpNoActivate|swpShow)
 		pInvalidate.Call(w.hwnd, 0, 0)
 	} else if w.visible {
 		pShowWindow.Call(w.hwnd, 0)
@@ -411,7 +445,7 @@ func (w *win) paint() {
 		return
 	}
 	defer pEndPaint.Call(w.hwnd, uintptr(unsafe.Pointer(&ps[0])))
-	sn := w.e.Snapshot()
+	sn := w.snapshot()
 	w.makeFonts(sn.Cfg)
 	st := sn.Cfg.Style
 	pal := st.Palette()
@@ -438,6 +472,13 @@ func (w *win) paint() {
 
 func wndProc(hwnd, m, wp, lp uintptr) uintptr {
 	w := cur
+	if curW != nil && hwnd == curW.hwnd {
+		w = curW
+		if m == wmClose || m == wmDestroy || m == wmTimer || m == wmHotkey {
+			r, _, _ := pDefWindowProc.Call(hwnd, m, wp, lp) // el widget no cierra el proceso ni atiende atajos
+			return r
+		}
+	}
 	switch m {
 	case wmPaint:
 		if w != nil {
@@ -507,6 +548,12 @@ func RunWindow(e *Engine, setQuit func(func())) (err error) {
 		return errors.New("no se pudo crear la ventana del overlay")
 	}
 	w.hwnd = h
+	// Widget de escritorio: otra ventana, sin «siempre visible», que deja pasar los clics.
+	wex := uintptr(wsExTransparent | wsExToolWindow | wsExLayered | wsExNoActivate)
+	if hw, _, _ := pCreateWindowEx.Call(wex, uintptr(unsafe.Pointer(cls)), uintptr(unsafe.Pointer(u16("OverdriveTuner Widget"))),
+		wsPopup, 20, 20, 190, 120, 0, 0, inst, 0); hw != 0 {
+		curW = &win{e: e, hwnd: hw, widget: true}
+	}
 	setQuit(func() { pPostMessage.Call(h, wmClose, 0, 0) })
 	w.syncHotkeys()
 	w.timerMs = 100

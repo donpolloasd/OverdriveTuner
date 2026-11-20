@@ -75,9 +75,13 @@ func Slow(sys system.System, hw scan.Hardware) []Check {
 }
 
 // Fast son los chequeos que se resuelven al instante (hardware ya escaneado, registro, plan de energía).
-func Fast(sys system.System, hw scan.Hardware, targetHz int) []Check {
-	var out []Check
+func Fast(sys system.System, hw scan.Hardware, targetHz int) (out []Check) {
 	add := func(c Check) { out = append(out, c) }
+	defer func() {
+		if c, ok := BIOSAge(hw, time.Now()); ok {
+			out = append(out, c)
+		}
+	}()
 
 	// 1) ¿A qué gráfica está conectado el monitor?
 	var active *scan.GPU

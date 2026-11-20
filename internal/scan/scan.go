@@ -59,6 +59,8 @@ type Hardware struct {
 	Monitors  int    `json:"monitors"`
 	RAMSticks int    `json:"ramSticks"`
 	Board     string `json:"board"`
+	BIOSVer   string `json:"biosVer"`  // versión de la BIOS (SMBIOS)
+	BIOSDate  string `json:"biosDate"` // fecha de la BIOS, yyyy-mm-dd
 	GPUs      []GPU  `json:"gpus"`
 	MaxHz     int    `json:"maxHz"` // frecuencia máxima que Windows ofrece al monitor, a su resolución actual
 	Disks     []Disk `json:"disks"`
@@ -98,6 +100,9 @@ $r.ramRatedMTs = $rated
 $r.monitors = @(Get-CimInstance -Namespace root\wmi -ClassName WmiMonitorBasicDisplayParams -ErrorAction SilentlyContinue | Where-Object { $_.Active }).Count
 $bb = Get-CimInstance Win32_BaseBoard
 $r.board = (([string]$bb.Manufacturer + ' ' + [string]$bb.Product).Trim())
+$bi = Get-CimInstance Win32_BIOS
+$r.biosVer = [string]$bi.SMBIOSBIOSVersion
+$r.biosDate = ''; if ($bi.ReleaseDate) { $r.biosDate = ([datetime]$bi.ReleaseDate).ToString('yyyy-MM-dd') }
 $os = Get-CimInstance Win32_OperatingSystem
 $r.os = [string]$os.Caption
 $r.build = [int]$os.BuildNumber
@@ -281,7 +286,7 @@ func Demo() Hardware {
 	return Hardware{
 		Computer: "PC-Demo", CPU: "AMD Ryzen 5 5600G with Radeon Graphics", CPUVendor: "amd",
 		Cores: 6, Threads: 12, MaxMHz: 3900, RAMGB: 32, RAMMTs: 3200, RAMSticks: 2,
-		Board: "ASRock A520M-K V2", OS: "Microsoft Windows 11 Home", Build: 26100,
+		Board: "ASRock A520M-K V2", BIOSVer: "P1.60", BIOSDate: "2023-04-12", OS: "Microsoft Windows 11 Home", Build: 26100,
 		RAMRated: 3200, Monitors: 1, MaxHz: 240,
 		GPUs: []GPU{
 			{Name: "AMD Radeon RX 7600", Vendor: "amd", VRAMMB: 8192, Driver: "32.0.21025.10016", Refresh: 240, Active: true, Width: 1920, Height: 1080},

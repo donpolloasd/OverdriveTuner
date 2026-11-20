@@ -248,6 +248,7 @@ async function renderSettings(m) {
     return mods.concat(row.querySelector("[data-key]").value).join("+");
   };
   v31Settings(m);
+  v32Settings(m);
   m.querySelectorAll("[data-hkrow]").forEach(row => {
     const k = row.dataset.hkrow;
     row.querySelectorAll("[data-mod],[data-key]").forEach(el => el.onchange = () => { cfg[k] = hkRead(k); saveHk(); });
@@ -271,29 +272,7 @@ async function renderSettings(m) {
     if (!f) return;
     let bundle;
     try { bundle = JSON.parse(await f.text()); } catch (err) { toast("El archivo no es un JSON válido.", 5000); return; }
-    let plan;
-    try { plan = await api("config/import", { bundle, apply: false }); } catch (err) { $("#cfgOut").innerHTML = `<div class="banner bad">${esc(err.message)}</div>`; return; }
-    const li = (a, f2) => a.length ? `<ul>${a.map(x => `<li>${esc(x.name)}${f2 && x.reason ? ` <span class="note">— ${esc(x.reason)}</span>` : ""}</li>`).join("")}</ul>` : "";
-    $("#cfgOut").innerHTML = `<div class="row" style="display:block"><h4>Esto es lo que se va a hacer</h4>
-      <p>Se guardarán los ajustes${plan.overlay ? " y la configuración del overlay" : ""} del archivo.</p>
-      <p><b>Optimizaciones a aplicar (${plan.toApply.length})</b></p>${li(plan.toApply) || '<p class="note">Ninguna.</p>'}
-      ${plan.already.length ? `<p><b>Ya aplicadas (${plan.already.length})</b></p>${li(plan.already)}` : ""}
-      ${plan.skipped.length ? `<p><b>Se omiten (${plan.skipped.length})</b></p>${li(plan.skipped, true)}` : ""}
-      <div class="btns" style="margin-top:10px"><button class="btn primary" id="cfgGo">Importar</button><button class="btn" id="cfgNo">Cancelar</button></div></div>`;
-    $("#cfgNo").onclick = () => { $("#cfgOut").innerHTML = ""; };
-    $("#cfgGo").onclick = async () => {
-      try {
-        if (plan.toApply.length && !S.admin) throw new Error("Para aplicar optimizaciones el programa necesita permisos de administrador.");
-        const done = await api("config/import", { bundle, apply: true });
-        S = await api("state");
-        const nl = effectiveLang(S.settings && S.settings.lang);
-        if (nl !== UILANG) { applyLang(nl); S = await api("state"); }
-        cacheIntroPrefs(introPrefs());
-        if (plan.toApply.length) { render(); await runIds("Importar configuración", plan.toApply.map(x => x.id), "apply", true); render(); }
-        else { toast("Configuración importada."); render(); }
-        void done;
-      } catch (err) { toast(err.message, 6000); }
-    };
+    await showImportPlan($("#cfgOut"), bundle);
   };
 
   // animación de apertura

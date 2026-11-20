@@ -32,6 +32,10 @@ type settings struct {
 	LastClean   time.Time       `json:"lastClean,omitempty"`   // última limpieza de temporales
 	RemindClean time.Time       `json:"remindClean,omitempty"` // último recordatorio de limpieza
 	RemindDrv   time.Time       `json:"remindDrv,omitempty"`   // último recordatorio de driver viejo
+	RemindBoot  time.Time       `json:"remindBoot,omitempty"`  // último recordatorio de reiniciar la PC
+	UIScale     int             `json:"uiScale,omitempty"`     // tamaño de la interfaz en % (0 = 100)
+	Theme       string          `json:"theme,omitempty"`       // vacío (oscuro), light o system (el de Windows)
+	Home        []string        `json:"home,omitempty"`        // bloques visibles del Inicio, en orden (vacío = los de siempre)
 	LastBuild   int             `json:"lastBuild,omitempty"`   // compilación de Windows vista la última vez
 	PrevBuild   int             `json:"prevBuild,omitempty"`   // la anterior, si Windows se actualizó
 	BuildAt     time.Time       `json:"buildAt,omitempty"`     // cuándo se notó la actualización de Windows
@@ -189,8 +193,14 @@ type settingsPatch struct {
 	SeenVersion *string         `json:"seenVersion"`
 	WizardDone  *bool           `json:"wizardDone"`
 	RemindOff   *bool           `json:"remindOff"`
+	UIScale     *int            `json:"uiScale"`
+	Theme       *string         `json:"theme"`
+	Home        []string        `json:"home"`
 	Fresh       map[string]bool `json:"fresh"` // pasos de «Después de formatear» (solo los que vienen)
 }
+
+// homeBlocks son los bloques que se pueden mostrar en Inicio.
+var homeBlocks = map[string]bool{"hero": true, "quick": true, "hardware": true, "recent": true, "status": true}
 
 // freshSteps son los pasos de «Después de formatear» que se pueden marcar a mano.
 var freshSteps = map[string]bool{"winupdate": true, "chipset": true, "gpu": true, "runtimes": true, "launchers": true, "bios": true, "profile": true, "restore": true}
@@ -232,6 +242,28 @@ func (p settingsPatch) apply(st *settings) string {
 	}
 	if p.RemindOff != nil {
 		st.RemindOff = *p.RemindOff
+	}
+	if p.Theme != nil {
+		if *p.Theme != "" && *p.Theme != "light" && *p.Theme != "system" {
+			return "tema no válido"
+		}
+		st.Theme = *p.Theme
+	}
+	if p.Home != nil {
+		seen := map[string]bool{}
+		for _, b := range p.Home {
+			if !homeBlocks[b] || seen[b] {
+				return "bloque de Inicio no válido"
+			}
+			seen[b] = true
+		}
+		st.Home = p.Home
+	}
+	if p.UIScale != nil {
+		if *p.UIScale < 80 || *p.UIScale > 160 {
+			return "tamaño no válido"
+		}
+		st.UIScale = *p.UIScale
 	}
 	for k, v := range p.Fresh {
 		if !freshSteps[k] {
@@ -329,6 +361,8 @@ func (s *Server) handleDiagAction(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case req.Action == "open_display":
 		err = diag.OpenDisplay(s.Sys)
+	case req.Action == "open_bios":
+		err = diag.OpenBIOSPage(s.Sys, s.hardware(false).Board)
 	case strings.HasPrefix(req.Action, "open_driver_"):
 		err = diag.OpenDriverPage(s.Sys, strings.TrimPrefix(req.Action, "open_driver_"))
 	default:

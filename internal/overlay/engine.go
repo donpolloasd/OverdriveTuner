@@ -148,6 +148,7 @@ type Snapshot struct {
 	Cfg         Config
 	Sample      telemetry.Sample
 	FPS, Low1   float64
+	Low01       float64 // 0.1% low (0 si no está activado o todavía no hay cuadros suficientes)
 	Spark       []float32
 	GameRunning bool
 	Recording   bool
@@ -175,14 +176,26 @@ func liveFPS(fr []float64, windowMs float64) float64 {
 // liveLow1 es el «1% low» del overlay: los FPS del percentil 99 de los tiempos de cuadro de los últimos
 // segundos (el método de CapFrameX y de la mayoría de los análisis). Es más estable que promediar el
 // peor 1%, donde un solo pico domina el número. Las corridas grabadas siguen usando el promedio del peor 1%.
-func liveLow1(fr []float64) float64 {
-	if len(fr) < 50 {
+func liveLow1(fr []float64) float64 { return livePctLow(fr, 0.99, 50) }
+
+// liveLow01 es el «0.1% low»: el percentil 99,9. Con menos de 1000 cuadros no hay datos para que tenga
+// sentido (un solo cuadro lo decidiría) y no se muestra.
+func liveLow01(fr []float64) float64 {
+	if len(fr) < 1000 {
+		return 0
+	}
+	return livePctLow(fr, 0.999, 1000)
+}
+
+// livePctLow devuelve los FPS del percentil q de los tiempos de cuadro.
+func livePctLow(fr []float64, q float64, min int) float64 {
+	if len(fr) < min {
 		r, _ := bench.FromFrameTimes(fr)
 		return r.Low1
 	}
 	s := append([]float64(nil), fr...)
 	sort.Float64s(s)
-	i := int(math.Ceil(0.99*float64(len(s)))) - 1
+	i := int(math.Ceil(q*float64(len(s)))) - 1
 	if i < 0 {
 		i = 0
 	}
@@ -212,6 +225,9 @@ func (e *Engine) snapshotLocked() Snapshot {
 			tail = tail[len(tail)-3000:]
 		}
 		s.Low1 = liveLow1(tail)
+		if e.cfg.ShowLow01 {
+			s.Low01 = liveLow01(tail)
+		}
 		w := e.frames
 		if len(w) > 360 {
 			w = w[len(w)-360:]
@@ -321,7 +337,7 @@ func (e *Engine) gameStarted(cfg Config, exe string) {
 	if _, ok := cfg.GameFor(exe); ok || len(g.Close) > 0 {
 		e.applyProfile(g)
 	}
-	if cfg.QuietGame {
+	if cfg.QuietGame || g.Quiet {
 		quietOn(e.d.Sys, e.d.Dir)
 	}
 }
@@ -478,7 +494,7 @@ func (e *Engine) writeState() {
 	e.mu.Lock()
 	sn := e.snapshotLocked()
 	st := State{PID: e.d.PID, Updated: e.d.Now(), Visible: e.visible, Game: e.gameName(), GameRunning: e.gameRun,
-		FPS: sn.FPS, Low1: sn.Low1, Recording: e.rec, RecLabel: e.recLabel, RecFrames: len(e.recBuf),
+		FPS: sn.FPS, Low1: sn.Low1, Low01: sn.Low01, Recording: e.rec, RecLabel: e.recLabel, RecFrames: len(e.recBuf),
 		Sample: e.sample, Message: e.msg, LastSession: e.lastSession, HotkeyErrs: e.hkErrs}
 	if e.exclusive {
 		st.Exclusive, st.ExclusiveSince = true, e.exclSince

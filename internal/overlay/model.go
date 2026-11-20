@@ -78,6 +78,12 @@ func BuildModel(sn Snapshot) Model {
 	if c.ShowLow && sn.Low1 > 0 {
 		m.Low = fmt.Sprintf("1%% %.0f", sn.Low1)
 	}
+	if c.ShowLow01 && sn.Low01 > 0 {
+		if m.Low != "" {
+			m.Low += "  "
+		}
+		m.Low += fmt.Sprintf("0.1%% %.0f", sn.Low01)
+	}
 	if c.ShowGrph {
 		m.Spark = sn.Spark
 	}
@@ -137,6 +143,9 @@ func BuildModel(sn Snapshot) Model {
 	// Diseño de una línea: «238 FPS · CPU 41% 62° · GPU 70% 54° · RAM 11.2 GB»
 	if c.ShowFPS {
 		m.LineCols = append(m.LineCols, Part{m.FPS + " FPS", m.FPSColor})
+		if m.Low != "" {
+			m.LineCols = append(m.LineCols, Part{"  " + m.Low, p.Label})
+		}
 	}
 	for _, r := range m.Rows {
 		m.LineCols = append(m.LineCols, Part{"  " + r.Label + " ", p.Label})

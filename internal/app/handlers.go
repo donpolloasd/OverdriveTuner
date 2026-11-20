@@ -99,6 +99,7 @@ func (s *Server) handleState(w http.ResponseWriter, r *http.Request) {
 		"settings":   st,
 		"lang":       lang,
 		"winUpdate":  winUpdateInfo(st, time.Now()),
+		"uptimeH":    int(uptime().Hours()),
 	})
 }
 

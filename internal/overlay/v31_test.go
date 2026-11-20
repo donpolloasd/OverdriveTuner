@@ -66,3 +66,74 @@ func TestQuietRestoresNotifications(t *testing.T) {
 		t.Fatal("vuelven a como estaban")
 	}
 }
+
+func TestMiniLayoutAndGameQuiet(t *testing.T) {
+	c := Default()
+	c.Layout = "mini"
+	c.Normalize()
+	if c.Layout != "mini" {
+		t.Fatal("el diseño mínimo es válido")
+	}
+	c.Layout = "raro"
+	c.Normalize()
+	if c.Layout != Default().Layout {
+		t.Fatal("diseño desconocido vuelve al de siempre")
+	}
+	f := system.NewFake()
+	f.Seed(pushKey, "ToastEnabled", "REG_DWORD", "1")
+	dir := t.TempDir()
+	cfg := Default()
+	cfg.Games = []Game{{Exe: "cs2.exe", Quiet: true, FreeRAM: true}}
+	if err := SaveConfig(dir, cfg); err != nil {
+		t.Fatal(err)
+	}
+	e := NewEngine(Deps{Dir: dir, Sys: f})
+	e.gameStarted(LoadConfig(dir), "cs2.exe")
+	if v, _ := system.RegGet(f, pushKey, "ToastEnabled"); !v.Matches("REG_DWORD", "0") {
+		t.Fatal("el perfil del juego silencia las notificaciones")
+	}
+	e.gameEnded()
+	if v, _ := system.RegGet(f, pushKey, "ToastEnabled"); !v.Matches("REG_DWORD", "1") {
+		t.Fatal("al cerrar el juego vuelven")
+	}
+}
+
+func TestWidgetSnapshot(t *testing.T) {
+	c := Default()
+	c.Widget, c.WidgetPos, c.Layout, c.ShowCPU, c.ShowFPS = true, "bl", "mini", false, true
+	w := WidgetSnapshot(Snapshot{Cfg: c})
+	if w.Cfg.Layout != "card" || w.Cfg.Corner != "bl" || w.Cfg.ShowFPS || !w.Cfg.ShowCPU || !w.Cfg.ShowTemp || !w.Visible {
+		t.Fatalf("%+v", w.Cfg)
+	}
+	if !WidgetVisible(Snapshot{Cfg: c}) || WidgetVisible(Snapshot{Cfg: c, GameRunning: true}) {
+		t.Fatal("se ve en el escritorio y se esconde en el juego")
+	}
+	c.WidgetPos = "centro"
+	c.Normalize()
+	if c.WidgetPos != "tr" {
+		t.Fatal("esquina desconocida")
+	}
+}
+
+func TestLow01(t *testing.T) {
+	fr := make([]float64, 2000)
+	for i := range fr {
+		fr[i] = 4 // 250 FPS
+	}
+	fr[100], fr[900], fr[1500] = 20, 20, 20 // tres tirones de 50 FPS: entran en el 0.1% pero no en el 1%
+	if v := liveLow01(fr[:500]); v != 0 {
+		t.Fatal("con pocos cuadros no se muestra")
+	}
+	if v := liveLow01(fr); v < 49 || v > 51 {
+		t.Fatalf("0.1%% low: %v", v)
+	}
+	if v := liveLow1(fr); v < 249 {
+		t.Fatalf("1%% low: %v", v)
+	}
+	c := Default()
+	c.ShowLow01 = true
+	m := BuildModel(Snapshot{Cfg: c, FPS: 240, Low1: 200, Low01: 120})
+	if m.Low != "1% 200  0.1% 120" {
+		t.Fatalf("texto: %q", m.Low)
+	}
+}

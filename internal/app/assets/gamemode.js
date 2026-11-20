@@ -23,7 +23,7 @@ async function renderGameMode(m) {
     (d.running ? "" : `<div class="banner">El Modo juego funciona junto con el overlay, que es el que detecta el juego, y ahora no está abierto. <button class="btn" id="gmStart">Abrir overlay</button></div>`) +
     `<h3>Se cierran al abrir un juego</h3><div class="list" id="gmList"></div>
     <div class="gm-add"><input type="text" id="gmNew" placeholder="programa, ej. chrome.exe" style="width:240px" aria-label="Programa a cerrar"><button class="btn" id="gmAdd">Agregar</button><button class="btn" id="gmPick">Elegir de los programas abiertos</button></div>
-    <div id="gmPickOut"></div><div id="gmQuiet"></div>`;
+    <div id="gmPickOut"></div><div id="gmQuiet"></div><div id="gmProfiles"></div>`;
   const paint = () => {
     const l = cfg.closeList;
     $("#gmList").innerHTML = l.length
@@ -59,4 +59,5 @@ async function renderGameMode(m) {
   };
   paint();
   gmQuiet($("#gmQuiet"), cfg, save);
+  gmProfiles($("#gmProfiles"), d, cfg, save);
 }

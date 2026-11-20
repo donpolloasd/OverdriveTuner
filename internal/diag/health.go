@@ -227,3 +227,64 @@ func BIOSGuide(hw scan.Hardware) Check {
 			"Modo de arranque UEFI, no Legacy. " +
 			"Actualizá la BIOS solo si tu placa lo recomienda para tu procesador o memoria, y nunca con el equipo en riesgo de apagarse."}
 }
+
+// biosPages son las páginas de soporte de cada fabricante (fijas: la interfaz solo puede pedir abrir una
+// de estas). La BIOS se actualiza desde ahí o desde la propia BIOS; el programa nunca la toca.
+var biosPages = []struct{ match, url string }{
+	{"asus", "https://www.asus.com/support/download-center/"},
+	{"asrock", "https://www.asrock.com/support/index.asp"},
+	{"gigabyte", "https://www.gigabyte.com/Support"},
+	{"micro-star", "https://www.msi.com/support/download"},
+	{"msi", "https://www.msi.com/support/download"},
+	{"biostar", "https://www.biostar.com.tw/app/en/support/download.php"},
+	{"dell", "https://www.dell.com/support/home"},
+	{"hewlett", "https://support.hp.com/drivers"},
+	{"hp ", "https://support.hp.com/drivers"},
+	{"lenovo", "https://pcsupport.lenovo.com"},
+	{"acer", "https://www.acer.com/support"},
+}
+
+func biosPage(board string) string {
+	b := strings.ToLower(board) + " "
+	for _, p := range biosPages {
+		if strings.Contains(b, p.match) {
+			return p.url
+		}
+	}
+	return ""
+}
+
+// BIOSAge dice de cuándo es la BIOS. No se puede saber con certeza si hay una más nueva (cada fabricante
+// publica distinto): a partir de dos años avisa y lleva a la página de soporte de la placa.
+func BIOSAge(hw scan.Hardware, now time.Time) (Check, bool) {
+	months := monthsSince(hw.BIOSDate, now)
+	if months < 0 {
+		return Check{}, false
+	}
+	ver := strings.TrimSpace(hw.BIOSVer)
+	if ver == "" {
+		ver = "sin número"
+	}
+	c := Check{ID: "bios", Title: "BIOS de la placa madre"}
+	if months >= 24 {
+		c.Status = Warn
+		c.Detail = fmt.Sprintf("Versión %s del %s (hace %d meses). Puede haber una más nueva con mejoras de estabilidad, compatibilidad de RAM y seguridad: revisá la página de soporte de tu placa (%s). Actualizarla la hacés vos, siguiendo las instrucciones del fabricante; nunca la interrumpas.", ver, hw.BIOSDate, months, hw.Board)
+	} else {
+		c.Status = OK
+		c.Detail = fmt.Sprintf("Versión %s del %s.", ver, hw.BIOSDate)
+	}
+	if biosPage(hw.Board) != "" {
+		c.Action, c.ActionLabel = "open_bios", "Abrir soporte de la placa"
+	}
+	return c, true
+}
+
+// OpenBIOSPage abre la página de soporte del fabricante de la placa madre.
+func OpenBIOSPage(sys system.System, board string) error {
+	u := biosPage(board)
+	if u == "" {
+		return fmt.Errorf("fabricante desconocido")
+	}
+	_, _, err := sys.Exec(15*time.Second, "rundll32.exe", "url.dll,FileProtocolHandler", u)
+	return err
+}

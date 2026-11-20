@@ -16,7 +16,7 @@
 </div>
 
 > [!NOTE]
-> **Beta (3.1.0).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups yet (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings).
+> **Beta (3.2.0).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups yet (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings).
 
 > Created with **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), directed and tested by its author (Donpolloasd).
 
@@ -28,13 +28,15 @@
 - **80+ performance tweaks** for FPS, latency, graphics, power, memory, network, services, privacy and Windows 11 debloat. Each one shows its risk level and has a **«?»** button that explains what it changes.
 - **One-click profiles** (Recommended and Competitive) that only include safe tweaks for your hardware.
 - **First-run assistant:** pick the kind of games you play (shooters, competitive, simulators, sports…) and get a recommendation of safe tweaks.
+- **Per-game profiles** (in Game mode): priority, power plan, notifications, free RAM and programs to close for each game.
+- **Configuration backups** in a local folder, with a preview of what gets turned on and off before restoring.
 - **Tweaks Windows undid:** if a Windows update reverts something you applied, Home tells you and applies it again with one click.
 - **Search** any tweak or section with **Ctrl+K**.
 
 ### In-game overlay
 - FPS, 1% low, frame-time graph, CPU, GPU, VRAM, RAM, temperatures, an overheating alert and a **throttling alert** (CPU or GPU slowing down).
 - **Detects the running game on its own** (Steam, Epic, EA, GOG, Ubisoft, Xbox, Riot…).
-- **Fully customizable:** any color, ready-made themes, transparent background, corners, border, font, position, monitor, row order, frame time, clock, saved styles and overlay language (English or Spanish). Save the overlay as an image.
+- **Fully customizable:** any color, ready-made themes, transparent background, corners, border, font, position, monitor, row order, frame time, clock, saved styles and overlay language (English or Spanish). Save the overlay as an image. Minimal layout (FPS only), **0.1% low** and a **desktop widget**.
 
 ### Diagnose
 - Monitor refresh rate, which GPU the monitor is plugged into, RAM speed (XMP/EXPO) and channels, power plan, Resizable BAR, GPU driver age, disk health and a BIOS guide for your hardware.
@@ -45,6 +47,8 @@
 - **Game mode:** closes the programs you choose when a game starts and can **silence Windows notifications** while you play.
 - **Install programs** with winget (launchers, runtimes, monitoring tools…).
 - **Free RAM**, temp-file cleanup, **unused programs and games**, **old drivers**, startup manager, scheduled maintenance and optional reminders.
+- **Disk space** (WizTree-style): folder map, largest files, space by type and duplicate files; deleting goes to the Recycle Bin. Empty the Recycle Bin and old restore points.
+- **Light theme**, interface size and a customizable Home.
 - **After a clean install:** a step-by-step checklist to get a new Windows ready for gaming.
 - **Report a problem:** builds a GitHub issue with your hardware and diagnostics that you review before sending.
 

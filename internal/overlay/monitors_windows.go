@@ -26,7 +26,8 @@ func monitorEnumProc(h, _, _, _ uintptr) uintptr {
 	mi.Size = uint32(unsafe.Sizeof(mi))
 	if r, _, _ := pMonitorInfo.Call(h, uintptr(unsafe.Pointer(&mi))); r != 0 {
 		monitorsFound = append(monitorsFound, Monitor{Width: int(mi.Monitor.R - mi.Monitor.L), Height: int(mi.Monitor.B - mi.Monitor.T),
-			Primary: mi.Flags&1 != 0, L: int(mi.Monitor.L), T: int(mi.Monitor.T)})
+			Primary: mi.Flags&1 != 0, L: int(mi.Monitor.L), T: int(mi.Monitor.T),
+			WL: int(mi.Work.L), WT: int(mi.Work.T), WW: int(mi.Work.R - mi.Work.L), WH: int(mi.Work.B - mi.Work.T)})
 	}
 	return 1
 }

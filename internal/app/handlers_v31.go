@@ -222,7 +222,7 @@ type Reminder struct{ Title, Text string }
 
 // dueReminders decide qué recordatorios tocan ahora y anota que se mostraron. Cada uno se repite como
 // mucho cada dos semanas (el de driver, cada mes) y nunca si el usuario los desactivó.
-func (s *Server) dueReminders(now time.Time, drivers []diag.Check) []Reminder {
+func (s *Server) dueReminders(now time.Time, drivers []diag.Check, up time.Duration) []Reminder {
 	st := s.loadSettings()
 	if st.RemindOff {
 		return nil
@@ -252,6 +252,11 @@ func (s *Server) dueReminders(now time.Time, drivers []diag.Check) []Reminder {
 				break
 			}
 		}
+		if days := int(up.Hours() / 24); days >= 7 && now.Sub(st.RemindBoot) > 3*24*time.Hour {
+			st.RemindBoot = now
+			out = append(out, Reminder{L(fmt.Sprintf("Hace %d días que no reiniciás la PC", days), fmt.Sprintf("Your PC has not restarted in %d days", days)),
+				L("Reiniciar libera memoria y termina de instalar actualizaciones. Ojo: «Apagar» no cuenta si está activado el Inicio rápido de Windows.", "Restarting frees memory and finishes installing updates. Note: «Shut down» does not count if Windows Fast Startup is on.")})
+		}
 	})
 	return out
 }
@@ -277,7 +282,7 @@ func (s *Server) WatchReminders(stop <-chan struct{}, notify func(title, text st
 		if ok {
 			drv = s.slowDiag(hw, false)
 		}
-		for _, rm := range s.dueReminders(time.Now(), drv) {
+		for _, rm := range s.dueReminders(time.Now(), drv, uptime()) {
 			notify(rm.Title, rm.Text)
 		}
 	}

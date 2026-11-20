@@ -3,6 +3,7 @@ package app
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 	"time"
 
 	"fpsforge/internal/overlay"
@@ -20,6 +21,9 @@ type configBundle struct {
 	Settings   settingsPatch   `json:"settings"`
 	Overlay    *overlay.Config `json:"overlay,omitempty"`
 	Tweaks     []string        `json:"tweaks"`
+	// Name y Auto solo los usan las copias guardadas en la carpeta local (Configuración → Copias).
+	Name string `json:"name,omitempty"`
+	Auto bool   `json:"auto,omitempty"`
 }
 
 type importItem struct {
@@ -36,22 +40,31 @@ type importPlan struct {
 	ToApply  []importItem `json:"toApply"`
 	Already  []importItem `json:"already"`
 	Skipped  []importItem `json:"skipped"`
+	// ToRevert son los ajustes que hoy están aplicados y no figuran en el archivo: para volver exactamente
+	// a esa configuración habría que revertirlos (la interfaz lo ofrece, no se hace solo).
+	ToRevert []importItem `json:"toRevert"`
 }
 
-func (s *Server) handleConfigExport(w http.ResponseWriter, r *http.Request) {
+// exportBundle arma la configuración actual (ajustes del programa, overlay y optimizaciones aplicadas).
+func (s *Server) exportBundle() configBundle {
 	st := s.loadSettings()
 	oc := overlay.LoadConfig(s.Dir)
 	ids := s.Eng.AppliedIDs()
 	if ids == nil {
 		ids = []string{}
 	}
+	sort.Strings(ids)
 	var hz *int
 	if st.HzManual {
 		hz = &st.TargetHz // si la frecuencia es automática no se exporta: cada PC detecta la suya
 	}
-	b := configBundle{App: "OverdriveTuner", Format: configFormat, Version: Version, ExportedAt: time.Now().Format(time.RFC3339),
+	return configBundle{App: "OverdriveTuner", Format: configFormat, Version: Version, ExportedAt: time.Now().Format(time.RFC3339),
 		Settings: settingsPatch{TargetHz: hz, Lang: &st.Lang, IntroOff: &st.IntroOff, IntroVol: &st.IntroVol},
 		Overlay:  &oc, Tweaks: ids}
+}
+
+func (s *Server) handleConfigExport(w http.ResponseWriter, r *http.Request) {
+	b := s.exportBundle()
 	w.Header().Set("Content-Disposition", `attachment; filename="overdrivetuner-config.json"`)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	enc := json.NewEncoder(w)
@@ -60,10 +73,18 @@ func (s *Server) handleConfigExport(w http.ResponseWriter, r *http.Request) {
 }
 
 // planImport clasifica los ajustes del archivo según este equipo.
-func (s *Server) planImport(b configBundle) importPlan {
+func (s *Server) planImport(b configBundle) (p importPlan) {
 	hw := s.hardware(false)
-	p := importPlan{ToApply: []importItem{}, Already: []importItem{}, Skipped: []importItem{}}
+	p = importPlan{ToApply: []importItem{}, Already: []importItem{}, Skipped: []importItem{}, ToRevert: []importItem{}}
 	seen := map[string]bool{}
+	defer func() {
+		for _, id := range s.Eng.AppliedIDs() {
+			if tw, ok := tweaks.ByID(id); ok && !seen[id] {
+				p.ToRevert = append(p.ToRevert, importItem{ID: id, Name: tw.Name})
+			}
+		}
+		sort.Slice(p.ToRevert, func(i, j int) bool { return p.ToRevert[i].Name < p.ToRevert[j].Name })
+	}()
 	for _, id := range b.Tweaks {
 		if seen[id] || len(p.ToApply)+len(p.Already)+len(p.Skipped) >= 500 {
 			continue

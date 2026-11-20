@@ -16,7 +16,7 @@
 </div>
 
 > [!NOTE]
-> **Beta (3.1.0).** Hecho y probado principalmente en una PC (Ryzen 5 5600G + RX 7600; juegos de Steam, EA, Epic y Minecraft). Algunas funciones todavía no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir. La interfaz está en español con traducción al inglés (se cambia en Configuración).
+> **Beta (3.2.0).** Hecho y probado principalmente en una PC (Ryzen 5 5600G + RX 7600; juegos de Steam, EA, Epic y Minecraft). Algunas funciones todavía no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir. La interfaz está en español con traducción al inglés (se cambia en Configuración).
 
 > Creado con **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), con la dirección y las pruebas de su autor (Donpolloasd).
 
@@ -28,13 +28,15 @@
 - **Más de 80 ajustes de rendimiento** para FPS, latencia, gráficos, energía, memoria, red, servicios, privacidad y debloat de Windows 11. Cada uno muestra su nivel de riesgo y tiene un botón **«?»** que explica qué cambia.
 - **Perfiles de un clic** (Recomendado y Competitivo) que solo incluyen ajustes seguros para tu hardware.
 - **Asistente de primera vez:** elegís qué tipo de juegos jugás (shooters, competitivos, simuladores, deportes…) y te recomienda ajustes seguros.
+- **Perfiles por juego** (en Modo juego): prioridad, plan de energía, notificaciones, liberar RAM y programas a cerrar para cada juego.
+- **Copias de tu configuración** en una carpeta de tu PC, con vista previa de qué se activa y qué se desactiva antes de restaurar.
 - **Ajustes que Windows deshizo:** si una actualización de Windows revierte algo que aplicaste, Inicio te avisa y lo vuelve a aplicar con un clic.
 - **Buscá** cualquier ajuste o sección con **Ctrl+K**.
 
 ### Overlay en juego
 - FPS, 1% low, gráfico de tiempos de cuadro, CPU, GPU, VRAM, RAM, temperaturas, aviso de sobrecalentamiento y **aviso de throttling** (procesador o placa de video bajando la velocidad).
 - **Detecta solo el juego que abriste** (Steam, Epic, EA, GOG, Ubisoft, Xbox, Riot…).
-- **Totalmente personalizable:** cualquier color, temas listos, fondo transparente, esquinas, borde, letra, posición, monitor, orden de los datos, tiempo de cuadro, hora, estilos guardados e idioma del overlay (español o inglés). Guardá el overlay como imagen.
+- **Totalmente personalizable:** cualquier color, temas listos, fondo transparente, esquinas, borde, letra, posición, monitor, orden de los datos, tiempo de cuadro, hora, estilos guardados e idioma del overlay (español o inglés). Guardá el overlay como imagen. Diseño mínimo (solo FPS), **0.1% low** y **widget de escritorio**.
 
 ### Diagnosticar
 - Frecuencia del monitor, a qué gráfica está conectado, velocidad (XMP/EXPO) y canales de la RAM, plan de energía, Resizable BAR, antigüedad del driver de video, salud de los discos y una guía de BIOS para tu hardware.
@@ -45,6 +47,8 @@
 - **Modo juego:** cierra los programas que elijas cuando abrís un juego y puede **silenciar las notificaciones de Windows** mientras jugás.
 - **Instalar programas** con winget (launchers, runtimes, herramientas de monitoreo…).
 - **Liberar RAM**, limpieza de temporales, **programas y juegos sin usar**, **drivers viejos**, administrador de inicio, mantenimiento programado y recordatorios opcionales.
+- **Espacio en disco** (estilo WizTree): mapa por carpetas, archivos más grandes, espacio por tipo y archivos repetidos; borrar manda a la Papelera. Vaciar la Papelera y los puntos de restauración viejos.
+- **Tema claro**, tamaño de la interfaz e Inicio personalizable.
 - **Después de formatear:** una lista de pasos para dejar un Windows nuevo listo para jugar.
 - **Reportar un problema:** arma un issue de GitHub con tu hardware y el diagnóstico, que revisás antes de enviar.
 

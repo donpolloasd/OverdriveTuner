@@ -19,6 +19,7 @@ type State struct {
 	GameRunning bool              `json:"gameRunning"`
 	FPS         float64           `json:"fps"`
 	Low1        float64           `json:"low1"`
+	Low01       float64           `json:"low01,omitempty"`
 	Recording   bool              `json:"recording"`
 	RecLabel    string            `json:"recLabel"`
 	RecFrames   int               `json:"recFrames"`

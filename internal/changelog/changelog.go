@@ -22,6 +22,16 @@ type Release struct {
 
 // Releases va de la más nueva a la más vieja.
 var Releases = []Release{
+	{"3.2.0", "Espacio en disco, perfiles por juego, copias de tu configuración y tema claro", []Change{
+		{"Espacio en disco", "Una sección nueva al estilo WizTree: analiza una unidad en segundos y muestra un mapa por carpetas, los archivos más grandes, el espacio por tipo y los archivos repetidos. Borrar siempre manda a la Papelera, y las carpetas de Windows y de los programas están protegidas."},
+		{"Papelera y puntos de restauración", "En Limpieza: cuánto ocupa la Papelera (y vaciarla) y los puntos de restauración, con la opción de borrar todos menos el más reciente (doble confirmación)."},
+		{"Perfiles por juego en Modo juego", "Para cada juego: prioridad alta, plan de energía, silenciar notificaciones, liberar RAM al abrirlo y programas extra para cerrar."},
+		{"Copias de tu configuración", "Guardá una foto de todo en una carpeta de tu PC y restaurala viendo antes qué se activa y qué se desactiva. Se guarda una automática antes de cada perfil, del asistente y de cada restauración."},
+		{"Tema claro y tamaño de la interfaz", "En Configuración → Apariencia: oscuro, claro o igual que Windows, y la ventana del 90 % al 140 %."},
+		{"Inicio personalizable", "Elegí y ordená los bloques del Inicio: puntaje y perfiles, estado de tu PC, accesos rápidos, tu equipo y últimos cambios."},
+		{"Overlay", "Diseño mínimo (solo el número de FPS), 0.1 % low como opción y widget de escritorio con CPU, GPU, RAM y temperaturas."},
+		{"BIOS y reinicio", "Diagnóstico muestra la versión y la fecha de la BIOS y avisa si tiene más de dos años, con enlace al soporte de tu placa. Nuevo recordatorio si hace una semana que no reiniciás la PC."},
+	}},
 	{"3.1.0", "Asistente, ajustes que Windows deshizo y más mantenimiento", []Change{
 		{"Asistente de primera vez", "Te pregunta qué tipo de juegos jugás (shooters, competitivos, simuladores, deportes…), si es notebook o PC y qué preferís, y arma una recomendación de ajustes seguros. Se repite desde Configuración."},
 		{"Ajustes que Windows deshizo", "Si una actualización de Windows (u otro programa) deshace ajustes que aplicaste, Inicio te avisa cuáles son y los vuelve a aplicar con un clic."},
@@ -227,6 +237,16 @@ func Since(installed string) []Release {
 // English tiene la traducción de las versiones nuevas (desde la 3.1.0). Las anteriores solo están en
 // español: si falta una versión, se muestra en español.
 var English = map[string]Release{
+	"3.2.0": {Title: "Disk space, per-game profiles, configuration backups and light theme", Changes: []Change{
+		{"Disk space", "A new WizTree-style section: it analyzes a drive in seconds and shows a folder map, the largest files, space by type and duplicate files. Deleting always sends to the Recycle Bin, and Windows and program folders are protected."},
+		{"Recycle Bin and restore points", "In Cleanup: how much the Recycle Bin takes (and emptying it) and the restore points, with the option to delete all but the most recent (double confirmation)."},
+		{"Per-game profiles in Game mode", "For each game: high priority, power plan, silence notifications, free RAM on launch and extra programs to close."},
+		{"Configuration backups", "Save a snapshot of everything in a folder on your PC and restore it seeing first what gets turned on and off. An automatic one is saved before each profile, the assistant and each restore."},
+		{"Light theme and interface size", "In Settings → Appearance: dark, light or same as Windows, and the window from 90% to 140%."},
+		{"Customizable Home", "Choose and order the Home blocks: score and profiles, PC status, quick actions, your computer and latest changes."},
+		{"Overlay", "Minimal layout (FPS number only), 0.1% low as an option and a desktop widget with CPU, GPU, RAM and temperatures."},
+		{"BIOS and restart", "Diagnostics shows the BIOS version and date and warns if it is more than two years old, with a link to your motherboard support page. New reminder if your PC has not restarted in a week."},
+	}},
 	"3.1.0": {Title: "Assistant, tweaks Windows undid and more maintenance", Changes: []Change{
 		{"First-run assistant", "It asks what kind of games you play (shooters, competitive, simulators, sports…), whether it is a laptop or a desktop and what you prefer, and builds a recommendation of safe tweaks. Run it again from Settings."},
 		{"Tweaks Windows undid", "If a Windows update (or another program) undoes tweaks you applied, Home tells you which ones and applies them again with one click."},

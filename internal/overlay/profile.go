@@ -4,7 +4,10 @@ import (
 	"strings"
 	"time"
 
+	"fpsforge/internal/fpslog"
+	"fpsforge/internal/memory"
 	"fpsforge/internal/procs"
+	"fpsforge/internal/system"
 )
 
 type profileState struct {
@@ -44,6 +47,13 @@ func (e *Engine) applyProfile(g Game) {
 		if err := procs.KillByName(sys, n); err != nil {
 			notes = append(notes, err.Error())
 		}
+	}
+	if _, demo := sys.(*system.Fake); g.FreeRAM && !demo { // en demostración y en las pruebas no se toca la memoria real
+		go func() { // tarda unos segundos: no se espera; el juego no se toca
+			if _, err := memory.Free(memory.Options{Game: g.Exe}); err != nil {
+				fpslog.Diag("perfil de %s: no se pudo liberar RAM: %v", g.Exe, err)
+			}
+		}()
 	}
 	if g.Priority {
 		name := strings.TrimSuffix(g.Exe, ".exe")

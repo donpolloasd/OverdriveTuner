@@ -177,7 +177,7 @@ function tweaksOf(cat) { return S.tweaks.filter(t => t.cat === cat); }
 function activeCount(cat) { const l = tweaksOf(cat).filter(t => t.suitable); return [l.filter(t => t.active).length, l.length]; }
 
 /* ---------- navegación ---------- */
-const TOOLS = [["install", "Instalar programas"], ["overlay", "Overlay en juego"], ["gamemode", "Modo juego"], ["fluidez", "Diagnóstico"], ["bench", "Benchmark"], ["clean", "Limpieza"], ["startup", "Inicio de Windows"], ["fresh", "Después de formatear"]];
+const TOOLS = [["install", "Instalar programas"], ["overlay", "Overlay en juego"], ["gamemode", "Modo juego"], ["fluidez", "Diagnóstico"], ["bench", "Benchmark"], ["clean", "Limpieza"], ["space", "Espacio en disco"], ["startup", "Inicio de Windows"], ["fresh", "Después de formatear"]];
 const PROGRAM = [["history", "Historial"], ["settings", "Configuración"]];
 let drvOpen = false;
 
@@ -270,6 +270,7 @@ function render() {
   if (view === "clean") return renderClean(m);
   if (view === "startup") return renderStartup(m);
   if (view === "fresh") return renderFresh(m);
+  if (view === "space") return renderSpace(m);
   if (view === "history") return renderHistory(m);
   if (view === "settings") return renderSettings(m);
   renderCategory(m, view);
@@ -302,10 +303,9 @@ function renderHome(m) {
   if (!S.scanning) cards += hwCard("Memoria", (h.ramGB || "?") + " GB", [h.ramMTs ? h.ramMTs + " MT/s" : "", h.ramSticks ? h.ramSticks + " módulos" : ""].filter(Boolean).join(" · "));
   if (!S.scanning) (h.disks || []).forEach(d => cards += hwCard(d.system ? "Disco del sistema" : "Disco", d.model || d.type, `${d.type} · ${d.sizeGB} GB`));
   if (!S.scanning) cards += hwCard("Sistema", h.os || "Windows", h.build ? "compilación " + h.build : "");
-  m.innerHTML = `
-  <div class="top"><div><h2>Inicio</h2><p>Escaneamos tu equipo y solo te ofrecemos lo que le sirve. Todo se puede revertir.</p></div></div>
-  ${banners()}${driftBanner()}${S.scanning ? '<div class="banner">Escaneando tu equipo… ya podés ir mirando las secciones; los perfiles se habilitan cuando termina.</div>' : ""}
-  <section class="hero">
+  // Cada bloque del Inicio se puede ocultar u ordenar (Personalizar Inicio).
+  const blocks = {};
+  blocks.hero = `<section class="hero">
     <div class="ring" role="img" aria-label="${pct}% de las optimizaciones recomendadas aplicadas">
       <div class="num"><b>${pct}<small>%</small></b><span>${on} de ${total} optimizaciones recomendadas aplicadas</span></div>
       <div class="scale" aria-hidden="true">${Array.from({ length: 50 }, (_, i) => `<i class="${i < Math.round(pct / 2) ? "f" : ""}" style="--i:${i}"></i>`).join("")}</div>
@@ -323,8 +323,15 @@ function renderHome(m) {
         <button class="btn danger" id="pUndo" ${S.admin ? "" : "disabled"}>Restaurar todo</button>
       </div>
     </div>
-  </section>
-  <div class="grid">${cards}</div>`;
+  </section>`;
+  blocks.hardware = `<div class="grid">${cards}</div>`;
+  m.innerHTML = `
+  <div class="top"><div><h2>Inicio</h2><p>Escaneamos tu equipo y solo te ofrecemos lo que le sirve. Todo se puede revertir.</p></div><div class="btns"><button class="btn" id="homeEdit">Personalizar Inicio</button></div></div>
+  ${banners()}${driftBanner()}${S.scanning ? '<div class="banner">Escaneando tu equipo… ya podés ir mirando las secciones; los perfiles se habilitan cuando termina.</div>' : ""}
+  ${homeBlocks(blocks)}`;
+  $("#homeEdit").onclick = editHome;
+  wireHomeExtras(m);
+  if (!$("#pRec")) { wireDrift(); return; } // el bloque del puntaje y los perfiles está oculto
   $("#pRec").onclick = () => runProfile("recommended", "Perfil recomendado");
   $("#pComp").onclick = () => runProfile("competitive", "Perfil competitivo");
   $("#pRp").onclick = async () => {
@@ -485,6 +492,7 @@ async function runProfile(name, title) {
   if (!r.ids.length) { toast("Ese perfil ya está aplicado en tu equipo."); return; }
   const names = r.ids.map(id => S.tweaks.find(t => t.id === id).name);
   if (!await ask(`${title}: se aplicarán ${r.ids.length} ajustes compatibles con tu equipo.\nSe creará antes un punto de restauración y podrás revertir cada ajuste.\n\nLo aplicás bajo tu responsabilidad. ¿Continuar?`, { title, ok: "Aplicar" })) return;
+  await autoSnapshot("Antes de: " + title);
   runIds(title, r.ids, "apply", true);
   void names;
 }
@@ -519,8 +527,9 @@ async function renderClean(m) {
   <table class="table"><tbody>${info.filter(x => !x.deep).map(cleanRow).join("")}</tbody></table>
   ${info.some(x => x.deep) ? `<h3 style="margin-top:22px">Limpieza profunda</h3><p class="note">Cachés de navegadores y apps. No borra contraseñas, cookies ni historial; la primera carga después puede ser un poco más lenta. Vienen desmarcadas.</p><table class="table"><tbody>${info.filter(x => x.deep).map(cleanRow).join("")}</tbody></table>` : ""}
   <div class="bar" style="margin-top:16px"><button class="btn primary" id="doClean">Limpiar lo seleccionado</button><span class="sp">Se pueden liberar hasta ${fmtBytes(total)}</span></div>
-  <div id="v31clean"></div>`;
+  <div id="v31clean"></div><div id="v33clean"></div>`;
   v31Clean($("#v31clean"));
+  v33Clean($("#v33clean"));
   $("#ramBtn").onclick = async () => {
     const b = $("#ramBtn"); b.disabled = true; $("#ramRes").textContent = "Liberando…";
     try {
@@ -728,7 +737,7 @@ async function renderBisect(m) {
 
 /* ---------- overlay ---------- */
 let ovTimer = null;
-const OVL_ITEMS = [["showFps", "FPS"], ["showLow", "1% low"], ["showGraph", "Gráfico de cuadros"], ["showCpu", "CPU"], ["showGpu", "GPU"], ["showRam", "RAM"], ["showVram", "VRAM"], ["showTemps", "Temperaturas"], ["showFrame", "Tiempo de cuadro"], ["showClock", "Hora"], ["showGame", "Juego"]];
+const OVL_ITEMS = [["showFps", "FPS"], ["showLow", "1% low"], ["showLow01", "0.1% low"], ["showGraph", "Gráfico de cuadros"], ["showCpu", "CPU"], ["showGpu", "GPU"], ["showRam", "RAM"], ["showVram", "VRAM"], ["showTemps", "Temperaturas"], ["showFrame", "Tiempo de cuadro"], ["showClock", "Hora"], ["showGame", "Juego"]];
 // Nombres de las filas para ordenarlas.
 const OVL_ROWS = { cpu: "CPU", gpu: "GPU", vram: "VRAM", ram: "RAM", frame: "Tiempo de cuadro", clock: "Hora", game: "Juego" };
 const OVL_ROW_SHOW = { cpu: "showCpu", gpu: "showGpu", vram: "showVram", ram: "showRam", frame: "showFrame", clock: "showClock", game: "showGame" };
@@ -749,7 +758,7 @@ function ovStyle(cfg, fps) {
 
 function ovPreview(cfg, st) {
   const sm = (st && st.sample) || { cpu: 41, gpu: 70, gpuTemp: 54, cpuTemp: -1, ramUsedMb: 11800 };
-  const fps = st && st.fps ? Math.round(st.fps) : 238, low = st && st.low1 ? Math.round(st.low1) : 126;
+  const fps = st && st.fps ? Math.round(st.fps) : 238, low = st && st.low1 ? Math.round(st.low1) : 126, low01 = st && st.low01 ? Math.round(st.low01) : 98;
   const look = `${cfg.transparent ? " tr" : ""}" style="${ovStyle(cfg, fps)}`;
   const t = v => v > 0 ? `<i class="${v >= 85 ? "bd" : v >= 70 ? "wn" : "gd"}">${Math.round(v)}°</i>` : `<i class="dm">—</i>`;
   const bars = Array.from({ length: 40 }, (_, i) => { const sp = i === 27 ? 26 : i === 11 ? 14 : 5 + (i * 7 % 3); return `<b class="${sp > 20 ? "bd" : sp > 10 ? "wn" : "gd"}" style="height:${sp / 26 * 100}%"></b>`; }).join("");
@@ -766,13 +775,14 @@ function ovPreview(cfg, st) {
     game: () => cfg.showGame && `<div><span>${L("Juego", "Game")}</span><em>${esc(game)}</em></div>`,
   };
   const rows = (cfg.order || Object.keys(R)).map(k => R[k] && R[k]()).filter(Boolean);
+  if (cfg.layout === "mini") return `<div class="ovp mini notr${look}"><em class="fp">${fps}</em></div>`;
   if (cfg.layout === "line") {
-    const parts = []; if (cfg.showFps) parts.push(`<em class="fp">${fps} FPS</em>`);
+    const parts = []; if (cfg.showFps) { parts.push(`<em class="fp">${fps} FPS</em>`); const lw = [cfg.showLow ? "1% " + low : "", cfg.showLow01 ? "0.1% " + low01 : ""].filter(Boolean).join("  "); if (lw) parts.push(`<small>${lw}</small>`); }
     rows.forEach(r => parts.push(r.replace(/<\/?div>/g, "")));
     return `<div class="ovp line notr${look}">${parts.join(" ")}</div>`;
   }
   return `<div class="ovp card notr${look}">
-    ${cfg.showFps ? `<div class="top2"><strong>${fps}</strong><small>FPS</small>${cfg.showLow ? `<small class="r">1% ${low}</small>` : ""}</div>` : ""}
+    ${cfg.showFps ? `<div class="top2"><strong>${fps}</strong><small>FPS</small>${cfg.showLow || cfg.showLow01 ? `<small class="r">${[cfg.showLow ? "1% " + low : "", cfg.showLow01 ? "0.1% " + low01 : ""].filter(Boolean).join("  ")}</small>` : ""}</div>` : ""}
     ${cfg.showGraph ? `<div class="spk">${bars}</div>` : ""}${rows.join("")}</div>`;
 }
 
@@ -781,7 +791,7 @@ function ovStatus(d) {
   const sm = st.sample || {};
   const tmp = v => v > 0 ? Math.round(v) + " °C" : "no disponible";
   return `<div class="row ${a ? "on" : ""}"><div><h4>${a ? "Overlay abierto" : "Overlay cerrado"} ${a && st.gameRunning ? '<span class="tag">' + esc(st.game) + " detectado</span>" : a ? '<span class="tag">esperando ' + (st.game ? esc(st.game) : "un juego") + "</span>" : ""}</h4>
-    <p>${a ? `FPS ${Math.round(st.fps || 0)} · 1% low ${Math.round(st.low1 || 0)} · CPU ${Math.round(sm.cpu || 0)}% (hilo más cargado ${Math.round(sm.cpuThread || 0)}%) · GPU ${Math.round(sm.gpu || 0)}% ${tmp(sm.gpuTemp)} · RAM ${((sm.ramUsedMb || 0) / 1024).toFixed(1)} GB · temp. CPU ${tmp(sm.cpuTemp)}` : "Abrilo para ver FPS y uso mientras jugás."}</p>
+    <p>${a ? `FPS ${Math.round(st.fps || 0)} · 1% low ${Math.round(st.low1 || 0)}${st.low01 ? ` · 0.1% low ${Math.round(st.low01)}` : ""} · CPU ${Math.round(sm.cpu || 0)}% (hilo más cargado ${Math.round(sm.cpuThread || 0)}%) · GPU ${Math.round(sm.gpu || 0)}% ${tmp(sm.gpuTemp)} · RAM ${((sm.ramUsedMb || 0) / 1024).toFixed(1)} GB · temp. CPU ${tmp(sm.cpuTemp)}` : "Abrilo para ver FPS y uso mientras jugás."}</p>
     ${a && st.verdict && st.verdict.kind !== "none" ? `<p><b>Qué limita tus FPS:</b> ${esc(st.verdict.text)}</p>` : ""}
     ${a && st.exclusive ? `<div class="banner warn">El juego está en pantalla completa exclusiva: Windows no deja que ninguna ventana externa (tampoco este overlay) se dibuje encima. Ponelo en «ventana sin bordes» en sus opciones de video. Si aplicaste «Desactivar optimizaciones de pantalla completa», revertilo.</div>` : ""}
     ${a ? throttleHtml(st) : ""}
@@ -804,7 +814,7 @@ async function renderOverlay(m) {
    <div class="row"><div><h4>Separación del borde</h4><p>En píxeles, desde la esquina elegida.</p></div><div class="bar"><label>Horizontal <input type="number" id="cOffX" min="0" max="1000" value="${cfg.offsetX}" style="width:76px"></label><label>Vertical <input type="number" id="cOffY" min="0" max="1000" value="${cfg.offsetY}" style="width:76px"></label></div></div>
    <div class="row"><div><h4>Monitor</h4><p>En qué pantalla aparece el panel. Si ese monitor se desconecta, vuelve al principal.</p></div><select id="cMon">${(d.monitors || []).map(mo => `<option value="${mo.index}" ${cfg.monitor === mo.index ? "selected" : ""}>${esc(mo.name)}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Idioma del overlay</h4><p>En qué idioma aparecen los textos del panel (Cuadro, Hora, Juego, avisos).</p></div><select id="cLang">${[["", "Igual que el programa"], ["es", "Español"], ["en", "English"]].map(([v, n]) => `<option value="${v}" ${(cfg.lang || "") === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
-   <div class="row"><div><h4>Diseño</h4></div><select id="cLayout"><option value="card" ${cfg.layout === "card" ? "selected" : ""}>Tarjeta</option><option value="line" ${cfg.layout === "line" ? "selected" : ""}>Una línea</option></select></div>
+   <div class="row"><div><h4>Diseño</h4></div><select id="cLayout"><option value="card" ${cfg.layout === "card" ? "selected" : ""}>Tarjeta</option><option value="line" ${cfg.layout === "line" ? "selected" : ""}>Una línea</option><option value="mini" ${cfg.layout === "mini" ? "selected" : ""}>Mínimo (solo FPS)</option></select></div>
    <div class="row"><div><h4>Frecuencia de actualización</h4><p>Cuántas veces por segundo se actualiza el número de FPS. Más rápido sigue mejor los cambios.</p></div><select id="cUpd">${[[50, "20 por segundo"], [100, "10 por segundo"], [250, "4 por segundo"], [500, "2 por segundo"]].map(([v, n]) => `<option value="${v}" ${cfg.updateMs === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Tamaño</h4></div><input type="range" id="cScale" min="0.8" max="1.8" step="0.1" value="${cfg.scale}"></div>
    <div class="row"><div><h4>Transparencia</h4></div><input type="range" id="cOp" min="0.3" max="1" step="0.05" value="${cfg.opacity}"></div>
@@ -834,8 +844,8 @@ async function renderOverlay(m) {
   <h3 style="margin-top:22px">Grabar una corrida</h3>
   <div class="row"><div><p>Poné un nombre que describa el estado del PC (por ejemplo «antes» o «optimizado»), tocá Grabar, jugá el mismo tramo o benchmark y tocá Detener. Hacé 3 corridas por estado. Después se importan en «Benchmark».</p>
   <div class="bar"><input type="text" id="recLbl" placeholder="antes / optimizado…" style="width:200px"><button class="btn primary" id="recStart" ${d.running ? "" : "disabled"}>Grabar</button><button class="btn" id="recStop" ${d.running ? "" : "disabled"}>Detener y guardar</button></div></div></div>
-  <h3 style="margin-top:22px">Perfiles por juego</h3><div class="list" id="ovGames"></div>
-  <div class="bar" style="margin-top:10px"><input type="text" id="newGame" placeholder="otro juego, ej. eurotrucks2.exe" style="width:240px"><button class="btn" id="addGame">Agregar juego</button></div>`;
+  <div id="ovWidget"></div>
+  <h3 style="margin-top:22px">Perfiles por juego</h3><p class="note">Ahora están en <a href="#" class="golink" data-go="gamemode">Modo juego</a>, junto con los programas que se cierran al jugar.</p>`;
   $("#ovGuideBtn").onclick = openOverlayGuide;
   $("#fhBtn").onclick = openFpsHelp;
   const toggle = $("#ovToggle");
@@ -844,6 +854,7 @@ async function renderOverlay(m) {
   $("#cOffX").onchange = e => { cfg.offsetX = +e.target.value; save().then(() => { e.target.value = cfg.offsetX; }); };
   $("#cOffY").onchange = e => { cfg.offsetY = +e.target.value; save().then(() => { e.target.value = cfg.offsetY; }); };
   $("#ovPng").onclick = ovPng;
+  ovWidget($("#ovWidget"), cfg, save);
   $("#cMon").onchange = e => { cfg.monitor = +e.target.value; save(); };
   $("#cLang").onchange = e => { cfg.lang = e.target.value; save(); };
   // orden de los datos: arrastrar o Subir/Bajar
@@ -924,20 +935,6 @@ async function renderOverlay(m) {
   m.querySelectorAll("[data-k]").forEach(c => c.onchange = () => { cfg[c.dataset.k] = c.checked; save(); renderOrder(); });
   $("#recStart").onclick = async () => { try { await api("overlay/record", { action: "start", label: $("#recLbl").value }); toast("Grabando…"); } catch (e) { toast(e.message, 5000); } };
   $("#recStop").onclick = async () => { try { await api("overlay/record", { action: "stop" }); toast("Guardando sesión… mirala en Benchmark."); } catch (e) { toast(e.message, 5000); } };
-  // perfiles por juego
-  const renderGames = () => {
-    $("#ovGames").innerHTML = cfg.games.map((g, i) => `<div class="row"><div><h4>${esc(g.exe)}</h4>
-      <p style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><label><input type="checkbox" data-gp="${i}" ${g.priority ? "checked" : ""}> Prioridad alta al abrir</label>
-      <label>Plan de energía: <select data-gpl="${i}"><option value="">no cambiar</option>${d.plans.map(p => `<option value="${esc(p.guid)}" ${g.powerPlan === p.guid ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label></p>
-      <p><label>Cerrar al abrir el juego (separados por coma): <input type="text" data-gc="${i}" value="${esc((g.close || []).join(", "))}" placeholder="discord.exe, chrome.exe" style="width:260px"></label></p>
-      <p class="note">Los programas se cierran sin guardar; nunca se cierran procesos de Windows. El plan de energía vuelve al anterior al cerrar el juego.</p></div><button class="btn danger" data-gx="${i}">Quitar</button></div>`).join("") || '<p class="note">Sin perfiles.</p>';
-    m.querySelectorAll("[data-gp]").forEach(c => c.onchange = () => { cfg.games[+c.dataset.gp].priority = c.checked; save(); });
-    m.querySelectorAll("[data-gpl]").forEach(c => c.onchange = () => { cfg.games[+c.dataset.gpl].powerPlan = c.value; save(); });
-    m.querySelectorAll("[data-gc]").forEach(c => c.onchange = () => { cfg.games[+c.dataset.gc].close = c.value.split(",").map(x => x.trim()).filter(Boolean); save(); });
-    m.querySelectorAll("[data-gx]").forEach(c => c.onclick = async () => { cfg.games.splice(+c.dataset.gx, 1); await save(); renderGames(); });
-  };
-  renderGames();
-  $("#addGame").onclick = async () => { const v = $("#newGame").value.trim(); if (!v) return; if (!cfg.games.some(g => g.exe.toLowerCase() === v.toLowerCase())) cfg.games.push({ exe: v, priority: false, powerPlan: "", close: [] }); await save(); renderGames(); $("#newGame").value = ""; };
   // estado en vivo
   const poll = async () => {
     if (view !== "overlay") return;
@@ -956,8 +953,8 @@ function offerRestart(v) {
   const bar = document.createElement("div");
   bar.className = "toast"; bar.setAttribute("role", "status"); bar.style.cssText = "display:flex;gap:12px;align-items:center;bottom:24px";
   const t = document.createElement("span"); t.textContent = "La versión " + v + " ya está instalada.";
-  const go = document.createElement("button"); go.className = "btn"; go.textContent = "Reiniciar ahora"; go.style.cssText = "height:30px;color:#000;border-color:#000";
-  const no = document.createElement("button"); no.className = "btn"; no.textContent = "Después"; no.style.cssText = "height:30px;color:#000;border-color:#0004";
+  const go = document.createElement("button"); go.className = "btn"; go.textContent = "Reiniciar ahora"; go.style.cssText = "height:30px;color:var(--ink);border-color:var(--ink)";
+  const no = document.createElement("button"); no.className = "btn"; no.textContent = "Después"; no.style.cssText = "height:30px;color:var(--ink);border-color:var(--ink-dim)";
   go.onclick = async () => { go.disabled = true; try { await api("update/restart", {}); t.textContent = "Reiniciando…"; } catch (e) { toast(e.message, 5000); go.disabled = false; } };
   no.onclick = () => bar.remove();
   bar.append(t, go, no); document.body.appendChild(bar);
