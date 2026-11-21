@@ -404,3 +404,6 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - Recordatorio nuevo: si la PC lleva 7 días o más sin reiniciarse (como mucho cada 3 días). Aclara que «Apagar» no cuenta con el Inicio rápido de Windows activado.
 - Arreglo: el aviso de la BIOS no aparecía porque el resultado del chequeo se agregaba después de devolver la lista; arreglado y con test.
 - Probado en la PC de pruebas: análisis del disco C: y búsqueda de duplicados, lectura de la Papelera, lectura de la BIOS (Gigabyte A520M K V2, F7c) y el widget (ventana visible en la esquina elegida, dentro del área útil). Sin probar en real: vaciar la Papelera, borrar puntos de restauración, mandar archivos a la Papelera desde el analizador y los perfiles por juego dentro de un juego (necesitan permisos de administrador o cambian el sistema; en el modo demostración se simulan). No se pudo ver el dibujo del widget porque queda detrás de las ventanas abiertas.
+
+== Versión 3.2.1 ==
+- Misma versión que la 3.2.0, que no llegó a publicarse: un test del recordatorio de reinicio esperaba el texto en español y el servidor de GitHub Actions tiene Windows en inglés. El test ahora fija el idioma.

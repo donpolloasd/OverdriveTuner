@@ -22,6 +22,9 @@ type Release struct {
 
 // Releases va de la más nueva a la más vieja.
 var Releases = []Release{
+	{"3.2.1", "La 3.2, publicada", []Change{
+		{"Lo mismo que la 3.2.0, ahora publicado", "La 3.2.0 no llegó a publicarse porque un test fallaba en el servidor de GitHub (que tiene Windows en inglés). Esta versión trae exactamente lo mismo: espacio en disco, perfiles por juego, copias de la configuración, tema claro y lo demás."},
+	}},
 	{"3.2.0", "Espacio en disco, perfiles por juego, copias de tu configuración y tema claro", []Change{
 		{"Espacio en disco", "Una sección nueva al estilo WizTree: analiza una unidad en segundos y muestra un mapa por carpetas, los archivos más grandes, el espacio por tipo y los archivos repetidos. Borrar siempre manda a la Papelera, y las carpetas de Windows y de los programas están protegidas."},
 		{"Papelera y puntos de restauración", "En Limpieza: cuánto ocupa la Papelera (y vaciarla) y los puntos de restauración, con la opción de borrar todos menos el más reciente (doble confirmación)."},
@@ -237,6 +240,9 @@ func Since(installed string) []Release {
 // English tiene la traducción de las versiones nuevas (desde la 3.1.0). Las anteriores solo están en
 // español: si falta una versión, se muestra en español.
 var English = map[string]Release{
+	"3.2.1": {Title: "Version 3.2, published", Changes: []Change{
+		{"The same as 3.2.0, now published", "3.2.0 was not published because a test failed on the GitHub server (which runs Windows in English). This version brings exactly the same: disk space, per-game profiles, configuration backups, light theme and the rest."},
+	}},
 	"3.2.0": {Title: "Disk space, per-game profiles, configuration backups and light theme", Changes: []Change{
 		{"Disk space", "A new WizTree-style section: it analyzes a drive in seconds and shows a folder map, the largest files, space by type and duplicate files. Deleting always sends to the Recycle Bin, and Windows and program folders are protected."},
 		{"Recycle Bin and restore points", "In Cleanup: how much the Recycle Bin takes (and emptying it) and the restore points, with the option to delete all but the most recent (double confirmation)."},
