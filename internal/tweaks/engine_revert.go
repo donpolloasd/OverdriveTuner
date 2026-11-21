@@ -199,6 +199,9 @@ func (e *Engine) DetectAllInfo(list []Tweak) (map[string]bool, map[string]bool) 
 				refs = append(refs, system.RegRef{Key: op.Key, Name: op.Name})
 				wants = append(wants, want{ti, op.Type, op.Data, false})
 			case OpSvc:
+				if op.Optional {
+					continue
+				}
 				refs = append(refs, system.RegRef{Key: svcKey + op.Svc, Name: "Start"})
 				wants = append(wants, want{ti, "REG_DWORD", strconv.Itoa(op.Start), true})
 			}

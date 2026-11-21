@@ -152,11 +152,16 @@ func (e *Engine) Apply(id string) Result {
 		}
 	}
 	rec := &Record{ID: id, Applied: time.Now(), Reboot: tw.Reboot}
+	done, skipped := 0, 0
 	for i, op := range tw.Ops {
 		bk, err := e.applyOp(i, op)
 		rec.Backups = append(rec.Backups, bk)
+		if err == nil && !op.Aux {
+			done++
+		}
 		if err != nil {
 			if op.Optional {
+				skipped++
 				res.Notes = append(res.Notes, "omitido: "+err.Error())
 				continue
 			}
@@ -165,6 +170,11 @@ func (e *Engine) Apply(id string) Result {
 			e.rollback(tw, rec)
 			return res
 		}
+	}
+	if done == 0 && skipped > 0 {
+		res.Errors = []string{"Windows no permite este cambio en tu versión (lo bloquea su propia protección). Si querés, hacelo a mano desde Configuración de Windows."}
+		e.rollback(tw, rec)
+		return res
 	}
 	e.recs[id] = rec
 	if err := e.save(); err != nil {

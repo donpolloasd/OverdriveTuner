@@ -22,6 +22,11 @@ type Release struct {
 
 // Releases va de la más nueva a la más vieja.
 var Releases = []Release{
+	{"3.2.2", "Ajustes que Windows bloqueaba", []Change{
+		{"Compresión de memoria", "Fallaba con el error 1058 si SysMain estaba deshabilitado (por ejemplo, por «Desactivar SysMain y Prefetch»). Ahora lo enciende un momento y lo deja como estaba."},
+		{"Servicios innecesarios", "En Windows 11 reciente, el servicio TrkWks no se deja modificar ni por un administrador y hacía fallar todo el ajuste. Ahora se saltea y se aplican los demás."},
+		{"Widgets y otros ajustes bloqueados", "Si Windows bloquea todo lo que hace un ajuste (por ejemplo, su protección UCPD con los Widgets), ahora se explica claramente en vez de mostrar un error técnico."},
+	}},
 	{"3.2.1", "La 3.2, publicada", []Change{
 		{"Lo mismo que la 3.2.0, ahora publicado", "La 3.2.0 no llegó a publicarse porque un test fallaba en el servidor de GitHub (que tiene Windows en inglés). Esta versión trae exactamente lo mismo: espacio en disco, perfiles por juego, copias de la configuración, tema claro y lo demás."},
 	}},
@@ -240,6 +245,11 @@ func Since(installed string) []Release {
 // English tiene la traducción de las versiones nuevas (desde la 3.1.0). Las anteriores solo están en
 // español: si falta una versión, se muestra en español.
 var English = map[string]Release{
+	"3.2.2": {Title: "Tweaks Windows was blocking", Changes: []Change{
+		{"Memory compression", "It failed with error 1058 if SysMain was disabled (for example, by «Turn off SysMain and Prefetch»). Now it starts it for a moment and leaves it as it was."},
+		{"Unneeded services", "On recent Windows 11, the TrkWks service cannot be changed even by an administrator and it made the whole tweak fail. Now it is skipped and the rest is applied."},
+		{"Widgets and other blocked tweaks", "If Windows blocks everything a tweak does (for example, its UCPD protection with Widgets), it is now explained clearly instead of showing a technical error."},
+	}},
 	"3.2.1": {Title: "Version 3.2, published", Changes: []Change{
 		{"The same as 3.2.0, now published", "3.2.0 was not published because a test failed on the GitHub server (which runs Windows in English). This version brings exactly the same: disk space, per-game profiles, configuration backups, light theme and the rest."},
 	}},

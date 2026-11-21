@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"fpsforge/internal/changelog"
 	"fpsforge/internal/diag"
 )
 
@@ -69,7 +70,7 @@ func TestWhatsNew(t *testing.T) {
 	}
 	_ = updateSettings(s.Dir, func(st *settings) { st.SeenVersion, st.TermsOK = "3.0.0", true })
 	_, b := call(t, s, base, "/api/whatsnew?lang=en", "", nil)
-	if !strings.Contains(b, `"version":"`+Version+`"`) || !strings.Contains(b, "First-run assistant") {
+	if !strings.Contains(b, `"version":"`+Version+`"`) || !strings.Contains(b, changelog.English[Version].Title) {
 		t.Fatalf("novedades en inglés: %s", b)
 	}
 	call(t, s, base, "/api/whatsnew", "{}", nil)

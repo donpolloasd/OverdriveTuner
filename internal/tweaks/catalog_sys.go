@@ -19,7 +19,7 @@ func memoryTweaks() []Tweak {
 		{ID: "mem.memcomp", Test: true, Cat: "memory", Name: "Desactivar compresión de memoria",
 			Desc: "Evita gastar CPU en comprimir RAM cuando te sobra memoria.",
 			Risk: 1, Comp: true, Reboot: true, Cond: "ram16", Ops: []Op{
-				PS(`Disable-MMAgent -MemoryCompression -ErrorAction Stop`, `Enable-MMAgent -MemoryCompression -ErrorAction Stop`),
+				PS(withSysMain(`Disable-MMAgent -MemoryCompression -ErrorAction Stop`), withSysMain(`Enable-MMAgent -MemoryCompression -ErrorAction Stop`)),
 			}},
 		{ID: "mem.prefetch", Cat: "memory", Name: "Desactivar SysMain y Prefetch (solo SSD)",
 			Desc: "En un SSD no aportan nada y generan lecturas/escrituras y uso de CPU en segundo plano.",
@@ -173,7 +173,7 @@ foreach ($t in $tasks) { $p = Split-Path $t -Parent; $n = Split-Path $t -Leaf
 		{ID: "svc.unneeded", Cat: "services", Name: "Deshabilitar servicios innecesarios",
 			Desc: "Fax, demo de tienda, mapas sin conexión, seguimiento de vínculos, control parental, reproductor en red, teléfono, pagos NFC, Insider y ubicación.",
 			Risk: 0, Rec: true, Ops: []Op{
-				Svc("Fax", 4, 3), Svc("RetailDemo", 4, 3), Svc("MapsBroker", 4, 2), Svc("TrkWks", 4, 2),
+				Svc("Fax", 4, 3), Svc("RetailDemo", 4, 3), Svc("MapsBroker", 4, 2), Svc("TrkWks", 4, 2).Opt(), // en Windows 11 reciente, TrkWks no se deja modificar ni por un administrador
 				Svc("WpcMonSvc", 4, 3), Svc("WMPNetworkSvc", 4, 3), Svc("PhoneSvc", 4, 3), Svc("SEMgrSvc", 4, 3),
 				Svc("wisvc", 4, 3), Svc("lfsvc", 4, 3), Svc("AJRouter", 4, 3),
 			}},
@@ -188,4 +188,20 @@ foreach ($t in $tasks) { $p = Split-Path $t -Parent; $n = Split-Path $t -Leaf
 			Warn: "No podrás imprimir ni exportar a PDF desde 'Imprimir' hasta revertir.",
 			Risk: 1, Ops: []Op{Svc("Spooler", 4, 2)}},
 	}
+}
+
+// withSysMain corre un comando de MMAgent (compresión de memoria) con el servicio SysMain en marcha: esos
+// comandos fallan con el error 1058 si está deshabilitado. Al terminar, SysMain vuelve a como estaba.
+func withSysMain(cmd string) string {
+	return `$svc = Get-Service SysMain -ErrorAction SilentlyContinue
+$was = if ($svc) { [string]$svc.StartType } else { '' }
+$run = $svc -and $svc.Status -eq 'Running'
+try {
+  if ($was -eq 'Disabled') { Set-Service SysMain -StartupType Manual }
+  if ($svc -and -not $run) { Start-Service SysMain -ErrorAction Stop }
+  ` + cmd + `
+} finally {
+  if ($svc -and -not $run) { Stop-Service SysMain -Force -ErrorAction SilentlyContinue }
+  if ($was -eq 'Disabled') { Set-Service SysMain -StartupType Disabled }
+}`
 }

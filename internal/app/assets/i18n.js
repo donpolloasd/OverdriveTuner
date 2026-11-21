@@ -514,6 +514,7 @@ function trText(s) {
   ["Si algo sale mal, solo vas a poder volver a ese último punto. También se borran otras instantáneas del disco del sistema (por ejemplo, las de programas de copia de seguridad).", "If something goes wrong, you will only be able to go back to that last point. Other system drive snapshots are also deleted (for example, those from backup programs)."],
   ["Confirmar otra vez", "Confirm again"], ["¿Seguro? Esto no se puede deshacer.", "Are you sure? This cannot be undone."], ["Se borraron {n} puntos de restauración.", "{1} restore points were deleted."],
   ["Borrar puntos de restauración necesita doble confirmación del usuario.", "Deleting restore points needs double confirmation from the user."], ["no se pudo leer la lista de puntos de restauración", "could not read the restore point list"],
+  ["Windows no permite este cambio en tu versión (lo bloquea su propia protección). Si querés, hacelo a mano desde Configuración de Windows.", "Windows does not allow this change in your version (its own protection blocks it). If you want, do it by hand from Windows Settings."],
   /* Limpieza: objetivos (vienen de internal/extras/cleaner.go) */
   ["Temporales del usuario", "User temporary files"], ["Archivos en %TEMP%", "Files in %TEMP%"],
   ["Temporales de Windows", "Windows temporary files"],

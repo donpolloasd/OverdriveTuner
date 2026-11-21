@@ -407,3 +407,9 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 
 == Versión 3.2.1 ==
 - Misma versión que la 3.2.0, que no llegó a publicarse: un test del recordatorio de reinicio esperaba el texto en español y el servidor de GitHub Actions tiene Windows en inglés. El test ahora fija el idioma.
+
+== Versión 3.2.2 ==
+- Arreglo: «Desactivar compresión de memoria» fallaba con el error 1058 cuando SysMain estaba deshabilitado (por ejemplo, por «Desactivar SysMain y Prefetch»): Disable-MMAgent necesita ese servicio en marcha. Ahora se enciende un momento y vuelve a quedar como estaba (también al revertir).
+- Arreglo: «Deshabilitar servicios innecesarios» fallaba entero porque en Windows 11 reciente el servicio TrkWks no se deja modificar ni por un administrador («acceso denegado»). Ahora TrkWks es opcional: si Windows no deja tocarlo se saltea y se aplican los demás; tampoco cuenta para saber si el ajuste sigue aplicado.
+- Arreglo: «Desactivar Widgets» fallaba con «acceso denegado» porque Windows 11 bloquea esa política con su protección UCPD, aunque los administradores tengan permiso. Ahora, si Windows bloquea todo lo que hace un ajuste, se explica que Windows no lo permite y que se puede hacer a mano desde su Configuración, en vez de mostrar el error técnico.
+- Encontrado en la PC de pruebas con los mensajes de error reales; arreglado con tests. Sin probar todavía aplicando los ajustes en real (necesitan permisos de administrador).

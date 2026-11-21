@@ -99,7 +99,7 @@ func debloatTweaks() []Tweak {
 		{ID: "db.widgets", Cat: "debloat", Name: "Desactivar Widgets (Noticias e intereses)",
 			Desc: "Desactiva el panel de Widgets de Windows 11 y su proceso en segundo plano.",
 			Risk: 0, Rec: true, Cond: "win11", Ops: []Op{
-				D(`HKLM\SOFTWARE\Policies\Microsoft\Dsh`, "AllowNewsAndInterests", "0", Del),
+				D(`HKLM\SOFTWARE\Policies\Microsoft\Dsh`, "AllowNewsAndInterests", "0", Del).Opt(), // UCPD puede bloquearla
 				D(explAdv, "TaskbarDa", "0", "1").Opt(),
 			}},
 		{ID: "db.chat", Cat: "debloat", Name: "Quitar Chat / Teams de la barra de tareas",
