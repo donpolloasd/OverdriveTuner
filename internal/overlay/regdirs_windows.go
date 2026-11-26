@@ -48,6 +48,9 @@ func regString(path, name string, view uint32) string {
 	return syscall.UTF16ToString(buf)
 }
 
+// steamRoot es la carpeta donde está instalado Steam («» si no está).
+func steamRoot() string { return regString(`SOFTWARE\Valve\Steam`, "InstallPath", 0x200) }
+
 // registryGameDirs devuelve las carpetas de juegos que EA (y Origin), GOG y Ubisoft guardan en el registro.
 func registryGameDirs() []string {
 	const wow64, wow32 = 0x100, 0x200

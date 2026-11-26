@@ -43,7 +43,7 @@ type Model struct {
 	LineCols []Part
 }
 
-func tempPart(p Palette, t float64, limit int) Part {
+func tempPart(p Palette, t float64, warn, limit int) Part {
 	if t == telemetry.Unknown || t <= 0 {
 		return Part{"—", p.Label}
 	}
@@ -51,10 +51,30 @@ func tempPart(p Palette, t float64, limit int) Part {
 	switch {
 	case t >= float64(limit):
 		c = p.Bad
-	case t >= 70:
+	case t >= float64(warn):
 		c = p.Warn
 	}
 	return Part{fmt.Sprintf("%.0f°", t), c}
+}
+
+// warnTemp es desde cuántos grados se pinta de aviso.
+func (sn Snapshot) warnTemp() int {
+	if !sn.Cfg.Levels || sn.Cfg.TempWarn <= 0 {
+		return 70
+	}
+	return sn.Cfg.TempWarn
+}
+
+// levelColor es el color de un uso en % según sus umbrales (0 = sin umbral).
+func (sn Snapshot) levelColor(p Palette, v float64, warn, bad int) uint32 {
+	switch {
+	case !sn.Cfg.Levels:
+	case bad > 0 && v >= float64(bad):
+		return p.Bad
+	case warn > 0 && v >= float64(warn):
+		return p.Warn
+	}
+	return p.Value
 }
 
 // limit devuelve el límite de aviso (el rojo de la temperatura sigue al límite configurado).
@@ -90,16 +110,16 @@ func BuildModel(sn Snapshot) Model {
 	// Filas de datos, en el orden elegido (RowKeys es el original).
 	build := map[string]func() (Row, bool){
 		"cpu": func() (Row, bool) {
-			r := Row{Label: "CPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.CPU), p.Value}}}
+			r := Row{Label: "CPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.CPU), sn.levelColor(p, s.CPU, c.CPUWarn, c.CPUBad)}}}
 			if c.ShowTemp {
-				r.Parts = append(r.Parts, tempPart(p, s.CPUTemp, sn.limit(c.AlertCPU)))
+				r.Parts = append(r.Parts, tempPart(p, s.CPUTemp, sn.warnTemp(), sn.limit(c.AlertCPU)))
 			}
 			return r, c.ShowCPU
 		},
 		"gpu": func() (Row, bool) {
-			r := Row{Label: "GPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.GPU), p.Value}}}
+			r := Row{Label: "GPU", Parts: []Part{{fmt.Sprintf("%.0f%%", s.GPU), sn.levelColor(p, s.GPU, c.GPUWarn, c.GPUBad)}}}
 			if c.ShowTemp {
-				r.Parts = append(r.Parts, tempPart(p, s.GPUTemp, sn.limit(c.AlertGPU)))
+				r.Parts = append(r.Parts, tempPart(p, s.GPUTemp, sn.warnTemp(), sn.limit(c.AlertGPU)))
 			}
 			return r, c.ShowGPU
 		},
@@ -107,7 +127,14 @@ func BuildModel(sn Snapshot) Model {
 			return Row{Label: "VRAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.GPUVRAMMB/1024), p.Value}}}, c.ShowVRAM
 		},
 		"ram": func() (Row, bool) {
-			return Row{Label: "RAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.RAMUsedMB/1024), p.Value}}}, c.ShowRAM
+			return Row{Label: "RAM", Parts: []Part{{fmt.Sprintf("%.1f GB", s.RAMUsedMB/1024), sn.levelColor(p, s.RAMPct(), c.RAMWarn, c.RAMBad)}}}, c.ShowRAM
+		},
+		"ssd": func() (Row, bool) {
+			lim := c.AlertSSD
+			if lim <= 0 || !c.AlertOn {
+				lim = 70
+			}
+			return Row{Label: "SSD", Parts: []Part{tempPart(p, s.SSDTemp, min(sn.warnTemp(), lim-8), lim)}}, c.ShowSSD
 		},
 		"frame": func() (Row, bool) { // tiempo de cuadro promedio: 1000 / FPS
 			v := Part{"—", p.Label}
@@ -139,6 +166,12 @@ func BuildModel(sn Snapshot) Model {
 		if sn.AlertGPU {
 			m.Rows = append(m.Rows, Row{Label: sn.tr("Aviso"), Parts: []Part{{sn.tr("GPU caliente"), p.Bad}}})
 		}
+		if sn.AlertSSD {
+			m.Rows = append(m.Rows, Row{Label: sn.tr("Aviso"), Parts: []Part{{sn.tr("SSD caliente"), p.Bad}}})
+		}
+	}
+	if c.ShowMic && sn.MicMuted {
+		m.Rows = append(m.Rows, Row{Label: sn.tr("Mic"), Parts: []Part{{sn.tr("silenciado"), p.Bad}}})
 	}
 	// Diseño de una línea: «238 FPS · CPU 41% 62° · GPU 70% 54° · RAM 11.2 GB»
 	if c.ShowFPS {

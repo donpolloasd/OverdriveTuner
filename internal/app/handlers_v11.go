@@ -39,6 +39,7 @@ type settings struct {
 	LastBuild   int             `json:"lastBuild,omitempty"`   // compilación de Windows vista la última vez
 	PrevBuild   int             `json:"prevBuild,omitempty"`   // la anterior, si Windows se actualizó
 	BuildAt     time.Time       `json:"buildAt,omitempty"`     // cuándo se notó la actualización de Windows
+	WinFavs     []string        `json:"winFavs,omitempty"`     // opciones de Windows marcadas como favoritas
 	Fresh       map[string]bool `json:"fresh,omitempty"`       // pasos marcados en «Después de formatear»
 }
 

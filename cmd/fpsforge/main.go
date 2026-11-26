@@ -265,6 +265,9 @@ func watchExclusive(dir string, stop <-chan struct{}) {
 		if overlay.ClaimThrottleNotice(dir, st) {
 			winhost.TrayNotify(st.ThrottleTitle(en), st.ThrottleText(en))
 		}
+		if overlay.ClaimHeatNotice(dir, st) {
+			winhost.TrayNotify(st.HeatNotice(en))
+		}
 	}
 }
 

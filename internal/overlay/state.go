@@ -37,6 +37,12 @@ type State struct {
 	ThrottleSince int64   `json:"throttleSince,omitempty"` // Unix ms
 	ThrottleLimit float64 `json:"throttleLimit,omitempty"` // % de la velocidad máxima permitida (procesador)
 	ThrottleTemp  float64 `json:"throttleTemp,omitempty"`
+	// Heat: último aviso de temperatura alta para la notificación de Windows («cpu», «gpu» o «ssd»).
+	Heat      string  `json:"heat,omitempty"`
+	HeatSince int64   `json:"heatSince,omitempty"` // Unix ms
+	HeatTemp  float64 `json:"heatTemp,omitempty"`
+	MicMuted  bool    `json:"micMuted,omitempty"`
+	Problem   bool    `json:"problem,omitempty"`
 }
 
 // ClaimExclusiveNotice dice si hay que avisar en la bandeja que el juego está en pantalla completa

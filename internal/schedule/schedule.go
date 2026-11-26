@@ -45,22 +45,32 @@ var dayNames = []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", 
 
 func psq(s string) string { return "'" + strings.ReplaceAll(s, "'", "''") + "'" }
 
+// Frecuencias: cada día, cada semana o cada cuatro semanas.
+var freqs = map[string]string{"daily": "-Daily -DaysInterval 1", "weekly": "-Weekly -WeeksInterval 1", "monthly": "-Weekly -WeeksInterval 4"}
+
 // Script devuelve el PowerShell que crea la tarea. day: 0 = domingo … 6 = sábado; hhmm: «HH:MM».
-func Script(j Job, exe string, day int, hhmm string) string {
+func Script(j Job, exe, freq string, day int, hhmm string) string {
+	trig := freqs[freq]
+	if freq != "daily" {
+		trig += " -DaysOfWeek " + dayNames[day]
+	}
 	return `$ErrorActionPreference='Stop'
 $u = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 $a = New-ScheduledTaskAction -Execute ` + psq(exe) + ` -Argument ` + psq(j.Arg) + ` -WorkingDirectory (Split-Path -Parent ` + psq(exe) + `)
-$t = New-ScheduledTaskTrigger -Weekly -DaysOfWeek ` + dayNames[day] + ` -At ` + psq(hhmm) + `
+$t = New-ScheduledTaskTrigger ` + trig + ` -At ` + psq(hhmm) + `
 $p = New-ScheduledTaskPrincipal -UserId $u -LogonType Interactive -RunLevel Highest
 $s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)
 Register-ScheduledTask -TaskName ` + psq(j.Name) + ` -Action $a -Trigger $t -Principal $p -Settings $s -Force | Out-Null`
 }
 
-// Enable crea o reemplaza la tarea semanal.
-func Enable(sys system.System, id, exe string, day int, hhmm string) error {
+// Enable crea o reemplaza la tarea. freq: daily, weekly o monthly (cada cuatro semanas).
+func Enable(sys system.System, id, exe, freq string, day int, hhmm string) error {
 	j, ok := ByID(id)
 	if !ok {
 		return fmt.Errorf("tarea desconocida")
+	}
+	if freqs[freq] == "" {
+		return fmt.Errorf("frecuencia no válida")
 	}
 	if day < 0 || day > 6 || !timeRe.MatchString(hhmm) {
 		return fmt.Errorf("día u hora no válidos")
@@ -68,7 +78,7 @@ func Enable(sys system.System, id, exe string, day int, hhmm string) error {
 	if strings.TrimSpace(exe) == "" {
 		return fmt.Errorf("no se conoce la ruta del programa")
 	}
-	if out, err := sys.PowerShell(Script(j, exe, day, hhmm), 45*time.Second); err != nil {
+	if out, err := sys.PowerShell(Script(j, exe, freq, day, hhmm), 45*time.Second); err != nil {
 		return fmt.Errorf("no se pudo programar la tarea: %v %s", err, strings.TrimSpace(out))
 	}
 	return nil
@@ -102,6 +112,7 @@ func RunNow(sys system.System, id string) error {
 type Info struct {
 	ID         string `json:"id"`
 	Registered bool   `json:"registered"`
+	Freq       string `json:"freq"`
 	Day        int    `json:"day"`
 	Time       string `json:"time"`
 	LastRun    string `json:"lastRun"`
@@ -112,7 +123,7 @@ type Info struct {
 
 // Status consulta la tarea.
 func Status(sys system.System, id string) Info {
-	info := Info{ID: id, Time: "20:00"}
+	info := Info{ID: id, Freq: "weekly", Time: "20:00"}
 	j, ok := ByID(id)
 	if !ok {
 		return info
@@ -122,8 +133,8 @@ if ($t) { $i = Get-ScheduledTaskInfo -TaskName `+psq(j.Name)+`
   $l = ''; if ($i.LastRunTime -and $i.LastRunTime.Year -gt 2000) { $l = $i.LastRunTime.ToString('yyyy-MM-dd HH:mm') }
   $n = ''; if ($i.NextRunTime -and $i.NextRunTime.Year -gt 2000) { $n = $i.NextRunTime.ToString('yyyy-MM-dd HH:mm') }
   $tr = $t.Triggers | Select-Object -First 1
-  $m = 0; $h = ''; if ($tr) { $m = [int]$tr.DaysOfWeek; $h = ([datetime]$tr.StartBoundary).ToString('HH:mm') }
-  'T|' + $l + '|' + $n + '|' + $i.LastTaskResult + '|' + $m + '|' + $h }`, 25*time.Second)
+  $m = 0; $h = ''; if ($tr) { $m = [int]$tr.DaysOfWeek; $wi = [int]$tr.WeeksInterval; $di = [int]$tr.DaysInterval; $h = ([datetime]$tr.StartBoundary).ToString('HH:mm') }
+  'T|' + $l + '|' + $n + '|' + $i.LastTaskResult + '|' + $m + '|' + $h + '|' + $wi + '|' + $di }`, 25*time.Second)
 	if err != nil {
 		return info
 	}
@@ -131,7 +142,7 @@ if ($t) { $i = Get-ScheduledTaskInfo -TaskName `+psq(j.Name)+`
 }
 
 func parseInfo(id, out string) Info {
-	info := Info{ID: id, Time: "20:00"}
+	info := Info{ID: id, Freq: "weekly", Time: "20:00"}
 	for _, ln := range strings.Split(out, "\n") {
 		ln = strings.TrimSpace(ln)
 		if !strings.HasPrefix(ln, "T|") {
@@ -154,6 +165,14 @@ func parseInfo(id, out string) Info {
 		}
 		if timeRe.MatchString(f[5]) {
 			info.Time = f[5]
+		}
+		if len(f) >= 8 {
+			switch {
+			case mask == 0 && f[7] != "" && f[7] != "0":
+				info.Freq = "daily"
+			case f[6] == "4":
+				info.Freq = "monthly"
+			}
 		}
 		return info
 	}
@@ -200,15 +219,57 @@ var (
 	cleanRun     = extras.Run
 )
 
+const cleanFile = "limpieza.json"
+
+// Allowed dice si algo se puede limpiar sin que el usuario esté mirando: nunca lo que pide confirmación
+// (los shaders).
+func Allowed(t extras.Target) bool { return t.Confirm == "" }
+
+// LoadClean devuelve qué se eligió para la limpieza programada (nil = lo seguro de siempre).
+func LoadClean(dir string) map[string]bool {
+	var ids []string
+	b, err := os.ReadFile(filepath.Join(dir, cleanFile))
+	if err != nil || json.Unmarshal(b, &ids) != nil {
+		return nil
+	}
+	m := map[string]bool{}
+	for _, id := range ids {
+		m[id] = true
+	}
+	return m
+}
+
+// SaveClean guarda qué limpiar (solo lo permitido).
+func SaveClean(dir string, ids []string) error {
+	ok := map[string]bool{}
+	for _, t := range cleanTargets() {
+		if Allowed(t) {
+			ok[t.ID] = true
+		}
+	}
+	out := []string{}
+	for _, id := range ids {
+		if ok[id] {
+			out = append(out, id)
+		}
+	}
+	if len(out) == 0 {
+		return fmt.Errorf("Elegí al menos una cosa para limpiar.")
+	}
+	b, _ := json.Marshal(out)
+	return os.WriteFile(filepath.Join(dir, cleanFile), b, 0o644)
+}
+
 // Run hace el trabajo de una tarea (lo llama OverdriveTuner.exe --task <id>) y devuelve un resumen.
 func Run(sys system.System, dataDir, id string) (string, error) {
 	var msg string
 	var err error
 	switch id {
 	case "cleanup":
+		pick := LoadClean(dataDir)
 		var ids []string
 		for _, t := range cleanTargets() {
-			if t.Safe && !t.Deep && t.Confirm == "" { // solo lo seguro: temporales, volcados y miniaturas (nunca shaders)
+			if Allowed(t) && (pick[t.ID] || (pick == nil && t.Safe)) {
 				ids = append(ids, t.ID)
 			}
 		}

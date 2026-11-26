@@ -177,8 +177,8 @@ function tweaksOf(cat) { return S.tweaks.filter(t => t.cat === cat); }
 function activeCount(cat) { const l = tweaksOf(cat).filter(t => t.suitable); return [l.filter(t => t.active).length, l.length]; }
 
 /* ---------- navegación ---------- */
-const TOOLS = [["install", "Instalar programas"], ["overlay", "Overlay en juego"], ["gamemode", "Modo juego"], ["fluidez", "Diagnóstico"], ["bench", "Benchmark"], ["clean", "Limpieza"], ["space", "Espacio en disco"], ["startup", "Inicio de Windows"], ["fresh", "Después de formatear"]];
-const PROGRAM = [["history", "Historial"], ["settings", "Configuración"]];
+const TOOLS = [["install", "Instalar programas"], ["overlay", "Overlay en juego"], ["gamemode", "Modo juego"], ["fluidez", "Diagnóstico"], ["bench", "Benchmark"], ["perf", "Pruebas de rendimiento"], ["clean", "Limpieza"], ["space", "Espacio en disco"], ["startup", "Inicio de Windows"], ["winopts", "Opciones de Windows"], ["mic", "Micrófono"], ["fresh", "Después de formatear"]];
+const PROGRAM = [["help", "Solucionar problemas"], ["history", "Historial"], ["settings", "Configuración"]];
 let drvOpen = false;
 
 /* ---------- búsqueda global: lleva al ajuste o a la sección ---------- */
@@ -196,7 +196,8 @@ function gSearch(q) {
   const tws = S.tweaks.filter(t => has(t.name, t.desc, t.warn || "", catName(t.cat), lang(catName(t.cat))))
     .map(t => ({ kind: "tw", id: t.id, cat: t.cat, name: t.name, where: catName(t.cat), first: has(t.name) }))
     .sort((a, b) => b.first - a.first);
-  return [...secs, ...tws].slice(0, 9);
+  const extra = searchExtra(words, has);
+  return [...secs, ...extra.slice(0, 6), ...tws.slice(0, 8), ...extra.slice(6)].slice(0, 16);
 }
 
 function gShow() {
@@ -211,6 +212,7 @@ function gGo(h) {
   const inp = $("#gq");
   inp.value = ""; gHits = []; gShow(); inp.blur();
   query = "";
+  if (h.run) return h.run();
   if (h.kind === "sec") { view = h.id; render(); $("#main").scrollTop = 0; return; }
   view = h.cat; render();
   const row = document.querySelector(`.row[data-tid="${CSS.escape(h.id)}"]`);
@@ -229,7 +231,7 @@ function gGo(h) {
     else if (e.key === "Escape") { inp.value = ""; gHits = []; gShow(); }
   };
   inp.onblur = () => setTimeout(() => { box.hidden = true; inp.setAttribute("aria-expanded", "false"); }, 120);
-  inp.onfocus = () => { if (inp.value.trim()) gShow(); };
+  inp.onfocus = () => { searchPrepare(); if (inp.value.trim()) gShow(); };
   box.addEventListener("mousedown", e => e.preventDefault()); // que el clic llegue antes de perder el foco
   box.addEventListener("click", e => { const b = e.target.closest("button[data-i]"); if (b) gGo(gHits[+b.dataset.i]); });
   window.focusSearch = () => { inp.focus(); inp.select(); };
@@ -271,6 +273,10 @@ function render() {
   if (view === "startup") return renderStartup(m);
   if (view === "fresh") return renderFresh(m);
   if (view === "space") return renderSpace(m);
+  if (view === "perf") return renderPerf(m);
+  if (view === "mic") return renderMic(m);
+  if (view === "winopts") return renderWinOpts(m);
+  if (view === "help") return renderHelp(m);
   if (view === "history") return renderHistory(m);
   if (view === "settings") return renderSettings(m);
   renderCategory(m, view);
@@ -636,7 +642,7 @@ async function renderFluidez(m, fresh) {
   $("#tGame").onclick = e => runTool(e.target, "Midiendo servidores de juegos (unos 5 segundos)…", async () => gamePingHtml(await api("gameping"), st));
   $("#tDpc").onclick = e => runTool(e.target, "Midiendo la latencia del sistema (10 segundos)…", async () => dpcHtml(await api("dpc")));
   $("#tIssue").onclick = reportIssue;
-  $("#tDns").onclick = e => runTool(e.target, "Midiendo servidores DNS (unos 10 segundos)…", async () => dnsHtml(await api("dnsbench")));
+  $("#tDns").onclick = e => runTool(e.target, "Midiendo servidores DNS (unos 10 segundos)…", async () => dnsHtml(await api("dnsbench", { custom: dnsCustom })));
   $("#tNetMon").onclick = e => runTool(e.target, "Leyendo conexiones…", async () => netMonHtml(await api("netmon")));
   tout.addEventListener("click", dnsClick);
   $("#tVid").onclick = e => runTool(e.target, "Buscando cs2_video.txt…", async () => { const v = await api("cs2video"); return `<p class="note">${esc(v.message)}</p>` + rowsOf(v.findings, f => `<div class="row"><div><h4>${esc(f.key)}: ${esc(f.value)} ${st(f.status)}</h4><p>${esc(f.advice)}</p></div></div>`); });
@@ -709,6 +715,7 @@ async function renderSessions(m) {
   });
   box.querySelectorAll("[data-i]").forEach(b => b.onclick = async () => { try { await api("sessions/import", { id: b.dataset.i }); renderBench(m); } catch (e) { toast(e.message, 5000); } });
   box.querySelectorAll("[data-d]").forEach(b => b.onclick = async () => { await api("sessions/delete", { id: b.dataset.d }); renderBench(m); });
+  sessCompare(box, list);
 }
 
 async function renderBisect(m) {
@@ -737,10 +744,10 @@ async function renderBisect(m) {
 
 /* ---------- overlay ---------- */
 let ovTimer = null;
-const OVL_ITEMS = [["showFps", "FPS"], ["showLow", "1% low"], ["showLow01", "0.1% low"], ["showGraph", "Gráfico de cuadros"], ["showCpu", "CPU"], ["showGpu", "GPU"], ["showRam", "RAM"], ["showVram", "VRAM"], ["showTemps", "Temperaturas"], ["showFrame", "Tiempo de cuadro"], ["showClock", "Hora"], ["showGame", "Juego"]];
+const OVL_ITEMS = [["showFps", "FPS"], ["showLow", "1% low"], ["showLow01", "0.1% low"], ["showGraph", "Gráfico de cuadros"], ["showCpu", "CPU"], ["showGpu", "GPU"], ["showRam", "RAM"], ["showVram", "VRAM"], ["showSsd", "Temperatura del SSD"], ["showTemps", "Temperaturas"], ["showFrame", "Tiempo de cuadro"], ["showClock", "Hora"], ["showGame", "Juego"]];
 // Nombres de las filas para ordenarlas.
-const OVL_ROWS = { cpu: "CPU", gpu: "GPU", vram: "VRAM", ram: "RAM", frame: "Tiempo de cuadro", clock: "Hora", game: "Juego" };
-const OVL_ROW_SHOW = { cpu: "showCpu", gpu: "showGpu", vram: "showVram", ram: "showRam", frame: "showFrame", clock: "showClock", game: "showGame" };
+const OVL_ROWS = { cpu: "CPU", gpu: "GPU", vram: "VRAM", ram: "RAM", ssd: "Temperatura del SSD", frame: "Tiempo de cuadro", clock: "Hora", game: "Juego" };
+const OVL_ROW_SHOW = { cpu: "showCpu", gpu: "showGpu", vram: "showVram", ram: "showRam", ssd: "showSsd", frame: "showFrame", clock: "showClock", game: "showGame" };
 // Lo que guarda un estilo: colores, forma y letra (más diseño, tamaño y transparencia).
 const OVL_STYLE_KEYS = ["theme", "colorBg", "colorValue", "colorLabel", "colorFps", "colorGood", "colorWarn", "colorBad", "colorGraph", "colorBorder", "fpsByValue", "fpsLow", "fpsMid", "transparent", "radius", "border", "font", "weight", "fpsSize"];
 
@@ -760,16 +767,19 @@ function ovPreview(cfg, st) {
   const sm = (st && st.sample) || { cpu: 41, gpu: 70, gpuTemp: 54, cpuTemp: -1, ramUsedMb: 11800 };
   const fps = st && st.fps ? Math.round(st.fps) : 238, low = st && st.low1 ? Math.round(st.low1) : 126, low01 = st && st.low01 ? Math.round(st.low01) : 98;
   const look = `${cfg.transparent ? " tr" : ""}" style="${ovStyle(cfg, fps)}`;
-  const t = v => v > 0 ? `<i class="${v >= 85 ? "bd" : v >= 70 ? "wn" : "gd"}">${Math.round(v)}°</i>` : `<i class="dm">—</i>`;
+  const t = v => v > 0 ? `<i class="${v >= 85 ? "bd" : v >= (cfg.colorLevels ? cfg.tempWarn : 70) ? "wn" : "gd"}">${Math.round(v)}°</i>` : `<i class="dm">—</i>`;
   const bars = Array.from({ length: 40 }, (_, i) => { const sp = i === 27 ? 26 : i === 11 ? 14 : 5 + (i * 7 % 3); return `<b class="${sp > 20 ? "bd" : sp > 10 ? "wn" : "gd"}" style="height:${sp / 26 * 100}%"></b>`; }).join("");
   const now = new Date(), two = n => String(n).padStart(2, "0");
   const game = ((st && st.game) || "cs2.exe").replace(/\.exe$/i, "");
   const L = (es, en) => ((cfg.lang || window.UILANG) === "en" ? en : es); // idioma del panel, no el de la interfaz
+  const lv = (x, w, b) => !cfg.colorLevels ? "" : b > 0 && x >= b ? ' class="bd"' : w > 0 && x >= w ? ' class="wn"' : "";
+  const ssdT = sm.ssdTemp > 0 ? sm.ssdTemp : st ? -1 : 41;
   const R = { // filas de datos, en el orden elegido (igual que el overlay real)
-    cpu: () => cfg.showCpu && `<div><span>CPU</span><em>${Math.round(sm.cpu)}%</em>${cfg.showTemps ? t(sm.cpuTemp) : ""}</div>`,
-    gpu: () => cfg.showGpu && `<div><span>GPU</span><em>${Math.round(sm.gpu)}%</em>${cfg.showTemps ? t(sm.gpuTemp) : ""}</div>`,
+    cpu: () => cfg.showCpu && `<div><span>CPU</span><em${lv(sm.cpu, cfg.cpuWarn, cfg.cpuBad)}>${Math.round(sm.cpu)}%</em>${cfg.showTemps ? t(sm.cpuTemp) : ""}</div>`,
+    gpu: () => cfg.showGpu && `<div><span>GPU</span><em${lv(sm.gpu, cfg.gpuWarn, cfg.gpuBad)}>${Math.round(sm.gpu)}%</em>${cfg.showTemps ? t(sm.gpuTemp) : ""}</div>`,
     vram: () => cfg.showVram && `<div><span>VRAM</span><em>${((sm.gpuVramMb || 0) / 1024).toFixed(1)} GB</em></div>`,
-    ram: () => cfg.showRam && `<div><span>RAM</span><em>${(sm.ramUsedMb / 1024).toFixed(1)} GB</em></div>`,
+    ram: () => cfg.showRam && `<div><span>RAM</span><em${lv(100 * sm.ramUsedMb / (sm.ramTotMb || 16384), cfg.ramWarn, cfg.ramBad)}>${(sm.ramUsedMb / 1024).toFixed(1)} GB</em></div>`,
+    ssd: () => cfg.showSsd && `<div><span>SSD</span><em>${ssdT > 0 ? Math.round(ssdT) + "°" : "—"}</em></div>`,
     frame: () => cfg.showFrame && `<div><span>${L("Cuadro", "Frame")}</span><em>${(1000 / fps).toFixed(1)} ms</em></div>`,
     clock: () => cfg.showClock && `<div><span>${L("Hora", "Time")}</span><em>${two(now.getHours())}:${two(now.getMinutes())}</em></div>`,
     game: () => cfg.showGame && `<div><span>${L("Juego", "Game")}</span><em>${esc(game)}</em></div>`,
@@ -791,7 +801,7 @@ function ovStatus(d) {
   const sm = st.sample || {};
   const tmp = v => v > 0 ? Math.round(v) + " °C" : "no disponible";
   return `<div class="row ${a ? "on" : ""}"><div><h4>${a ? "Overlay abierto" : "Overlay cerrado"} ${a && st.gameRunning ? '<span class="tag">' + esc(st.game) + " detectado</span>" : a ? '<span class="tag">esperando ' + (st.game ? esc(st.game) : "un juego") + "</span>" : ""}</h4>
-    <p>${a ? `FPS ${Math.round(st.fps || 0)} · 1% low ${Math.round(st.low1 || 0)}${st.low01 ? ` · 0.1% low ${Math.round(st.low01)}` : ""} · CPU ${Math.round(sm.cpu || 0)}% (hilo más cargado ${Math.round(sm.cpuThread || 0)}%) · GPU ${Math.round(sm.gpu || 0)}% ${tmp(sm.gpuTemp)} · RAM ${((sm.ramUsedMb || 0) / 1024).toFixed(1)} GB · temp. CPU ${tmp(sm.cpuTemp)}` : "Abrilo para ver FPS y uso mientras jugás."}</p>
+    <p>${a ? `FPS ${Math.round(st.fps || 0)} · 1% low ${Math.round(st.low1 || 0)}${st.low01 ? ` · 0.1% low ${Math.round(st.low01)}` : ""} · CPU ${Math.round(sm.cpu || 0)}% (hilo más cargado ${Math.round(sm.cpuThread || 0)}%) · GPU ${Math.round(sm.gpu || 0)}% ${tmp(sm.gpuTemp)} · RAM ${((sm.ramUsedMb || 0) / 1024).toFixed(1)} GB · temp. CPU ${tmp(sm.cpuTemp)} · SSD ${tmp(sm.ssdTemp)}` : "Abrilo para ver FPS y uso mientras jugás."}</p>
     ${a && st.verdict && st.verdict.kind !== "none" ? `<p><b>Qué limita tus FPS:</b> ${esc(st.verdict.text)}</p>` : ""}
     ${a && st.exclusive ? `<div class="banner warn">El juego está en pantalla completa exclusiva: Windows no deja que ninguna ventana externa (tampoco este overlay) se dibuje encima. Ponelo en «ventana sin bordes» en sus opciones de video. Si aplicaste «Desactivar optimizaciones de pantalla completa», revertilo.</div>` : ""}
     ${a ? throttleHtml(st) : ""}
@@ -809,7 +819,7 @@ async function renderOverlay(m) {
   const save = async () => { try { Object.assign(cfg, await api("overlay/config", cfg)); syncColors(); $("#cFpsLow").value = cfg.fpsLow; $("#cFpsMid").value = cfg.fpsMid; } catch (e) { toast(e.message, 5000); } $("#ovPrev").innerHTML = ovPreview(cfg, d.running ? d.state : null); };
   m.innerHTML = head + banners() + `<div id="ovStatus">${ovStatus(d)}</div>
   <div class="ovgrid"><div><h3>Vista previa</h3><div class="ovstage" id="ovPrev">${ovPreview(cfg, d.running ? d.state : null)}</div><p class="note">Es una aproximación: el diseño real lo dibuja Windows y puede verse un poco distinto.</p><button class="btn" id="ovPng">Guardar como imagen</button></div>
-  <div><h3>Apariencia</h3><div class="list">
+  <div><div id="ovV34"></div><h3>Apariencia</h3><div class="list">
    <div class="row"><div><h4>Esquina</h4></div><select id="cCorner">${[["tl", "Arriba izquierda"], ["tr", "Arriba derecha"], ["bl", "Abajo izquierda"], ["br", "Abajo derecha"]].map(([v, n]) => `<option value="${v}" ${cfg.corner === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
    <div class="row"><div><h4>Separación del borde</h4><p>En píxeles, desde la esquina elegida.</p></div><div class="bar"><label>Horizontal <input type="number" id="cOffX" min="0" max="1000" value="${cfg.offsetX}" style="width:76px"></label><label>Vertical <input type="number" id="cOffY" min="0" max="1000" value="${cfg.offsetY}" style="width:76px"></label></div></div>
    <div class="row"><div><h4>Monitor</h4><p>En qué pantalla aparece el panel. Si ese monitor se desconecta, vuelve al principal.</p></div><select id="cMon">${(d.monitors || []).map(mo => `<option value="${mo.index}" ${cfg.monitor === mo.index ? "selected" : ""}>${esc(mo.name)}</option>`).join("")}</select></div>
@@ -850,11 +860,12 @@ async function renderOverlay(m) {
   $("#fhBtn").onclick = openFpsHelp;
   const toggle = $("#ovToggle");
   toggle.onclick = async () => { try { await api(d.running ? "overlay/stop" : "overlay/start", {}); toast(d.running ? "Cerrando overlay…" : "Abriendo overlay…"); setTimeout(() => renderOverlay(m), 1800); } catch (e) { toast(e.message, 6000); } };
-  $("#cCorner").onchange = e => { cfg.corner = e.target.value; save(); };
+  $("#cCorner").onchange = e => { cfg.corner = e.target.value; cfg.freePos = false; save(); };
   $("#cOffX").onchange = e => { cfg.offsetX = +e.target.value; save().then(() => { e.target.value = cfg.offsetX; }); };
   $("#cOffY").onchange = e => { cfg.offsetY = +e.target.value; save().then(() => { e.target.value = cfg.offsetY; }); };
   $("#ovPng").onclick = ovPng;
   ovWidget($("#ovWidget"), cfg, save);
+  ovV34($("#ovV34"), cfg, save, () => { if (view === "overlay") renderOverlay(m); });
   $("#cMon").onchange = e => { cfg.monitor = +e.target.value; save(); };
   $("#cLang").onchange = e => { cfg.lang = e.target.value; save(); };
   // orden de los datos: arrastrar o Subir/Bajar

@@ -385,3 +385,15 @@ main:focus,main:focus-visible{outline:none}
 .sp-bar{height:5px;background:var(--track);border-radius:3px;overflow:hidden;margin:6px 0 2px}.sp-bar i{display:block;height:100%;background:var(--muted)}
 .sp-path{word-break:break-all}
 .sp-dup{margin:6px 0;gap:8px}
+
+/* 3.3: pruebas, micrófono y editor del overlay */
+.pf-chart{width:100%;max-width:760px;height:120px;border:1px solid var(--line2);border-radius:var(--r);background:var(--s1);margin-top:12px;display:block}
+.pf-chart polyline{fill:none;stroke-width:2;vector-effect:non-scaling-stroke}.pf-chart .r{stroke:var(--text)}.pf-chart .t{stroke:var(--warn)}
+.mic-lv i{transition:width .1s linear;background:var(--ok)}
+.ov-ed{width:min(1080px,96vw);max-height:94vh;overflow:auto}
+.ov-ed-in{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:20px}
+.ov-scr{position:relative;width:100%;overflow:hidden;border:1px solid var(--line3);border-radius:var(--r);background:#0c0c0c linear-gradient(135deg,#1b2430,#2a1d2c)}
+#oePan{position:absolute;cursor:grab;touch-action:none;user-select:none}#oePan:active{cursor:grabbing}#oePan:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:8px}
+.oe-g{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}.oe-g.col{flex-direction:column}
+.oe-chip{justify-content:flex-start;text-align:left}.oe-g.col .oe-chip{cursor:grab}
+@media (max-width:820px){.ov-ed-in{grid-template-columns:1fr}}

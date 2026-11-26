@@ -28,6 +28,7 @@ async function renderApps(m) {
       <button class="btn primary" id="appsInstall" ${wg && S.admin ? "" : "disabled"}>Instalar seleccionados</button>
       <button class="btn" id="appsUpgrade" ${wg && S.admin ? "" : "disabled"}>Actualizar programas instalados</button>
       <span class="sp"></span><span class="note" id="appsNote">Consultando qué ya está instalado…</span></div>
+    ${wg ? `<h3 style="margin-top:22px">${tt("Programas con versión nueva", "Programs with a new version")}</h3><p class="note">${tt("Elegí cuáles actualizar. Incluye programas que no instalaste desde acá.", "Choose which ones to update. It includes programs you did not install from here.")}</p><div id="upList"><button class="btn" id="upLoad">${tt("Buscar versiones nuevas", "Look for new versions")}</button></div>` : ""}
     <h3 style="margin-top:22px">Drivers de video</h3>
     <p class="note">Abre la página oficial del fabricante en tu navegador. Los drivers no se instalan desde acá: descargalos y verificalos vos.</p>
     <div class="bar">${vend.map(v => `<button class="btn drv" data-v="${v}">Drivers de ${vname[v]}</button>`).join("")}</div>`;
@@ -45,6 +46,7 @@ async function renderApps(m) {
   });
   $("#appsInstall").onclick = () => appsInstallSelected(m);
   $("#appsUpgrade").onclick = () => appsUpgradeAll(m);
+  if ($("#upLoad")) $("#upLoad").onclick = () => appsUpgrades($("#upList"));
   if (wg) appsLoadInstalled(m, false);
   else $("#appsNote").textContent = "";
 }

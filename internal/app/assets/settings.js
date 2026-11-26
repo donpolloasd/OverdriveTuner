@@ -1,7 +1,7 @@
 "use strict";
 /* Pestaña Configuración: idioma, atajos globales, importar/exportar, animación de apertura. */
 
-const HK_LABELS = [["hkShow", "Mostrar / ocultar el overlay", "Ctrl+Alt+O"], ["hkRecord", "Empezar / detener grabación", "Ctrl+Alt+R"], ["hkCorner", "Cambiar de esquina", "Ctrl+Alt+P"]];
+const HK_LABELS = [["hkShow", "Mostrar / ocultar el overlay", "Ctrl+Alt+O"], ["hkRecord", "Empezar / detener grabación", "Ctrl+Alt+R"], ["hkCorner", "Cambiar de esquina", "Ctrl+Alt+P"], ["hkMic", "Silenciar el micrófono", ""], ["hkRam", "Liberar memoria RAM", ""], ["hkOpen", "Abrir OverdriveTuner", ""]];
 const HK_KEYS_UNUSED = { " ": "Space", PageUp: "PageUp", PageDown: "PageDown", End: "End", Home: "Home", ArrowLeft: "Left", ArrowRight: "Right", ArrowUp: "Up", ArrowDown: "Down", Insert: "Insert", Delete: "Delete" };
 
 /* Convierte un evento de teclado en texto de atajo, o "" si todavía falta la tecla. */
@@ -24,9 +24,10 @@ function hkFromEvent(e) {
 
 const HK_KEYLIST = [..."ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"].concat(Array.from({ length: 12 }, (_, i) => "F" + (i + 1)), ["Space", "Home", "End", "PageUp", "PageDown", "Insert", "Delete", "Left", "Right", "Up", "Down"]);
 function hkParts(v) { const p = String(v || "").split("+"); const key = p.pop() || "O"; return { mods: p, key }; }
+const HK_OPT = ["hkMic", "hkRam", "hkOpen"], HK_SUG = { hkMic: "Ctrl+Alt+M", hkRam: "Ctrl+Alt+L", hkOpen: "Ctrl+Alt+T" }; // opcionales: arrancan sin atajo
 function hkRow(k, n, v) {
-  const { mods, key } = hkParts(v);
-  return `<div class="row" data-hkrow="${k}"><div><h4>${n}</h4><p>Elegí los modificadores y la tecla. Se necesitan dos modificadores, o uno y una tecla F1–F12.</p></div><div class="bar">${["Ctrl", "Alt", "Shift", "Win"].map(x => `<label><input type="checkbox" data-mod="${x}" ${mods.includes(x) ? "checked" : ""}> ${x}</label>`).join(" ")}
+  const { mods, key } = hkParts(v), opt = HK_OPT.includes(k);
+  return `<div class="row" data-hkrow="${k}"><div><h4>${n}</h4><p>Elegí los modificadores y la tecla. Se necesitan dos modificadores, o uno y una tecla F1–F12.</p></div><div class="bar">${opt ? `<label><input type="checkbox" data-hkon ${v ? "checked" : ""}> ${tt("Activado", "On")}</label>` : ""}${["Ctrl", "Alt", "Shift", "Win"].map(x => `<label><input type="checkbox" data-mod="${x}" ${mods.includes(x) ? "checked" : ""}> ${x}</label>`).join(" ")}
     <select data-key aria-label="Tecla">${HK_KEYLIST.map(x => `<option value="${x}" ${x === key ? "selected" : ""}>${x}</option>`).join("")}</select><button class="btn" data-hkreset="${k}">Restablecer</button></div></div>`;
 }
 function hkSet(m, k, v) {
@@ -34,12 +35,13 @@ function hkSet(m, k, v) {
   const { mods, key } = hkParts(v);
   row.querySelectorAll("[data-mod]").forEach(c => c.checked = mods.includes(c.dataset.mod));
   row.querySelector("[data-key]").value = key;
+  const on = row.querySelector("[data-hkon]"); if (on) on.checked = !!v;
 }
 
 const SCH_DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const SCH_JOBS = [
-  ["cleanup", "Limpieza semanal", "Borra los archivos temporales, los volcados de errores y las miniaturas (solo lo seguro, igual que la selección por defecto de «Limpieza»). No borra la caché de shaders. Corre sin ventana. Si la PC estaba apagada a esa hora, corre al encenderla."],
-  ["restore", "Punto de restauración semanal", "Crea un punto de restauración de Windows para poder volver atrás si algo sale mal. Requiere la Protección del sistema activada en Windows."],
+  ["cleanup", "Limpieza programada", "Borra los archivos temporales y lo que elijas abajo. Nunca la caché de shaders. Corre sin ventana. Si la PC estaba apagada a esa hora, corre al encenderla."],
+  ["restore", "Punto de restauración programado", "Crea un punto de restauración de Windows para poder volver atrás si algo sale mal. Requiere la Protección del sistema activada en Windows."],
 ];
 
 function introPrefs() {
@@ -99,7 +101,7 @@ async function renderSettings(m) {
 
   <h3 id="stSchH" style="margin-top:22px">Tareas programadas</h3>
   <div class="list" id="stSch">${SCH_JOBS.map(([id, name, desc]) => `<div class="row" data-sch="${id}"><div><h4>${name}</h4><p>${desc}</p><p class="note" data-schst></p></div>
-   <span class="bar"><select data-schday aria-label="Día">${SCH_DAYS.map((d, i) => `<option value="${i}">${d}</option>`).join("")}</select><input type="time" data-schtime aria-label="Hora"><button class="btn" data-schrun hidden>Ejecutar ahora</button><button class="sw" data-schon role="switch" aria-checked="false" aria-label="${name}"></button></span></div>`).join("")}</div>
+   <span class="bar"><select data-schfreq aria-label="${tt("Frecuencia", "Frequency")}"><option value="daily">${tt("Cada día", "Daily")}</option><option value="weekly">${tt("Cada semana", "Weekly")}</option><option value="monthly">${tt("Cada 4 semanas", "Every 4 weeks")}</option></select><select data-schday aria-label="${tt("Día", "Day")}">${SCH_DAYS.map((d, i) => `<option value="${i}">${d}</option>`).join("")}</select><input type="time" data-schtime aria-label="Hora"><button class="btn" data-schrun hidden>Ejecutar ahora</button><button class="sw" data-schon role="switch" aria-checked="false" aria-label="${name}"></button></span></div>`).join("")}</div>
 
   <h3 id="stUpdH" style="margin-top:22px">Actualizaciones</h3>
   <div class="list" id="stUpd">
@@ -151,6 +153,8 @@ async function renderSettings(m) {
       const row = m.querySelector(`[data-sch="${i.id}"]`); if (!row) return;
       row.querySelector("[data-schon]").setAttribute("aria-checked", i.registered ? "true" : "false");
       row.querySelector("[data-schday]").value = String(i.day);
+      row.querySelector("[data-schfreq]").value = i.freq || "weekly";
+      row.querySelector("[data-schday]").hidden = i.freq === "daily";
       row.querySelector("[data-schtime]").value = i.time || "20:00";
       row.querySelector("[data-schrun]").hidden = !i.registered;
       let t = i.registered ? "Programada" + (i.nextRun ? ". Próxima vez: " + i.nextRun : "") : "No está programada.";
@@ -163,11 +167,11 @@ async function renderSettings(m) {
   m.querySelectorAll("[data-sch]").forEach(row => {
     const id = row.dataset.sch, sw = row.querySelector("[data-schon]");
     const send = async enabled => {
-      const body = { id, enabled, day: +row.querySelector("[data-schday]").value, time: row.querySelector("[data-schtime]").value || "20:00" };
+      const body = { id, enabled, freq: row.querySelector("[data-schfreq]").value, day: +row.querySelector("[data-schday]").value, time: row.querySelector("[data-schtime]").value || "20:00" };
       try { schPaint(await api("schedule", body)); return true; } catch (err) { toast(err.message, 6000); return false; }
     };
     sw.onclick = async () => { const want = sw.getAttribute("aria-checked") !== "true"; sw.disabled = true; if (await send(want)) toast(want ? "Tarea programada." : "Tarea quitada."); sw.disabled = false; };
-    row.querySelectorAll("[data-schday],[data-schtime]").forEach(el => el.onchange = () => { if (sw.getAttribute("aria-checked") === "true") send(true); });
+    row.querySelectorAll("[data-schday],[data-schtime],[data-schfreq]").forEach(el => el.onchange = () => { row.querySelector("[data-schday]").hidden = row.querySelector("[data-schfreq]").value === "daily"; if (sw.getAttribute("aria-checked") === "true") send(true); });
     row.querySelector("[data-schrun]").onclick = async e => {
       const b = e.currentTarget; b.disabled = true;
       try { await api("schedule", { id, run: true }); toast("Se está ejecutando. El resultado aparece acá en unos segundos.", 5000); setTimeout(async () => { if (view === "settings") try { schPaint(await api("schedule")); } catch (x) { /* sigue */ } }, 6000); }
@@ -249,9 +253,15 @@ async function renderSettings(m) {
   };
   v31Settings(m);
   v32Settings(m);
+  schCleanPick(m.querySelector('[data-sch="cleanup"]'));
   m.querySelectorAll("[data-hkrow]").forEach(row => {
     const k = row.dataset.hkrow;
-    row.querySelectorAll("[data-mod],[data-key]").forEach(el => el.onchange = () => { cfg[k] = hkRead(k); saveHk(); });
+    const on = row.querySelector("[data-hkon]");
+    if (on) on.onchange = () => { cfg[k] = on.checked ? HK_SUG[k] : ""; saveHk(); };
+    row.querySelectorAll("[data-mod],[data-key]").forEach(el => el.onchange = () => {
+      if (on && !on.checked && !row.querySelector("[data-mod]:checked")) return; // todavía sin modificadores
+      cfg[k] = hkRead(k); saveHk();
+    });
   });
   m.querySelectorAll("[data-hkreset]").forEach(b => b.onclick = () => { const row = HK_LABELS.find(x => x[0] === b.dataset.hkreset); cfg[row[0]] = row[2]; saveHk(); });
 

@@ -114,20 +114,21 @@ function gmProfiles(el, d, cfg, save) {
         <label><input type="checkbox" data-gk="freeRam" data-i="${i}" ${g.freeRam ? "checked" : ""}> Liberar RAM al abrir</label>
         <label>Plan de energía: <select data-gpl="${i}"><option value="">no cambiar</option>${plans.map(p => `<option value="${esc(p.guid)}" ${g.powerPlan === p.guid ? "selected" : ""}>${esc(p.name)}</option>`).join("")}</select></label>
       </div>
-      <p><label>Cerrar también al abrir este juego (separados por coma): <input type="text" data-gc="${i}" value="${esc((g.close || []).join(", "))}" placeholder="discord.exe, chrome.exe" style="width:260px"></label></p></div>
+      <p><label>Cerrar también al abrir este juego (separados por coma): <input type="text" data-gc="${i}" value="${esc((g.close || []).join(", "))}" placeholder="discord.exe, chrome.exe" style="width:260px"></label></p><div class="bar" data-glrow="${i}"></div></div>
       <button class="btn danger" data-gx="${i}">Quitar</button></div>`).join("")
       : '<div class="row"><div><p>Todavía no hay perfiles. Agregá un juego, por ejemplo cs2.exe.</p></div></div>';
     el.querySelectorAll("[data-gk]").forEach(c => c.onchange = () => { cfg.games[+c.dataset.i][c.dataset.gk] = c.checked; save(); });
     el.querySelectorAll("[data-gpl]").forEach(c => c.onchange = () => { cfg.games[+c.dataset.gpl].powerPlan = c.value; save(); });
     el.querySelectorAll("[data-gc]").forEach(c => c.onchange = () => { cfg.games[+c.dataset.gc].close = c.value.split(",").map(x => gmName(x)).filter(Boolean); save(); });
     el.querySelectorAll("[data-gx]").forEach(c => c.onclick = async () => { cfg.games.splice(+c.dataset.gx, 1); await save(); paint(); });
+    gpLaunch(el, cfg, save);
   };
   const add = async raw => {
     const n = gmName(raw);
     if (!n) return;
     if (!/^[^\\/:*?"<>| ,;&]{1,60}\.exe$/i.test(n)) return toast("Poné solo el nombre del programa, por ejemplo chrome.exe", 5000);
     if (cfg.games.some(g => g.exe.toLowerCase() === n.toLowerCase())) return toast("Ya está en la lista.");
-    cfg.games.push({ exe: n, priority: false, powerPlan: "", close: [], quiet: false, freeRam: false });
+    cfg.games.push({ exe: n, priority: false, powerPlan: "", close: [], quiet: false, freeRam: false, launch: "" });
     await save(); paint();
   };
   $("#gpAdd").onclick = () => { add($("#gpNew").value); $("#gpNew").value = ""; };

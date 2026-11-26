@@ -400,7 +400,7 @@ func (s *Server) handleDPC(w http.ResponseWriter, r *http.Request) {
 }
 
 // settingsPages son las páginas de Configuración de Windows que la interfaz puede abrir (fijas).
-var settingsPages = map[string]string{"winupdate": "ms-settings:windowsupdate", "notifications": "ms-settings:notifications"}
+var settingsPages = map[string]string{"winupdate": "ms-settings:windowsupdate", "notifications": "ms-settings:notifications", "micprivacy": "ms-settings:privacy-microphone", "sound": "ms-settings:sound"}
 
 func (s *Server) handleOpenSettings(w http.ResponseWriter, r *http.Request) {
 	var req struct {

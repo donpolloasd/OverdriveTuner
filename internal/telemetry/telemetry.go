@@ -28,6 +28,7 @@ type Sample struct {
 	GPUVRAMMB float64   `json:"gpuVramMb"`
 	GPUTemp   float64   `json:"gpuTemp"` // Unknown si no hay
 	GPULuid   string    `json:"gpuLuid,omitempty"`
+	SSDTemp   float64   `json:"ssdTemp"` // del SSD más caliente; Unknown si no hay
 }
 
 // RAMPct devuelve el uso de memoria en %.
@@ -55,6 +56,7 @@ type rawLine struct {
 	NVTemp *float64 `json:"nv"`
 	LHMCPU *float64 `json:"lhmCpu"`
 	LHMGPU *float64 `json:"lhmGpu"`
+	SSD    *float64 `json:"ssd"`
 }
 
 // NormLuid unifica el formato del identificador de una gráfica.
@@ -72,7 +74,7 @@ func ParseLine(line string, gpuTemps map[string]float64) (Sample, error) {
 		return Sample{}, fmt.Errorf("línea no válida: %w", err)
 	}
 	s := Sample{At: time.Now(), CPU: clamp(r.CPU, 0, 100), CPUThread: clamp(r.Max, 0, 100), CPUMHz: r.MHz, CPULimit: clamp(r.Lim, 0, 100),
-		CPUTemp: Unknown, GPUTemp: Unknown}
+		CPUTemp: Unknown, GPUTemp: Unknown, SSDTemp: Unknown}
 	if r.Total > 0 {
 		s.RAMTotMB = r.Total / 1024
 		s.RAMUsedMB = math.Max(0, (r.Total-r.Free)/1024)
@@ -100,6 +102,9 @@ func ParseLine(line string, gpuTemps map[string]float64) (Sample, error) {
 	}
 	if r.LHMCPU != nil && *r.LHMCPU > 0 && *r.LHMCPU < 150 {
 		s.CPUTemp = *r.LHMCPU
+	}
+	if r.SSD != nil && *r.SSD > 0 && *r.SSD < 120 {
+		s.SSDTemp = *r.SSD
 	}
 	return s, nil
 }

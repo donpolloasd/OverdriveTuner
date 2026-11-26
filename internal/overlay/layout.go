@@ -8,7 +8,7 @@ import (
 )
 
 // RowKeys son las filas de datos del panel, en su orden original (debajo del número de FPS y el gráfico).
-var RowKeys = []string{"cpu", "gpu", "vram", "ram", "frame", "clock", "game"}
+var RowKeys = []string{"cpu", "gpu", "vram", "ram", "ssd", "frame", "clock", "game"}
 
 // normalizeOrder deja cada fila conocida una sola vez, en el orden elegido; las que falten van al final.
 func normalizeOrder(in []string) []string {
@@ -84,7 +84,7 @@ func overlayLang(c Config, dir string) string {
 }
 
 // overlayEN son los textos del panel en inglés (las etiquetas CPU, GPU, RAM, VRAM y FPS son iguales).
-var overlayEN = map[string]string{"Aviso": "Alert", "CPU caliente": "CPU hot", "GPU caliente": "GPU hot", "Cuadro": "Frame", "Hora": "Time", "Juego": "Game"}
+var overlayEN = map[string]string{"Aviso": "Alert", "CPU caliente": "CPU hot", "GPU caliente": "GPU hot", "SSD caliente": "SSD hot", "Mic": "Mic", "silenciado": "muted", "Cuadro": "Frame", "Hora": "Time", "Juego": "Game"}
 
 // tr traduce un texto del panel al idioma de la interfaz.
 func (sn Snapshot) tr(s string) string {
@@ -118,6 +118,7 @@ func WidgetSnapshot(sn Snapshot) Snapshot {
 	c.Layout, c.Corner, c.Show = "card", c.WidgetPos, true
 	c.ShowFPS, c.ShowLow, c.ShowGrph, c.ShowFrame, c.ShowGame = false, false, false, false, false
 	c.ShowCPU, c.ShowGPU, c.ShowRAM, c.ShowTemp = true, true, true, true
+	c.FreePos, c.ShowMic = false, false
 	sn.Cfg, sn.Visible = c, true
 	return sn
 }

@@ -4,13 +4,16 @@ import (
 	"context"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
 
+	"fpsforge/internal/audio"
 	"fpsforge/internal/fpslog"
+	"fpsforge/internal/memory"
 	"fpsforge/internal/rtss"
 	"fpsforge/internal/system"
 	"fpsforge/internal/telemetry"
@@ -90,6 +93,19 @@ func Main(dataDir string, demo bool) error {
 	}
 	fpslog.DiagPath = filepath.Join(dataDir, "presentmon_diagnostico.txt")
 	d := Deps{Dir: dataDir, Sys: sys, PID: os.Getpid(), Quit: quit}
+	if !demo {
+		d.MicMuted, d.SetMic = audio.MicMuted, audio.SetMicMuted
+		d.FreeRAM = func() { _, _ = memory.Free(memory.Options{Game: FindGame(sys, nil)}) }
+		d.OpenApp = func() {
+			if exe, err := os.Executable(); err == nil { // si ya está abierto, esa copia se muestra y esta termina
+				c := exec.Command(exe)
+				c.Dir = filepath.Dir(exe)
+				if c.Start() == nil {
+					go func() { _ = c.Wait() }()
+				}
+			}
+		}
+	}
 	if demo {
 		d.GameRunning = func(string) bool { return true }
 		d.FindGame = func() string { return "cs2.exe" }

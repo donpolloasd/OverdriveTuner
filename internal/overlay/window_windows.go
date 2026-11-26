@@ -107,8 +107,8 @@ const (
 
 type win struct {
 	e        *Engine
-	hkOn     [4]string // atajo registrado por id (1-3)
-	hkTried  [4]string // último atajo intentado (aunque haya fallado)
+	hkOn     [hkCount + 1]string // atajo registrado por id (1 a hkCount)
+	hkTried  [hkCount + 1]string // último atajo intentado (aunque haya fallado)
 	hwnd     uintptr
 	scale    float64
 	fonts    [3]uintptr // grande, normal, pequeña
@@ -312,17 +312,21 @@ const (
 	hkIDShow   = 1
 	hkIDRecord = 2
 	hkIDCorner = 3
+	hkIDMic    = 4
+	hkIDRAM    = 5
+	hkIDOpen   = 6
+	hkCount    = 6
 )
 
 // syncHotkeys registra (o vuelve a registrar) los atajos globales según la configuración.
 func (w *win) syncHotkeys() {
 	cfg := w.e.Snapshot().Cfg
-	want := [4]string{"", cfg.HkShow, cfg.HkRecord, cfg.HkCorner}
+	want := [hkCount + 1]string{"", cfg.HkShow, cfg.HkRecord, cfg.HkCorner, cfg.HkMic, cfg.HkRAM, cfg.HkOpen}
 	if !cfg.Hotkey {
-		want = [4]string{}
+		want = [hkCount + 1]string{}
 	}
 	changed := false
-	for id := 1; id <= 3; id++ {
+	for id := 1; id <= hkCount; id++ {
 		if want[id] != w.hkTried[id] {
 			changed = true
 		}
@@ -331,7 +335,7 @@ func (w *win) syncHotkeys() {
 		return
 	}
 	var errs []string
-	for id := 1; id <= 3; id++ {
+	for id := 1; id <= hkCount; id++ {
 		pUnregHotKey.Call(w.hwnd, uintptr(id))
 		w.hkOn[id], w.hkTried[id] = "", want[id]
 		if want[id] == "" {
@@ -397,6 +401,9 @@ func (w *win) refresh() {
 	case "br":
 		x, y = mon.L+mon.Width-W-mx, mon.T+mon.Height-H-my
 	}
+	if sn.Cfg.FreePos {
+		x, y = freePos(mon, W, H, sn.Cfg)
+	}
 	st := sn.Cfg.Style
 	if k := fmt.Sprint(W, H, st.Radius, st.Transparent, sn.Cfg.Scale); k != w.rgnKey {
 		w.rgnKey = k
@@ -413,7 +420,8 @@ func (w *win) refresh() {
 		w.alpha = a
 	}
 	w.w, w.h, w.x, w.y = W, H, x, y
-	vis := sn.Cfg.Show && sn.Visible && (!sn.Cfg.OnlyGame || sn.GameRunning || sn.Recording)
+	vis := sn.Cfg.Show && sn.Visible && (!sn.Cfg.OnlyGame || sn.GameRunning || sn.Recording) &&
+		(!sn.Cfg.OnlyBad || sn.Problem || sn.Recording)
 	after := ^uintptr(0) // HWND_TOPMOST: se vuelve a pedir para quedar por encima del juego
 	if w.widget {
 		vis, after = WidgetVisible(sn), 1 // HWND_BOTTOM: el widget queda detrás de las ventanas, sobre el escritorio
@@ -504,6 +512,12 @@ func wndProc(hwnd, m, wp, lp uintptr) uintptr {
 				w.e.ToggleRecording()
 			case hkIDCorner:
 				w.e.CycleCorner()
+			case hkIDMic:
+				go w.e.ToggleMic()
+			case hkIDRAM:
+				go w.e.FreeRAM()
+			case hkIDOpen:
+				go w.e.OpenApp()
 			}
 			w.refresh()
 		}
@@ -512,7 +526,7 @@ func wndProc(hwnd, m, wp, lp uintptr) uintptr {
 		pDestroyWindow.Call(hwnd)
 		return 0
 	case wmDestroy:
-		for id := uintptr(1); id <= 3; id++ {
+		for id := uintptr(1); id <= hkCount; id++ {
 			pUnregHotKey.Call(hwnd, id)
 		}
 		pPostQuit.Call(0)

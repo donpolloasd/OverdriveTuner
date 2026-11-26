@@ -16,7 +16,7 @@
 </div>
 
 > [!NOTE]
-> **Beta (3.2.2).** Hecho y probado principalmente en una PC (Ryzen 5 5600G + RX 7600; juegos de Steam, EA, Epic y Minecraft). Algunas funciones todavía no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir. La interfaz está en español con traducción al inglés (se cambia en Configuración).
+> **Beta (3.3.0).** Hecho y probado principalmente en una PC (Ryzen 5 5600G + RX 7600; juegos de Steam, EA, Epic y Minecraft). Algunas funciones todavía no se probaron en otras configuraciones (por ejemplo NVIDIA o Intel). Todos los ajustes se pueden revertir. La interfaz está en español con traducción al inglés (se cambia en Configuración).
 
 > Creado con **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), con la dirección y las pruebas de su autor (Donpolloasd).
 
@@ -36,16 +36,21 @@
 ### Overlay en juego
 - FPS, 1% low, gráfico de tiempos de cuadro, CPU, GPU, VRAM, RAM, temperaturas, aviso de sobrecalentamiento y **aviso de throttling** (procesador o placa de video bajando la velocidad).
 - **Detecta solo el juego que abriste** (Steam, Epic, EA, GOG, Ubisoft, Xbox, Riot…).
-- **Totalmente personalizable:** cualquier color, temas listos, fondo transparente, esquinas, borde, letra, posición, monitor, orden de los datos, tiempo de cuadro, hora, estilos guardados e idioma del overlay (español o inglés). Guardá el overlay como imagen. Diseño mínimo (solo FPS), **0.1% low** y **widget de escritorio**.
+- **Totalmente personalizable:** cualquier color, temas listos, fondo transparente, esquinas, borde, letra, posición, monitor, orden de los datos, tiempo de cuadro, hora, estilos guardados e idioma del overlay (español o inglés). Guardá el overlay como imagen. Diseño mínimo (solo FPS), **0.1% low** y **widget de escritorio**. **Editor del panel** arrastrando, colores por umbral, **temperatura del SSD**, avisos como notificación de Windows y modo «solo si hay un problema».
 
 ### Diagnosticar
 - Frecuencia del monitor, a qué gráfica está conectado, velocidad (XMP/EXPO) y canales de la RAM, plan de energía, Resizable BAR, antigüedad del driver de video, salud de los discos y una guía de BIOS para tu hardware.
 - **Ping a servidores de juegos**, prueba de DNS, uso de red por programa y **latencia del sistema (DPC)**.
-- **Benchmark** antes/después con detector de microcortes.
+- **Benchmark** antes/después con detector de microcortes, y **comparar dos partidas grabadas**.
+- **Pruebas de rendimiento:** procesador (un núcleo y todos), velocidad y latencia de la RAM, lectura y escritura de disco, ranking local y una **prueba de estabilidad** que detecta throttling.
+- **Asistente para solucionar problemas:** elegís qué pasa y seguís los pasos.
 
 ### Herramientas
 - **Modo juego:** cierra los programas que elijas cuando abrís un juego y puede **silenciar las notificaciones de Windows** mientras jugás.
-- **Instalar programas** con winget (launchers, runtimes, herramientas de monitoreo…).
+- **Arranque optimizado:** «Jugar» desde el perfil de cada juego aplica el perfil y abre el juego.
+- **Instalar programas** con winget (launchers, runtimes, herramientas de monitoreo…) y **actualizar programas de a uno**.
+- **Micrófono:** silenciarlo con un atajo y probar cómo se escucha.
+- **Todas las opciones de Windows** («God Mode») con buscador y favoritos.
 - **Liberar RAM**, limpieza de temporales, **programas y juegos sin usar**, **drivers viejos**, administrador de inicio, mantenimiento programado y recordatorios opcionales.
 - **Espacio en disco** (estilo WizTree): mapa por carpetas, archivos más grandes, espacio por tipo y archivos repetidos; borrar manda a la Papelera. Vaciar la Papelera y los puntos de restauración viejos.
 - **Tema claro**, tamaño de la interfaz e Inicio personalizable.

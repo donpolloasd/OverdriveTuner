@@ -7,7 +7,7 @@ const Script = `$ErrorActionPreference='SilentlyContinue'
 [Console]::OutputEncoding=[Text.Encoding]::UTF8
 $total=[double](Get-CimInstance Win32_OperatingSystem).TotalVisibleMemorySize
 $nv=$null; if(Get-Command nvidia-smi.exe){$nv='nvidia-smi.exe'}
-$n=0; $nvT=$null; $lc=$null; $lg=$null
+$n=0; $nvT=$null; $lc=$null; $lg=$null; $sd=$null
 while($true){
  $o=[ordered]@{}
  $p=@(Get-CimInstance Win32_PerfFormattedData_Counters_ProcessorInformation)
@@ -35,8 +35,11 @@ while($true){
     $c=$s|Where-Object{$_.Name -match 'Tctl|Tdie|CPU Package|Core Average|CPU Total'}|Select-Object -First 1; if($c){$lc=[double]$c.Value}
     $d=$s|Where-Object{$_.Name -match 'GPU Core'}|Select-Object -First 1; if($d){$lg=[double]$d.Value}
     break } } }
+ if(($n % 60) -eq 8){
+  $v=@(Get-PhysicalDisk|Where-Object{$_.MediaType -eq 'SSD'}|Get-StorageReliabilityCounter|ForEach-Object{[double]$_.Temperature}|Where-Object{$_ -gt 0 -and $_ -lt 120})
+  $sd=$null; if($v.Count){$sd=[double]($v|Measure-Object -Maximum).Maximum} }
  $n++
- $o.nv=$nvT; $o.lhmCpu=$lc; $o.lhmGpu=$lg
+ $o.nv=$nvT; $o.lhmCpu=$lc; $o.lhmGpu=$lg; $o.ssd=$sd
  [Console]::Out.WriteLine(($o|ConvertTo-Json -Compress -Depth 4)); [Console]::Out.Flush()
  Start-Sleep -Milliseconds 500
 }`

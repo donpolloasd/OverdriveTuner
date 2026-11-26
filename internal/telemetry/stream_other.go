@@ -25,7 +25,7 @@ func Stream(stop <-chan struct{}) <-chan Sample {
 			case <-tk.C:
 				x := time.Since(t0).Seconds()
 				out <- Sample{At: time.Now(), CPU: 45 + 8*math.Sin(x/3), CPUThread: 82 + 6*math.Sin(x/2), CPUMHz: 4300,
-					CPUTemp: Unknown, RAMUsedMB: 11800, RAMTotMB: 32768, GPU: 70 + 10*math.Sin(x/4), GPUVRAMMB: 3900,
+					CPUTemp: Unknown, SSDTemp: 41, RAMUsedMB: 11800, RAMTotMB: 32768, GPU: 70 + 10*math.Sin(x/4), GPUVRAMMB: 3900,
 					GPUTemp: 56 + 3*math.Sin(x/6)}
 			}
 		}

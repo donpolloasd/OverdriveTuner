@@ -22,6 +22,16 @@ type Release struct {
 
 // Releases va de la más nueva a la más vieja.
 var Releases = []Release{
+	{"3.3.0", "Pruebas de rendimiento, arranque optimizado y asistente de problemas", []Change{
+		{"Pruebas de rendimiento", "Sección nueva para medir el procesador (un núcleo y todos), la velocidad y la latencia de la RAM y la lectura y escritura de los discos, con un ranking de tus propios resultados. Incluye una prueba de estabilidad que comprueba cada cuenta y detecta si el procesador baja la velocidad (throttling)."},
+		{"Arranque optimizado", "En Modo juego, cada perfil puede guardar cómo se abre el juego (lo busca solo en Steam, Epic, EA, GOG y Ubisoft). «Jugar» abre el overlay, que aplica el perfil, y después el juego; al cerrarlo todo vuelve a como estaba."},
+		{"Comparar dos partidas", "En Benchmark marcás dos partidas grabadas y ves la diferencia en FPS, 1% y 0.1% low, el peor cuadro y los picos, con los dos gráficos."},
+		{"Solucionar problemas", "Un asistente: elegís qué te pasa (tirones, pocos FPS, lag, calor, Windows lento, cierres o el micrófono) y te lleva paso a paso a la herramienta que sirve."},
+		{"Overlay", "Editor para arrastrar el panel a cualquier parte y ordenar sus datos, colores según el uso y la temperatura, temperatura del SSD, avisos de temperatura con notificación de Windows y la opción de mostrarlo solo si hay un problema."},
+		{"Micrófono", "Silenciá el micrófono de Windows desde el programa o con un atajo dentro del juego, y probá cómo se escucha con una grabación que no se guarda."},
+		{"Opciones de Windows", "Todas las opciones del Panel de control en un lugar, con buscador y favoritos (lo que se conoce como «God Mode»)."},
+		{"Y además", "Actualizar programas de a uno con winget, limpieza programada diaria, semanal o mensual eligiendo qué limpiar, prueba de DNS con tu DNS actual y uno propio, tres atajos nuevos y el buscador ahora encuentra herramientas, programas y opciones de Windows."},
+	}},
 	{"3.2.2", "Ajustes que Windows bloqueaba", []Change{
 		{"Compresión de memoria", "Fallaba con el error 1058 si SysMain estaba deshabilitado (por ejemplo, por «Desactivar SysMain y Prefetch»). Ahora lo enciende un momento y lo deja como estaba."},
 		{"Servicios innecesarios", "En Windows 11 reciente, el servicio TrkWks no se deja modificar ni por un administrador y hacía fallar todo el ajuste. Ahora se saltea y se aplican los demás."},
@@ -245,6 +255,16 @@ func Since(installed string) []Release {
 // English tiene la traducción de las versiones nuevas (desde la 3.1.0). Las anteriores solo están en
 // español: si falta una versión, se muestra en español.
 var English = map[string]Release{
+	"3.3.0": {Title: "Performance tests, optimized launch and troubleshooting assistant", Changes: []Change{
+		{"Performance tests", "New section to measure the processor (single core and all cores), RAM speed and latency, and drive read and write speed, with a ranking of your own results. It includes a stability test that checks every calculation and detects whether the processor slows down (throttling)."},
+		{"Optimized launch", "In Game mode, each profile can store how the game is opened (it finds it by itself in Steam, Epic, EA, GOG and Ubisoft). «Play» opens the overlay, which applies the profile, and then the game; when you close it everything goes back to how it was."},
+		{"Compare two runs", "In Benchmark you select two recorded runs and see the difference in FPS, 1% and 0.1% low, the worst frame and spikes, with both graphs."},
+		{"Troubleshooting", "An assistant: choose what is happening (stutters, low FPS, lag, heat, slow Windows, crashes or the microphone) and it takes you step by step to the tool that helps."},
+		{"Overlay", "An editor to drag the panel anywhere and reorder its data, colors by usage and temperature, SSD temperature, temperature alerts with a Windows notification and an option to show it only when there is a problem."},
+		{"Microphone", "Mute the Windows microphone from the program or with a shortcut inside the game, and test how it sounds with a recording that is not saved."},
+		{"Windows options", "Every Control Panel option in one place, with search and favorites (known as «God Mode»)."},
+		{"And also", "Update programs one by one with winget, daily, weekly or monthly scheduled cleanup choosing what to clean, DNS test with your current DNS and a custom one, three new shortcuts, and search now finds tools, programs and Windows options."},
+	}},
 	"3.2.2": {Title: "Tweaks Windows was blocking", Changes: []Change{
 		{"Memory compression", "It failed with error 1058 if SysMain was disabled (for example, by «Turn off SysMain and Prefetch»). Now it starts it for a moment and leaves it as it was."},
 		{"Unneeded services", "On recent Windows 11, the TrkWks service cannot be changed even by an administrator and it made the whole tweak fail. Now it is skipped and the rest is applied."},

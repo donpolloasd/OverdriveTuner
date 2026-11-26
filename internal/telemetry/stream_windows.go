@@ -40,6 +40,9 @@ func Stream(stop <-chan struct{}) <-chan Sample {
 			if err != nil {
 				continue
 			}
+			if t := SSDTemp(); t != Unknown {
+				s.SSDTemp = t
+			}
 			select {
 			case out <- s:
 			case <-stop:

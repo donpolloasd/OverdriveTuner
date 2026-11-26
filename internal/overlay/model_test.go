@@ -42,7 +42,7 @@ func TestBuildModelOptions(t *testing.T) {
 		}
 	}
 	p := DefaultStyle().Palette()
-	if tempPart(p, 90, 85).Color != ColBad || tempPart(p, 75, 85).Color != ColWarn {
+	if tempPart(p, 90, 70, 85).Color != ColBad || tempPart(p, 75, 70, 85).Color != ColWarn {
 		t.Fatal("colores de temperatura")
 	}
 }

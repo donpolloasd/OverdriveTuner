@@ -36,9 +36,14 @@ type Deps struct {
 	StartPM func(process string, onFrame func(ms float64), onExit func(error)) (func(), error)
 	// Exclusive dice si hay un juego en pantalla completa exclusiva (nil: no se consulta).
 	Exclusive func() bool
-	Now       func() time.Time
-	PID       int
-	Quit      func()
+	// Micrófono, memoria y ventana principal: los usan los atajos (nil: no hay).
+	MicMuted func() (bool, error)
+	SetMic   func(bool) error
+	FreeRAM  func()
+	OpenApp  func()
+	Now      func() time.Time
+	PID      int
+	Quit     func()
 }
 
 // Engine reúne mediciones, cuadros, grabación y perfiles.
@@ -71,6 +76,11 @@ type Engine struct {
 	exclSince   int64  // desde cuándo (Unix ms): identifica cada vez que pasa, para avisar una sola vez
 	lang        string // idioma de la interfaz (se relee cada segundo por si lo cambian en Configuración)
 	thr         throttleState
+	alertSSD    bool
+	heat        heatNotice
+	micMuted    bool
+	lowFPS      int       // segundos seguidos con FPS bajos
+	problemTill time.Time // hasta cuándo se considera que hay un problema (para «solo si hay problema»)
 }
 
 // NewEngine crea el motor.
@@ -101,8 +111,19 @@ func (e *Engine) OnSample(s telemetry.Sample) {
 		}
 	}
 	e.mu.Lock()
-	e.alertCPU = heat(e.alertCPU, s.CPUTemp, e.cfg.AlertCPU)
-	e.alertGPU = heat(e.alertGPU, s.GPUTemp, e.cfg.AlertGPU)
+	now := e.d.Now()
+	for _, a := range []struct {
+		on    *bool
+		kind  string
+		t     float64
+		limit int
+	}{{&e.alertCPU, "cpu", s.CPUTemp, e.cfg.AlertCPU}, {&e.alertGPU, "gpu", s.GPUTemp, e.cfg.AlertGPU}, {&e.alertSSD, "ssd", s.SSDTemp, e.cfg.AlertSSD}} {
+		was := *a.on
+		*a.on = heat(was, a.t, a.limit)
+		if *a.on && !was && e.cfg.AlertOn && e.cfg.AlertTray {
+			e.heat.note(a.kind, a.t, now)
+		}
+	}
 	if e.gameRun && e.thr.feed(s, e.d.Now().UnixMilli()) {
 		fpslog.Diag("throttling detectado (%s): límite %.0f%%, %.0f °C", e.thr.kind, e.thr.limit, e.thr.temp)
 	}
@@ -155,6 +176,9 @@ type Snapshot struct {
 	Visible     bool
 	AlertCPU    bool      // el procesador pasó el límite de temperatura
 	AlertGPU    bool      // la gráfica pasó el límite de temperatura
+	AlertSSD    bool      // el SSD pasó el límite de temperatura
+	MicMuted    bool      // el micrófono está silenciado en Windows
+	Problem     bool      // hay (o hubo hace segundos) un problema: temperatura, FPS bajos, RAM llena o throttling
 	Game        string    // juego que se está midiendo (para la fila «Juego»)
 	Lang        string    // idioma de los textos del panel: es o en
 	Now         time.Time // hora (para la fila «Hora»)
@@ -214,6 +238,7 @@ func (e *Engine) Snapshot() Snapshot {
 
 func (e *Engine) snapshotLocked() Snapshot {
 	s := Snapshot{Cfg: e.cfg, Sample: e.sample, GameRunning: e.gameRun, Recording: e.rec, Visible: e.visible, AlertCPU: e.alertCPU, AlertGPU: e.alertGPU,
+		AlertSSD: e.alertSSD, MicMuted: e.micMuted, Problem: e.d.Now().Before(e.problemTill),
 		Lang: e.lang, Now: e.d.Now()}
 	if e.gameRun {
 		s.Game = e.pmGame
@@ -284,6 +309,8 @@ func (e *Engine) Tick() {
 	e.checkGame(cfg) // cada segundo: el juego se detecta apenas se abre
 	e.checkExclusive()
 	e.watchFrames()
+	e.checkMic(cfg)
+	e.checkProblem()
 	e.writeState()
 }
 
@@ -499,6 +526,8 @@ func (e *Engine) writeState() {
 	if e.exclusive {
 		st.Exclusive, st.ExclusiveSince = true, e.exclSince
 	}
+	st.Heat, st.HeatSince, st.HeatTemp = e.heat.kind, e.heat.since, e.heat.temp
+	st.MicMuted, st.Problem = e.micMuted, sn.Problem
 	if e.thr.kind != "" {
 		st.Throttle, st.ThrottleSince, st.ThrottleLimit, st.ThrottleTemp = e.thr.kind, e.thr.since, e.thr.limit, e.thr.temp
 	}
@@ -535,6 +564,7 @@ func (e *Engine) CycleCorner() {
 	for i, c := range order {
 		if c == cfg.Corner {
 			cfg.Corner = order[(i+1)%len(order)]
+			cfg.FreePos = false
 			break
 		}
 	}

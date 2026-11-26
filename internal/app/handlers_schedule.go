@@ -37,7 +37,7 @@ func (s *Server) scheduleInfos(fresh bool) []schedule.Info {
 			schedDemoMu.Unlock()
 			i.ID = j.ID
 			if i.Time == "" {
-				i.Time = "20:00"
+				i.Time, i.Freq = "20:00", "weekly"
 			}
 		} else {
 			i = live[j.ID]
@@ -55,12 +55,24 @@ func (s *Server) handleSchedule(w http.ResponseWriter, r *http.Request) {
 			ID      string `json:"id"`
 			Enabled *bool  `json:"enabled"`
 			Day     int    `json:"day"`
+			Freq    string `json:"freq"`
 			Time    string `json:"time"`
 			Run     bool   `json:"run"`
+			// Clean: qué borra la limpieza programada.
+			Clean []string `json:"clean"`
 		}
 		if readJSON(r, &req) != nil {
 			fail(w, 400, "petición no válida")
 			return
+		}
+		if req.Freq == "" {
+			req.Freq = "weekly"
+		}
+		if req.Clean != nil {
+			if err := schedule.SaveClean(s.Dir, req.Clean); err != nil {
+				fail(w, 400, err.Error())
+				return
+			}
 		}
 		if _, ok := schedule.ByID(req.ID); !ok {
 			fail(w, 404, "tarea desconocida")
@@ -76,10 +88,10 @@ func (s *Server) handleSchedule(w http.ResponseWriter, r *http.Request) {
 		case req.Enabled != nil && *req.Enabled:
 			if demo {
 				schedDemoMu.Lock()
-				schedDemo[req.ID] = schedule.Info{ID: req.ID, Registered: true, Day: req.Day, Time: req.Time}
+				schedDemo[req.ID] = schedule.Info{ID: req.ID, Registered: true, Freq: req.Freq, Day: req.Day, Time: req.Time}
 				schedDemoMu.Unlock()
 			} else {
-				err = schedule.Enable(s.Sys, req.ID, s.scheduleExe(), req.Day, req.Time)
+				err = schedule.Enable(s.Sys, req.ID, s.scheduleExe(), req.Freq, req.Day, req.Time)
 			}
 		case req.Enabled != nil:
 			if demo {

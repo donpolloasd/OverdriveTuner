@@ -261,14 +261,21 @@ async function showMicrocuts(id) {
 }
 
 /* ---------------- DNS, red y discos ---------------- */
+let dnsCustom = "";
 function dnsHtml(rs) {
-  const rows = rs.map(r => `<div class="row ${r.applied ? "on" : ""}"><div><h4>${esc(r.name)} <span class="tag">${esc(r.ip)}</span> ${r.best ? '<span class="tag" style="color:var(--ok)">más rápido</span>' : ""} ${r.applied ? '<span class="tag">en uso</span>' : ""}</h4>
-    <p>${r.median < 0 ? "No respondió desde tu conexión." : `Respuesta típica: <b>${r.median} ms</b>${r.fails ? ` · ${r.fails} consulta(s) fallaron` : ""}.`}</p></div>
-    ${r.median < 0 ? "" : r.applied ? `<button class="btn" data-dns-off="${esc(r.tweakId)}">Volver al anterior</button>` : `<button class="btn ${r.best ? "primary" : ""}" data-dns-on="${esc(r.tweakId)}" ${S.admin ? "" : "disabled"}>Usar este DNS</button>`}</div>`).join("");
-  return `<p class="note">Mide cuánto tarda cada servidor en responder desde tu conexión. Cambiar de DNS acelera la resolución de nombres (conectar a servidores), no baja el ping dentro de la partida. Se guarda tu configuración anterior.</p><div class="list">${rows}</div>`;
+  const rows = rs.map(r => `<div class="row ${r.applied ? "on" : ""}"><div><h4>${esc(r.name)} <span class="tag">${esc(r.ip)}</span> ${r.best ? '<span class="tag" style="color:var(--ok)">más rápido</span>' : ""} ${r.applied || r.current ? '<span class="tag">en uso</span>' : ""}</h4>
+    <p>${r.median < 0 ? "No respondió desde tu conexión." : `Respuesta típica: <b>${r.median} ms</b>${r.fails ? ` · ${r.fails} consulta(s) fallaron` : ""}.`}</p>${r.median >= 0 ? `<p class="note">${tt("Variación", "Variation")}: ${r.jitter} ms. ${esc(r.note ? tt(r.note, { "Bloquea sitios maliciosos.": "Blocks malicious sites.", "Bloquea publicidad. Solo se compara.": "Blocks ads. Comparison only.", "Bloquea sitios maliciosos. Solo se compara.": "Blocks malicious sites. Comparison only.", "Solo se compara.": "Comparison only." }[r.note] || r.note) : "")}</p>` : ""}</div>
+    ${r.median < 0 || !r.tweakId ? "" : r.applied ? `<button class="btn" data-dns-off="${esc(r.tweakId)}">Volver al anterior</button>` : `<button class="btn ${r.best ? "primary" : ""}" data-dns-on="${esc(r.tweakId)}" ${S.admin ? "" : "disabled"}>Usar este DNS</button>`}</div>`).join("");
+  return `<p class="note">Mide cuánto tarda cada servidor en responder desde tu conexión. Cambiar de DNS acelera la resolución de nombres (conectar a servidores), no baja el ping dentro de la partida. Se guarda tu configuración anterior.</p><div class="bar"><input type="text" id="dnsCus" value="${esc(dnsCustom)}" placeholder="${tt("Otro DNS, por ejemplo 9.9.9.11", "Another DNS, for example 9.9.9.11")}" style="width:240px" aria-label="DNS"><button class="btn" id="dnsCusGo">${tt("Medir de nuevo", "Measure again")}</button></div><div class="list">${rows}</div>`;
 }
 
 async function dnsClick(e) {
+  if (e.target.id === "dnsCusGo") {
+    const v = $("#dnsCus").value.trim();
+    e.target.disabled = true;
+    try { const r = await api("dnsbench", { custom: v }); dnsCustom = v; $("#tOut").innerHTML = dnsHtml(r); } catch (err) { toast(err.message, 5000); e.target.disabled = false; }
+    return;
+  }
   const on = e.target.closest("[data-dns-on]"), off = e.target.closest("[data-dns-off]");
   const b = on || off; if (!b) return;
   b.disabled = true;
@@ -277,7 +284,7 @@ async function dnsClick(e) {
     if (!r.ok) throw new Error((r.errors || ["No se pudo cambiar el DNS"]).join("; "));
     toast(on ? "DNS cambiado." : "DNS restaurado.");
     S = await api("state");
-    const out = $("#tOut"); if (out) out.innerHTML = dnsHtml(await api("dnsbench"));
+    const out = $("#tOut"); if (out) out.innerHTML = dnsHtml(await api("dnsbench", { custom: dnsCustom }));
   } catch (err) { toast(err.message, 6000); b.disabled = false; }
 }
 

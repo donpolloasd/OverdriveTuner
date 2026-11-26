@@ -413,3 +413,19 @@ Pestaña Overlay, «Fuente de FPS»: Automática (PresentMon primero y RTSS si P
 - Arreglo: «Deshabilitar servicios innecesarios» fallaba entero porque en Windows 11 reciente el servicio TrkWks no se deja modificar ni por un administrador («acceso denegado»). Ahora TrkWks es opcional: si Windows no deja tocarlo se saltea y se aplican los demás; tampoco cuenta para saber si el ajuste sigue aplicado.
 - Arreglo: «Desactivar Widgets» fallaba con «acceso denegado» porque Windows 11 bloquea esa política con su protección UCPD, aunque los administradores tengan permiso. Ahora, si Windows bloquea todo lo que hace un ajuste, se explica que Windows no lo permite y que se puede hacer a mano desde su Configuración, en vez de mostrar el error técnico.
 - Encontrado en la PC de pruebas con los mensajes de error reales; arreglado con tests. Sin probar todavía aplicando los ajustes en real (necesitan permisos de administrador).
+
+== Versión 3.3.0 ==
+- Nueva sección «Pruebas de rendimiento»: procesador (un núcleo y todos; 1000 puntos = un Ryzen 5 5600G), velocidad y latencia de la RAM, lectura y escritura de disco (archivo temporal de hasta 1 GB, sin la caché de Windows, que se borra solo) y un ranking local de tus resultados. Los números sirven para comparar dentro del programa; no son iguales a los de AIDA64 o CrystalDiskMark.
+- Prueba de estabilidad (1 a 10 minutos): carga todo el procesador, comprueba cada cuenta (un error indica overclock o RAM inestable), dibuja velocidad y temperatura y detecta throttling. Se corta sola si el procesador llega a 98 °C (necesita Core Temp para leer la temperatura).
+- Modo juego: cada perfil puede guardar cómo se abre el juego (ruta del .exe o enlace de Steam, Epic, Ubisoft, EA o Battle.net; «Buscar» lo encuentra solo). «Jugar» abre el overlay si estaba cerrado y después el juego, sin permisos de administrador.
+- Benchmark: comparar dos partidas grabadas (FPS, 1% y 0.1% low, peor cuadro, picos por minuto y los dos gráficos).
+- Nueva sección «Solucionar problemas»: un asistente paso a paso para tirones, pocos FPS, lag, calor, Windows lento, cierres y micrófono.
+- Overlay: editor para arrastrar el panel y ordenar sus datos; colores según el uso y la temperatura; temperatura del SSD (algunos discos SATA no la informan); aviso de temperatura también como notificación de Windows; opción de mostrar el panel solo si hay un problema.
+- Nueva sección «Micrófono»: silenciar el micrófono de Windows (también con un atajo dentro del juego) y prueba de grabación que queda solo en memoria.
+- Nueva sección «Opciones de Windows»: las 200 opciones del Panel de control con buscador y favoritos.
+- Instalar programas: elegir qué programas actualizar con winget, de a uno.
+- Limpieza programada: diaria, semanal o cada 4 semanas, eligiendo qué limpiar (nunca la caché de shaders).
+- Prueba de DNS: incluye tu DNS actual, tres servidores más, la variación y un DNS que escribas.
+- Atajos nuevos (vienen apagados): silenciar el micrófono, liberar RAM y abrir OverdriveTuner.
+- El buscador (Ctrl+K) también encuentra herramientas, programas para instalar y opciones de Windows.
+- Probado en la PC de pruebas: benchmarks, disco, micrófono (silenciar y grabar), lista de winget y de opciones de Windows, y la interfaz en español e inglés. Sin probar todavía: los atajos y el panel nuevo dentro de un juego, la prueba de estabilidad larga y la temperatura del SSD con permisos de administrador.

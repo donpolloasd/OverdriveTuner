@@ -10,7 +10,7 @@ import (
 
 func TestEnableValidatesAndBuildsScript(t *testing.T) {
 	f := system.NewFake()
-	if err := Enable(f, "cleanup", `C:\P F\OverdriveTuner.exe`, 0, "20:30"); err != nil {
+	if err := Enable(f, "cleanup", `C:\P F\OverdriveTuner.exe`, "weekly", 0, "20:30"); err != nil {
 		t.Fatal(err)
 	}
 	s := f.PSLog[0]
@@ -24,12 +24,24 @@ func TestEnableValidatesAndBuildsScript(t *testing.T) {
 		day int
 		tm  string
 	}{{"x", 0, "20:00"}, {"cleanup", 7, "20:00"}, {"cleanup", -1, "20:00"}, {"cleanup", 1, "25:00"}, {"cleanup", 1, "20:00'; calc"}, {"restore", 1, ""}} {
-		if Enable(f, bad.id, "a.exe", bad.day, bad.tm) == nil {
+		if Enable(f, bad.id, "a.exe", "weekly", bad.day, bad.tm) == nil {
 			t.Errorf("debía rechazar %+v", bad)
 		}
 	}
-	if Enable(f, "restore", " ", 1, "10:00") == nil {
+	if Enable(f, "restore", " ", "weekly", 1, "10:00") == nil {
 		t.Error("sin ruta no se programa")
+	}
+	if Enable(f, "cleanup", "a.exe", "x", 1, "10:00") == nil {
+		t.Error("frecuencia desconocida")
+	}
+	if Enable(f, "cleanup", "a.exe", "daily", 1, "10:00") != nil || !strings.Contains(f.PSLog[len(f.PSLog)-1], "-Daily") || strings.Contains(f.PSLog[len(f.PSLog)-1], "DaysOfWeek") {
+		t.Error("diaria")
+	}
+	if i := parseInfo("cleanup", "T|||0|0|07:15||1"); i.Freq != "daily" {
+		t.Errorf("%+v", i)
+	}
+	if i := parseInfo("cleanup", "T|||0|8|07:15|4|"); i.Freq != "monthly" || i.Day != 3 {
+		t.Errorf("%+v", i)
 	}
 	if err := Disable(f, "restore"); err != nil || !strings.Contains(f.PSLog[len(f.PSLog)-1], "Unregister-ScheduledTask") {
 		t.Errorf("Disable: %v", err)

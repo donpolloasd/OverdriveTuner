@@ -19,6 +19,7 @@ type Game struct {
 	Close     []string `json:"close"`     // programas a cerrar al abrir el juego (los eligió el usuario)
 	Quiet     bool     `json:"quiet"`     // silenciar las notificaciones de Windows mientras se juega
 	FreeRAM   bool     `json:"freeRam"`   // liberar memoria RAM de los otros programas al abrir el juego
+	Launch    string   `json:"launch"`    // cómo abrirlo desde «Jugar»: ruta del .exe o enlace del launcher (vacío = no se abre desde acá)
 }
 
 // Config es la configuración del overlay.
@@ -37,33 +38,52 @@ type Config struct {
 	ShowRAM   bool     `json:"showRam"`
 	ShowTemp  bool     `json:"showTemps"`
 	ShowVRAM  bool     `json:"showVram"`
-	Hotkey    bool     `json:"hotkey"`     // activa los atajos globales
-	HkShow    string   `json:"hkShow"`     // muestra/oculta el overlay
-	HkRecord  string   `json:"hkRecord"`   // empieza/detiene una grabación
-	HkCorner  string   `json:"hkCorner"`   // cambia de esquina
-	FpsSource string   `json:"fpsSource"`  // siempre rtss: los FPS salen de RTSS
-	GameDirs  []string `json:"gameDirs"`   // carpetas de juegos adicionales (ej. D:\\Juegos)
-	UpdateMs  int      `json:"updateMs"`   // cada cuántos milisegundos se redibuja el panel (50 a 500)
-	GameExe   string   `json:"gameExe"`    // juego a medir (ej. cs2.exe) cuando la detección automática está apagada
-	AutoGame  bool     `json:"autoGame"`   // detecta solo qué juego está abierto
-	OnlyGame  bool     `json:"onlyInGame"` // el panel aparece solo mientras hay un juego abierto
-	AutoOpen  bool     `json:"autoOpen"`   // el overlay se abre solo al iniciar OverdriveTuner
-	AlertOn   bool     `json:"alertOn"`    // avisa en el overlay cuando la PC se calienta de más
-	AlertCPU  int      `json:"alertCpu"`   // °C a partir de los que se avisa del procesador (60 a 110)
-	AlertGPU  int      `json:"alertGpu"`   // °C a partir de los que se avisa de la gráfica (60 a 110)
-	CloseList []string `json:"closeList"`  // Modo juego: programas que se cierran siempre al abrir un juego
-	OffsetX   int      `json:"offsetX"`    // separación horizontal desde la esquina, en píxeles (0 a 1000)
-	OffsetY   int      `json:"offsetY"`    // separación vertical desde la esquina, en píxeles (0 a 1000)
-	Monitor   int      `json:"monitor"`    // en qué monitor aparece: 0 = el principal; 1, 2… = los demás
-	Order     []string `json:"order"`      // orden de las filas de datos (ver RowKeys)
-	ShowFrame bool     `json:"showFrame"`  // tiempo de cuadro en milisegundos
-	ShowClock bool     `json:"showClock"`  // hora
-	ShowGame  bool     `json:"showGame"`   // nombre del juego detectado
-	Lang      string   `json:"lang"`       // idioma de los textos del panel: «es», «en» o vacío (el de la interfaz)
-	QuietGame bool     `json:"quietGame"`  // Modo juego: silenciar las notificaciones de Windows mientras hay un juego abierto
-	Widget    bool     `json:"widget"`     // widget de escritorio: CPU, GPU, RAM y temperaturas detrás de las ventanas
-	WidgetPos string   `json:"widgetPos"`  // esquina del widget: tl, tr, bl, br
-	Presets   []Preset `json:"presets"`    // estilos guardados con nombre
+	Hotkey    bool     `json:"hotkey"`      // activa los atajos globales
+	HkShow    string   `json:"hkShow"`      // muestra/oculta el overlay
+	HkRecord  string   `json:"hkRecord"`    // empieza/detiene una grabación
+	HkCorner  string   `json:"hkCorner"`    // cambia de esquina
+	FpsSource string   `json:"fpsSource"`   // siempre rtss: los FPS salen de RTSS
+	GameDirs  []string `json:"gameDirs"`    // carpetas de juegos adicionales (ej. D:\\Juegos)
+	UpdateMs  int      `json:"updateMs"`    // cada cuántos milisegundos se redibuja el panel (50 a 500)
+	GameExe   string   `json:"gameExe"`     // juego a medir (ej. cs2.exe) cuando la detección automática está apagada
+	AutoGame  bool     `json:"autoGame"`    // detecta solo qué juego está abierto
+	OnlyGame  bool     `json:"onlyInGame"`  // el panel aparece solo mientras hay un juego abierto
+	AutoOpen  bool     `json:"autoOpen"`    // el overlay se abre solo al iniciar OverdriveTuner
+	AlertOn   bool     `json:"alertOn"`     // avisa en el overlay cuando la PC se calienta de más
+	AlertCPU  int      `json:"alertCpu"`    // °C a partir de los que se avisa del procesador (60 a 110)
+	AlertGPU  int      `json:"alertGpu"`    // °C a partir de los que se avisa de la gráfica (60 a 110)
+	CloseList []string `json:"closeList"`   // Modo juego: programas que se cierran siempre al abrir un juego
+	OffsetX   int      `json:"offsetX"`     // separación horizontal desde la esquina, en píxeles (0 a 1000)
+	OffsetY   int      `json:"offsetY"`     // separación vertical desde la esquina, en píxeles (0 a 1000)
+	Monitor   int      `json:"monitor"`     // en qué monitor aparece: 0 = el principal; 1, 2… = los demás
+	Order     []string `json:"order"`       // orden de las filas de datos (ver RowKeys)
+	ShowFrame bool     `json:"showFrame"`   // tiempo de cuadro en milisegundos
+	ShowClock bool     `json:"showClock"`   // hora
+	ShowGame  bool     `json:"showGame"`    // nombre del juego detectado
+	Lang      string   `json:"lang"`        // idioma de los textos del panel: «es», «en» o vacío (el de la interfaz)
+	QuietGame bool     `json:"quietGame"`   // Modo juego: silenciar las notificaciones de Windows mientras hay un juego abierto
+	Widget    bool     `json:"widget"`      // widget de escritorio: CPU, GPU, RAM y temperaturas detrás de las ventanas
+	WidgetPos string   `json:"widgetPos"`   // esquina del widget: tl, tr, bl, br
+	FreePos   bool     `json:"freePos"`     // posición libre (la del editor) en vez de una esquina
+	PosX      float64  `json:"posX"`        // 0 = pegado a la izquierda, 1 = a la derecha
+	PosY      float64  `json:"posY"`        // 0 = arriba, 1 = abajo
+	Levels    bool     `json:"colorLevels"` // colores según umbral en uso y temperatura
+	TempWarn  int      `json:"tempWarn"`    // °C desde los que una temperatura se pinta de aviso
+	CPUWarn   int      `json:"cpuWarn"`     // % de uso: aviso y problema (0 = sin color)
+	CPUBad    int      `json:"cpuBad"`
+	GPUWarn   int      `json:"gpuWarn"`
+	GPUBad    int      `json:"gpuBad"`
+	RAMWarn   int      `json:"ramWarn"`
+	RAMBad    int      `json:"ramBad"`
+	ShowSSD   bool     `json:"showSsd"`     // temperatura del SSD más caliente
+	ShowMic   bool     `json:"showMic"`     // avisa en el panel cuando el micrófono está silenciado
+	AlertSSD  int      `json:"alertSsd"`    // °C a partir de los que se avisa del SSD (45 a 100)
+	AlertTray bool     `json:"alertTray"`   // además, notificación de Windows
+	OnlyBad   bool     `json:"onlyProblem"` // el panel aparece solo si hay un problema
+	HkMic     string   `json:"hkMic"`       // silencia el micrófono (vacío = sin atajo)
+	HkRAM     string   `json:"hkRam"`       // libera memoria RAM
+	HkOpen    string   `json:"hkOpen"`      // abre OverdriveTuner
+	Presets   []Preset `json:"presets"`     // estilos guardados con nombre
 	Games     []Game   `json:"games"`
 	Style              // aspecto del panel: colores, forma y letra (se guarda en el mismo nivel del JSON)
 }
@@ -79,7 +99,7 @@ func Default() Config {
 		ShowFPS: true, ShowLow: true, ShowGrph: true, ShowCPU: true, ShowGPU: true, ShowRAM: true,
 		ShowTemp: true, Hotkey: true, HkShow: "Ctrl+Alt+O", HkRecord: "Ctrl+Alt+R", HkCorner: "Ctrl+Alt+P", UpdateMs: 100, FpsSource: SrcRTSS, GameExe: "cs2.exe", AutoGame: true, OnlyGame: true, AutoOpen: true, AlertOn: true, AlertCPU: 90, AlertGPU: 85,
 		Games: []Game{{Exe: "cs2.exe", Priority: false}}, Style: DefaultStyle(),
-		OffsetX: 14, OffsetY: 14, Order: append([]string(nil), RowKeys...)}
+		OffsetX: 14, OffsetY: 14, PosX: 0.02, PosY: 0.03, TempWarn: 70, CPUWarn: 85, CPUBad: 97, RAMWarn: 80, RAMBad: 92, ShowMic: true, AlertSSD: 70, Order: append([]string(nil), RowKeys...)}
 }
 
 var corners = map[string]bool{"tl": true, "tr": true, "bl": true, "br": true}
@@ -127,6 +147,28 @@ func (c *Config) Normalize() {
 	if c.AlertGPU < 60 || c.AlertGPU > 110 {
 		c.AlertGPU = d.AlertGPU
 	}
+	if c.AlertSSD < 45 || c.AlertSSD > 100 {
+		c.AlertSSD = d.AlertSSD
+	}
+	if !(c.PosX >= 0 && c.PosX <= 1) {
+		c.PosX = d.PosX
+	}
+	if !(c.PosY >= 0 && c.PosY <= 1) {
+		c.PosY = d.PosY
+	}
+	if c.TempWarn < 40 || c.TempWarn > 100 {
+		c.TempWarn = d.TempWarn
+	}
+	for _, p := range [][2]*int{{&c.CPUWarn, &c.CPUBad}, {&c.GPUWarn, &c.GPUBad}, {&c.RAMWarn, &c.RAMBad}} {
+		for _, v := range p {
+			if *v < 0 || *v > 100 {
+				*v = 0
+			}
+		}
+		if *p[0] > 0 && *p[1] > 0 && *p[0] > *p[1] { // al revés: se dan vuelta
+			*p[0], *p[1] = *p[1], *p[0]
+		}
+	}
 	var cl []string
 	seen := map[string]bool{}
 	for _, n := range c.CloseList {
@@ -151,6 +193,17 @@ func (c *Config) Normalize() {
 	if c.HkCorner == c.HkShow || c.HkCorner == c.HkRecord {
 		c.HkCorner = d.HkCorner
 	}
+	// Los atajos opcionales vacíos quedan sin asignar; los repetidos, también.
+	used := map[string]bool{c.HkShow: true, c.HkRecord: true, c.HkCorner: true}
+	for _, p := range []*string{&c.HkMic, &c.HkRAM, &c.HkOpen} {
+		*p = NormalizeHotkey(*p, "")
+		if used[*p] {
+			*p = ""
+		}
+		if *p != "" {
+			used[*p] = true
+		}
+	}
 	var gs []Game
 	for _, g := range c.Games {
 		if !ValidExe(g.Exe) {
@@ -163,6 +216,9 @@ func (c *Config) Normalize() {
 			}
 		}
 		g.Close = cl
+		if g.Launch = strings.TrimSpace(g.Launch); !ValidLaunch(g.Launch) {
+			g.Launch = ""
+		}
 		if g.PowerPlan != "" && !guidRe.MatchString(g.PowerPlan) {
 			g.PowerPlan = ""
 		}
@@ -240,7 +296,8 @@ func (c Config) GameFor(exe string) (Game, bool) {
 
 // HotkeyConflict devuelve un mensaje si el texto de algún atajo no es válido o se repite.
 func (c Config) HotkeyConflict() string {
-	names := []struct{ label, v string }{{"Mostrar/ocultar", c.HkShow}, {"Grabar", c.HkRecord}, {"Cambiar esquina", c.HkCorner}}
+	names := []struct{ label, v string }{{"Mostrar/ocultar", c.HkShow}, {"Grabar", c.HkRecord}, {"Cambiar esquina", c.HkCorner},
+		{"Silenciar micrófono", c.HkMic}, {"Liberar RAM", c.HkRAM}, {"Abrir OverdriveTuner", c.HkOpen}}
 	seen := map[string]string{}
 	for _, n := range names {
 		if n.v == "" {

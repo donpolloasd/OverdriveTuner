@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"fpsforge/internal/icon"
+	"fpsforge/internal/perf"
 	"fpsforge/internal/scan"
 	"fpsforge/internal/system"
 	"fpsforge/internal/tools"
@@ -27,7 +28,7 @@ import (
 var assets embed.FS
 
 // Version del programa.
-const Version = "3.2.2"
+const Version = "3.3.0"
 
 // Server es el backend de la interfaz.
 type Server struct {
@@ -61,6 +62,8 @@ type Server struct {
 	beaten   bool
 	srv      *http.Server
 	closeOne sync.Once
+	perfOnce sync.Once
+	perf     *perf.Store // ranking local de las pruebas de rendimiento
 }
 
 // New crea el servidor.
@@ -226,6 +229,18 @@ func (s *Server) Start() (string, error) {
 	mux.HandleFunc("/api/space/open", s.guard(s.handleSpaceOpen))
 	mux.HandleFunc("/api/recyclebin", s.guard(s.handleRecycleBin))
 	mux.HandleFunc("/api/restorepoints", s.guard(s.handleRestorePoints))
+	mux.HandleFunc("/api/perf", s.guard(s.handlePerf))
+	mux.HandleFunc("/api/perf/run", s.guard(s.handlePerfRun))
+	mux.HandleFunc("/api/perf/delete", s.guard(s.handlePerfDelete))
+	mux.HandleFunc("/api/mic", s.guard(s.handleMic))
+	mux.HandleFunc("/api/mic/wav", s.guard(s.handleMicWAV))
+	mux.HandleFunc("/api/winopts", s.guard(s.handleWinOpts))
+	mux.HandleFunc("/api/winopts/folder", s.guard(s.handleWinOptsFolder))
+	mux.HandleFunc("/api/apps/upgrades", s.guard(s.handleAppsUpgrades))
+	mux.HandleFunc("/api/clean/plan", s.guard(s.handleCleanPlan))
+	mux.HandleFunc("/api/hotkeys", s.guard(s.handleHotkeys))
+	mux.HandleFunc("/api/gamemode/find", s.guard(s.handleGameFind))
+	mux.HandleFunc("/api/gamemode/launch", s.guard(s.handleGameLaunch))
 	if h, ok := s.loadHardwareCache(); ok {
 		// Con el último escaneo guardado la interfaz aparece completa al instante; se actualiza en segundo plano.
 		s.mu.Lock()
@@ -369,7 +384,7 @@ func (s *Server) index(sub fs.FS) http.HandlerFunc {
 			page = strings.Replace(page, "__BOOT__", strings.ReplaceAll(string(boot), "<", `\u003c`), 1)
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.Header().Set("Cache-Control", "no-store")
-			w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'")
+			w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'")
 			w.Header().Set("X-Content-Type-Options", "nosniff")
 			w.Write([]byte(page))
 			return

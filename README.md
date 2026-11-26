@@ -16,7 +16,7 @@
 </div>
 
 > [!NOTE]
-> **Beta (3.2.2).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups yet (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings).
+> **Beta (3.3.0).** Built and tested mainly on one PC (Ryzen 5 5600G + RX 7600; Steam, EA, Epic and Minecraft games). Some features have not been tested on other setups yet (for example NVIDIA or Intel). Every tweak can be reverted. The interface is in Spanish with an English translation (switch it in Settings).
 
 > Created with **Claude Sonnet 5.5 & Claude Opus 5.5** (Anthropic), directed and tested by its author (Donpolloasd).
 
@@ -36,16 +36,21 @@
 ### In-game overlay
 - FPS, 1% low, frame-time graph, CPU, GPU, VRAM, RAM, temperatures, an overheating alert and a **throttling alert** (CPU or GPU slowing down).
 - **Detects the running game on its own** (Steam, Epic, EA, GOG, Ubisoft, Xbox, Riot…).
-- **Fully customizable:** any color, ready-made themes, transparent background, corners, border, font, position, monitor, row order, frame time, clock, saved styles and overlay language (English or Spanish). Save the overlay as an image. Minimal layout (FPS only), **0.1% low** and a **desktop widget**.
+- **Fully customizable:** any color, ready-made themes, transparent background, corners, border, font, position, monitor, row order, frame time, clock, saved styles and overlay language (English or Spanish). Save the overlay as an image. Minimal layout (FPS only), **0.1% low** and a **desktop widget**. Drag-and-drop **panel editor**, colors by threshold, **SSD temperature**, alerts as Windows notifications and an «only when there is a problem» mode.
 
 ### Diagnose
 - Monitor refresh rate, which GPU the monitor is plugged into, RAM speed (XMP/EXPO) and channels, power plan, Resizable BAR, GPU driver age, disk health and a BIOS guide for your hardware.
 - **Ping to game servers**, DNS test, network usage per program and **system latency (DPC)**.
-- **Benchmark** before/after with a stutter detector.
+- **Benchmark** before/after with a stutter detector, and **compare two recorded runs**.
+- **Performance tests:** CPU (single and all cores), RAM speed and latency, drive read/write, a local ranking and a **stability test** that detects throttling.
+- **Troubleshooting assistant:** pick what is wrong and follow the steps.
 
 ### Tools
 - **Game mode:** closes the programs you choose when a game starts and can **silence Windows notifications** while you play.
-- **Install programs** with winget (launchers, runtimes, monitoring tools…).
+- **Optimized launch:** «Play» from each game profile applies the profile and opens the game.
+- **Install programs** with winget (launchers, runtimes, monitoring tools…) and **update programs one by one**.
+- **Microphone:** mute it with a shortcut and test how it sounds.
+- **All Windows options** («God Mode») with search and favorites.
 - **Free RAM**, temp-file cleanup, **unused programs and games**, **old drivers**, startup manager, scheduled maintenance and optional reminders.
 - **Disk space** (WizTree-style): folder map, largest files, space by type and duplicate files; deleting goes to the Recycle Bin. Empty the Recycle Bin and old restore points.
 - **Light theme**, interface size and a customizable Home.
